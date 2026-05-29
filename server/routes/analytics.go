@@ -3,6 +3,7 @@ package routes
 
 import (
 	"context"
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/logger"
 	"github.com/shivasymbl/muster/server/models"
 	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,9 +23,24 @@ func AnalyticsBasicAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		analyticsUsername := os.Getenv("ANALYTICS_USERNAME")
 		analyticsPassword := os.Getenv("ANALYTICS_PASSWORD")
+
+		// Fail closed if credentials aren't configured. Otherwise empty env
+		// vars combined with the old `user != "" || pass != ""` style check
+		// would let a request with empty credentials authenticate, exposing
+		// these admin endpoints (user lookup, manual upgrade/downgrade).
+		if analyticsUsername == "" || analyticsPassword == "" {
+			logger.StdErr.Println("ANALYTICS_USERNAME/ANALYTICS_PASSWORD not configured; refusing analytics request")
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Analytics auth not configured"})
+			return
+		}
+
 		user, pass, hasAuth := c.Request.BasicAuth()
 
-		if !hasAuth || user != analyticsUsername || pass != analyticsPassword {
+		// Constant-time comparison to avoid leaking the credentials via timing.
+		userMatch := subtle.ConstantTimeCompare([]byte(user), []byte(analyticsUsername)) == 1
+		passMatch := subtle.ConstantTimeCompare([]byte(pass), []byte(analyticsPassword)) == 1
+
+		if !hasAuth || !userMatch || !passMatch {
 			c.Header("WWW-Authenticate", `Basic realm="Restricted"`)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
