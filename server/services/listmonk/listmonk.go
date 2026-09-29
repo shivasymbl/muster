@@ -53,7 +53,7 @@ func TxPayload(email string, templateId int, data bson.M, opts ...EmailOptions) 
 // Adds the given user to the Listmonk contact list
 // If subscriberId is not nil, then UPDATE the user instead of adding user
 func AddUserToListmonk(email string, firstName string, lastName string, picture string, subscriberId *int, sendMarketingEmails bool) {
-	if os.Getenv("LISTMONK_ENABLED") == "false" {
+	if os.Getenv("LISTMONK_URL") == "" || os.Getenv("LISTMONK_ENABLED") == "false" {
 		return
 	}
 
@@ -108,7 +108,7 @@ func AddUserToListmonk(email string, firstName string, lastName string, picture 
 // Check if the user is already in listmonk
 // Returns a bool representing whether the subscriber exists and the id of the subscriber if it does exist
 func DoesUserExist(email string) (bool, *int) {
-	if os.Getenv("LISTMONK_ENABLED") == "false" {
+	if os.Getenv("LISTMONK_URL") == "" || os.Getenv("LISTMONK_ENABLED") == "false" {
 		return false, nil
 	}
 
@@ -162,7 +162,7 @@ func DoesUserExist(email string) (bool, *int) {
 
 // Send a transactional email using the specified template and data
 func SendEmail(email string, templateId int, data bson.M, opts ...EmailOptions) {
-	if os.Getenv("LISTMONK_ENABLED") == "false" {
+	if os.Getenv("LISTMONK_URL") == "" || os.Getenv("LISTMONK_ENABLED") == "false" {
 		return
 	}
 
@@ -194,7 +194,7 @@ func SendEmail(email string, templateId int, data bson.M, opts ...EmailOptions) 
 
 // Send a transactional email using the specified template and data. Adds subscriber if they don't exist
 func SendEmailAddSubscriberIfNotExist(email string, templateId int, data bson.M, sendMarketingEmails bool, opts ...EmailOptions) {
-	if os.Getenv("LISTMONK_ENABLED") == "false" {
+	if os.Getenv("LISTMONK_URL") == "" || os.Getenv("LISTMONK_ENABLED") == "false" {
 		return
 	}
 

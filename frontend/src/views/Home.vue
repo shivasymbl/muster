@@ -1,8 +1,5 @@
 <template>
   <span>
-    <FormerlyKnownAs
-      class="tw-mx-auto tw-mb-10 tw-mt-3 tw-max-w-6xl tw-pl-4 sm:tw-pl-12"
-    />
     <div
       class="tw-mx-auto tw-mb-24 tw-mt-4 tw-max-w-6xl tw-space-y-4 sm:tw-mb-12 sm:tw-mt-7"
     >
@@ -36,13 +33,7 @@
             @click="convertW2M"
             class="tw-cursor-pointer tw-text-sm tw-font-normal tw-text-dark-gray tw-underline"
           >
-            Convert When2meet to Timeful
-          </div>
-          <div
-            @click="importTimeful"
-            class="tw-cursor-pointer tw-text-sm tw-font-normal tw-text-dark-gray tw-underline"
-          >
-            Import Timeful Event
+            Convert When2meet
           </div>
         </div>
       </div>
@@ -75,9 +66,6 @@
 
       <!-- When2meet Import Dialog -->
       <When2meetImportDialog v-model="showW2MDialog" />
-
-      <!-- Timeful Import Dialog -->
-      <TimefulImportDialog v-model="showImportDialog" />
     </div>
   </span>
 </template>
@@ -87,12 +75,10 @@ import EventType from "@/components/EventType.vue"
 import BottomFab from "@/components/BottomFab.vue"
 import CreateSpeedDial from "@/components/CreateSpeedDial.vue"
 import When2meetImportDialog from "@/components/When2meetImportDialog.vue"
-import TimefulImportDialog from "@/components/TimefulImportDialog.vue"
 import Dashboard from "@/components/home/Dashboard.vue"
 import { mapState, mapActions, mapMutations } from "vuex"
 import { eventTypes } from "@/constants"
 import { isPhone, get } from "@/utils"
-import FormerlyKnownAs from "@/components/FormerlyKnownAs.vue"
 
 export default {
   name: "Home",
@@ -106,9 +92,7 @@ export default {
     BottomFab,
     CreateSpeedDial,
     When2meetImportDialog,
-    TimefulImportDialog,
     Dashboard,
-    FormerlyKnownAs,
   },
 
   props: {
@@ -122,7 +106,6 @@ export default {
   data: () => ({
     loading: true,
     showW2MDialog: false,
-    showImportDialog: false,
   }),
 
   mounted() {
@@ -157,11 +140,7 @@ export default {
     createFolder() {},
     convertW2M() {
       this.showW2MDialog = true
-      this.$posthog?.capture("convert_when2meet_to_timeful_clicked")
-    },
-    importTimeful() {
-      this.showImportDialog = true
-      this.$posthog?.capture("import_timeful_event_clicked")
+      this.$posthog?.capture("convert_when2meet_clicked")
     },
   },
 

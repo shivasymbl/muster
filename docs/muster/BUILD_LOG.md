@@ -20,3 +20,18 @@
 - Root cause: this project's sass-loader treats `css.loaderOptions.sass.additionalData` as a string. A function was coerced into the indented `.sass` files. Vuetify component styles are indented Sass, so an SCSS `@import` is also invalid there.
 - Fix: `frontend/src/sass/variables.sass` sets `$body-font-family`, and `vue.config.js` prepends `@import "@/sass/variables.sass"` as a string. `@font-face` src paths are relative to `public/fonts` so css-loader can resolve them.
 - Source: local build error. Vuetify 2.7 ships indented Sass. css-loader 6 treats absolute `/fonts/...` urls as modules.
+
+## 2026-09-29 · Phase 2 · Google contacts scopes
+
+- Symptom: spec section 7.4 says to drop `contacts.readonly` and `directory.readonly` unless a kept feature needs them.
+- Root cause: `server/services/contacts/contacts.go` and `GET` contact search in `server/routes/user.go` still search Google contacts and the directory. Sign-in only requests those scopes when `requestContactsPermission` is true.
+- Fix: left the scopes in place so that feature still works. Needs a decision from Shiv before they are removed.
+- Source: spec section 7.4.
+
+## 2026-09-29 · Phase 2 · Historical Go scripts
+
+- Symptom: `go build ./...` failed in three `server/scripts/*` mains on fields the current models no longer have (`Responses`, old calendar token fields).
+- Root cause: those files are one-off upstream migrations and already did not match `models.Event` / `models.CalendarAccount` before the Muster edits.
+- Fix: added `//go:build ignore` so the package build skips them. They are not part of the server.
+- Source: `go build ./...` error output.
+

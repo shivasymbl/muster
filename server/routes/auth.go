@@ -219,7 +219,6 @@ func signInHelper(c *gin.Context, token auth.TokenResponse, tokenOrigin models.T
 
 		userId = res.InsertedID.(primitive.ObjectID)
 
-		// slackbot.SendTextMessage(fmt.Sprintf(":wave: %s %s (%s) has joined schej.it!", firstName, lastName, email))
 	} else {
 		user := existing
 		userId = user.Id

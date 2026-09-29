@@ -6,7 +6,6 @@ require (
 	cloud.google.com/go/cloudtasks v1.12.6
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/brianvoe/sjwt v0.5.1
-	github.com/bwmarrin/discordgo v0.27.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.1
@@ -20,8 +19,6 @@ require (
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
-
-require github.com/stripe/stripe-go/v82 v82.0.0 // indirect
 
 require (
 	cloud.google.com/go/compute v1.23.3 // indirect
@@ -54,7 +51,6 @@ require (
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/sessions v1.2.1 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
