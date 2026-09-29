@@ -640,7 +640,7 @@ const docTemplate = `{
                 "tags": [
                     "events"
                 ],
-                "summary": "Import a Timeful event from a remote instance",
+                "summary": "Import a Muster event from a remote instance",
                 "parameters": [
                     {
                         "description": "Object containing the URL of the remote event",
@@ -2647,8 +2647,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:3002/api",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Schej.it API",
-	Description:      "This is the API for Schej.it!",
+	Title:            "Asymbl Muster API",
+	Description:      "This is the API for Asymbl Muster.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

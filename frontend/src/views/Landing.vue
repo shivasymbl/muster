@@ -1,259 +1,232 @@
 <template>
-  <div class="tw-bg-light-gray">
-    <div
-      class="tw-relative tw-m-auto tw-mb-12 tw-flex tw-max-w-6xl tw-flex-col tw-px-4 sm:tw-mb-20"
+  <div class="tw-bg-white tw-text-ink">
+    <header
+      class="tw-sticky tw-top-0 tw-z-20 tw-border-b tw-border-light-gray-stroke tw-bg-white/95 tw-backdrop-blur"
     >
-      <!-- Header -->
-      <div class="tw-mb-16 sm:tw-mb-28">
-        <div class="tw-flex tw-items-center tw-pt-5">
-          <Logo type="timeful" />
-
-          <v-spacer />
-
-          <LandingPageHeader>
-            <v-btn text @click="openHowItWorksDialog">How it works</v-btn>
-            <v-btn text href="/blog">Blog</v-btn>
-            <div v-if="authUser" class="tw-ml-2">
-              <AuthUserMenu />
-            </div>
-            <v-btn v-else text :to="{ name: 'sign-in' }">Sign in</v-btn>
-          </LandingPageHeader>
-        </div>
-
-      </div>
-
-      <div class="tw-flex tw-flex-col tw-items-center">
-        <div
-          class="tw-mb-6 tw-flex tw-max-w-[26rem] tw-flex-col tw-items-center sm:tw-w-[35rem] sm:tw-max-w-none"
+      <div
+        class="tw-mx-auto tw-flex tw-max-w-6xl tw-items-center tw-gap-3 tw-px-4 tw-py-3 sm:tw-px-6"
+      >
+        <Logo color="navy" :width="118" />
+        <v-spacer />
+        <a
+          href="#how"
+          class="tw-hidden tw-text-sm tw-font-medium tw-text-ink sm:tw-inline"
+          >How it works</a
         >
-          <div
-            class="tw-mb-4 tw-flex tw-select-none tw-items-center tw-rounded-full tw-border tw-border-light-gray-stroke tw-bg-white/70 tw-px-2.5 tw-py-1.5 tw-text-sm tw-text-dark-gray"
-          >
-            We're open source!
-            <github-button
-              v-once
-              class="-tw-mb-1 tw-ml-2"
-              href="https://github.com/schej-it/timeful.app"
-              data-show-count="true"
-              aria-label="Star timeful.app on GitHub"
-              >Star</github-button
+        <router-link
+          :to="{ name: 'privacy-policy' }"
+          class="tw-hidden tw-text-sm tw-font-medium tw-text-ink sm:tw-inline"
+          >Privacy</router-link
+        >
+        <AuthUserMenu v-if="authUser" class="tw-ml-1" />
+        <v-btn
+          v-else
+          text
+          class="tw-text-ink"
+          :to="{ name: 'sign-in' }"
+          >Sign in</v-btn
+        >
+        <v-btn
+          class="tw-rounded-lg tw-bg-green tw-px-4 tw-text-sm"
+          dark
+          @click="startMuster"
+          >Start a Muster</v-btn
+        >
+      </div>
+    </header>
+
+    <main>
+      <section class="tw-relative tw-overflow-hidden tw-px-4 tw-py-8 sm:tw-px-6 sm:tw-py-12">
+        <img
+          src="@/assets/brand/illustrations/blob-blue.png"
+          alt=""
+          class="tw-pointer-events-none tw-absolute -tw-left-24 tw-top-8 tw-w-56 tw-opacity-40"
+        />
+        <img
+          src="@/assets/brand/illustrations/blob-purple-orb.png"
+          alt=""
+          class="tw-pointer-events-none tw-absolute -tw-right-16 tw-bottom-0 tw-w-48 tw-opacity-30"
+        />
+        <div
+          class="tw-relative tw-mx-auto tw-flex tw-max-w-6xl tw-flex-col tw-items-center tw-gap-10 tw-overflow-hidden tw-rounded-3xl tw-px-6 tw-py-12 sm:tw-px-12 lg:tw-flex-row lg:tw-py-16"
+          style="background: linear-gradient(180deg, #191d47, #2c1169)"
+        >
+          <div class="tw-max-w-xl tw-text-white">
+            <div
+              class="tw-mb-4 tw-inline-flex tw-rounded-full tw-border tw-border-white/30 tw-px-3 tw-py-1 tw-text-sm"
             >
+              Group scheduling, without the thread
+            </div>
+            <h1 class="tw-text-4xl tw-font-semibold tw-leading-tight sm:tw-text-5xl">
+              Find the time that works for
+              <span style="color: #b2deff">everyone</span>.
+            </h1>
+            <p class="tw-mt-4 tw-text-base tw-leading-relaxed tw-text-white/90 sm:tw-text-lg">
+              Send one link. Everyone connects their calendar. Muster shows you
+              when the whole group is free, across companies and time zones.
+            </p>
+            <div class="tw-mt-8 tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-flex-wrap">
+              <v-btn
+                class="tw-rounded-lg tw-bg-green tw-px-6"
+                dark
+                large
+                @click="startMuster"
+                >Start a Muster</v-btn
+              >
+              <v-btn
+                outlined
+                large
+                class="tw-rounded-lg tw-border-white tw-text-white"
+                @click="_signIn(calendarTypes.GOOGLE)"
+                >Sign in with Google</v-btn
+              >
+              <v-btn
+                outlined
+                large
+                class="tw-rounded-lg tw-border-white tw-text-white"
+                @click="_signIn(calendarTypes.OUTLOOK)"
+                >Sign in with Microsoft</v-btn
+              >
+            </div>
           </div>
-          <div
-            id="header"
-            class="tw-mb-4 tw-text-center tw-text-2xl tw-font-medium sm:tw-text-4xl lg:tw-text-4xl xl:tw-text-5xl"
-          >
-            <h1>Find a time to meet</h1>
-          </div>
-
-          <div
-            class="lg:tw-text-md tw-text-left tw-text-center tw-text-sm tw-text-very-dark-gray sm:tw-text-lg md:tw-text-lg xl:tw-text-lg"
-          >
-            Coordinate group meetings without the back and forth.
-            <br class="tw-hidden sm:tw-block" />
-            Integrates with your
-            <v-tooltip
-              top
-              content-class="tw-bg-very-dark-gray tw-shadow-lg tw-opacity-100"
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <span
-                  class="tw-cursor-pointer tw-border-b tw-border-dashed tw-border-dark-gray"
-                  v-bind="attrs"
-                  v-on="on"
-                  >calendar</span
-                >
-              </template>
-              <span
-                >Timeful allows you to autofill your availability from Google
-                Calendar,<br class="tw-hidden sm:tw-block" />
-                Outlook, Apple Calendar, or an ICS feed URL.</span
-              > </v-tooltip
-            >.
-          </div>
+          <img
+            src="@/assets/brand/illustrations/robot-crew.png"
+            alt="Muster robots standing together"
+            class="tw-h-auto tw-w-full tw-max-w-md tw-object-contain"
+          />
         </div>
+      </section>
 
-        <div class="tw-mb-12 tw-space-y-2">
-          <v-btn
-            class="tw-block tw-self-center tw-rounded-lg tw-bg-green tw-px-10 tw-text-base sm:tw-px-10 lg:tw-px-12"
-            dark
-            @click="authUser ? openDashboard() : (newDialog = true)"
-            large
-            :x-large="$vuetify.breakpoint.mdAndUp"
-          >
-            {{ authUser ? "Open dashboard" : "Create event" }}
-          </v-btn>
-          <div
-            v-if="!authUser"
-            class="tw-text-center tw-text-xs tw-text-dark-gray sm:tw-text-sm"
-          >
-            It's free! No login required.
-          </div>
-        </div>
-        <div class="tw-relative tw-w-full">
-          <!-- Green background -->
-          <div
-            class="tw-absolute -tw-bottom-12 tw-left-1/2 tw-h-[85%] tw-w-screen -tw-translate-x-1/2 tw-bg-green sm:-tw-bottom-20"
-          ></div>
-
-          <!-- Hero video -->
-          <div
-            class="tw-relative tw-z-20 tw-w-full tw-rounded-lg tw-border tw-border-light-gray-stroke tw-bg-white tw-shadow-xl sm:tw-rounded-xl md:tw-mx-auto md:tw-w-fit"
+      <section id="how" class="tw-mx-auto tw-max-w-6xl tw-px-4 tw-py-16 sm:tw-px-6">
+        <h2 class="tw-text-3xl tw-font-semibold">
+          How it <span class="tw-text-green">works</span>
+        </h2>
+        <div class="tw-mt-8 tw-grid tw-gap-4 md:tw-grid-cols-3">
+          <article
+            v-for="step in steps"
+            :key="step.title"
+            class="tw-rounded-2xl tw-border tw-border-light-gray-stroke tw-bg-white tw-p-6"
           >
             <div
-              class="tw-relative tw-mx-4 tw-aspect-square md:tw-size-[700px] lg:tw-size-[800px]"
+              class="tw-mb-4 tw-flex tw-h-10 tw-w-10 tw-items-center tw-justify-center tw-rounded-full tw-text-sm tw-font-semibold tw-text-white"
+              :style="{ background: step.color }"
             >
-              <v-img
-                class="tw-absolute tw-left-0 tw-top-0 tw-z-20 tw-size-full tw-transition-opacity tw-duration-300"
-                :class="{ 'tw-opacity-0': isVideoPlaying }"
-                src="@/assets/img/hero.jpg"
-                transition="fade-transition"
-                contain
-              />
-              <vue-vimeo-player
-                video-url="https://player.vimeo.com/video/1083205305?h=d58bef862a"
-                :player-width="800"
-                :player-height="800"
-                :options="{
-                  muted: true,
-                  playsinline: true,
-                  responsive: true,
-                }"
-                :controls="false"
-                :autoplay="true"
-                :loop="true"
-                @play="onPlay"
-              />
+              {{ step.n }}
+            </div>
+            <h3 class="tw-text-lg tw-font-semibold">{{ step.title }}</h3>
+            <p class="tw-mt-2 tw-text-slate">{{ step.body }}</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="tw-bg-off-white tw-px-4 tw-py-16 sm:tw-px-6">
+        <div class="tw-mx-auto tw-max-w-6xl">
+          <h2 class="tw-text-3xl tw-font-semibold">
+            See the <span class="tw-text-green">overlap</span>
+          </h2>
+          <p class="tw-mt-2 tw-text-slate">
+            Darker blue means more people are free.
+          </p>
+          <div class="tw-mt-6 tw-overflow-x-auto">
+            <LandingPageCalendar />
+          </div>
+        </div>
+      </section>
+
+      <section class="tw-mx-auto tw-max-w-6xl tw-px-4 tw-py-16 sm:tw-px-6">
+        <div
+          class="tw-grid tw-gap-6 tw-rounded-3xl tw-bg-ligher-green tw-p-8 md:tw-grid-cols-2 md:tw-p-12"
+        >
+          <div>
+            <h2 class="tw-text-3xl tw-font-semibold">
+              Built for the <span class="tw-text-green">in-between</span>
+            </h2>
+            <p class="tw-mt-4 tw-text-lg tw-leading-relaxed">
+              Internal and external in one place. Your team, your client and
+              your vendor on the same grid, with no admin setup on either side.
+            </p>
+          </div>
+          <p class="tw-self-center tw-text-lg tw-leading-relaxed">
+            Each person connects their own calendar. Nobody has to share a
+            calendar with another company.
+          </p>
+        </div>
+      </section>
+
+      <section class="tw-mx-auto tw-max-w-6xl tw-px-4 tw-pb-16 sm:tw-px-6">
+        <div class="tw-grid tw-items-center tw-gap-8 md:tw-grid-cols-[1fr_auto]">
+          <div>
+            <h2 class="tw-text-3xl tw-font-semibold">
+              Privacy <span class="tw-text-green">first</span>
+            </h2>
+            <div class="tw-mt-6 tw-flex tw-flex-wrap tw-gap-3">
+              <span
+                v-for="pill in privacyPills"
+                :key="pill"
+                class="tw-rounded-full tw-border tw-border-light-gray-stroke tw-px-4 tw-py-2 tw-text-sm tw-font-medium"
+                >{{ pill }}</span
+              >
             </div>
           </div>
+          <img
+            src="@/assets/brand/illustrations/robot-logo-dot.png"
+            alt=""
+            class="tw-mx-auto tw-h-40 tw-w-auto tw-object-contain"
+          />
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- How it works -->
-    <div
-      id="how-it-works"
-      class="tw-grid tw-place-content-center tw-px-4 tw-pt-12"
-    >
-      <div class="tw-mx-auto tw-flex tw-flex-col tw-gap-4">
+      <section class="tw-mx-auto tw-max-w-3xl tw-px-4 tw-pb-16 sm:tw-px-6">
+        <h2 class="tw-mb-6 tw-text-center tw-text-3xl tw-font-semibold">
+          Questions
+        </h2>
+        <div class="tw-grid tw-gap-3">
+          <FAQ
+            v-for="faq in faqs"
+            :key="faq.question"
+            @signIn="signIn"
+            v-bind="faq"
+          />
+        </div>
+      </section>
+
+      <section class="tw-px-4 tw-pb-16 sm:tw-px-6">
         <div
-          class="tw-mb-4 tw-text-center tw-text-2xl tw-font-medium sm:tw-text-3xl lg:tw-text-4xl"
+          class="tw-mx-auto tw-max-w-6xl tw-rounded-3xl tw-px-8 tw-py-12 tw-text-center tw-text-white"
+          style="background: linear-gradient(90deg, #008ff8, #8855ff)"
         >
-          How it works
-        </div>
-        <div
-          v-for="(step, i) in howItWorksSteps"
-          :key="i"
-          class="tw-flex tw-items-center tw-gap-2"
-        >
-          <NumberBullet>{{ i + 1 }}</NumberBullet>
-          <div class="tw-text-base tw-font-medium md:tw-text-xl">
-            <div v-html="step"></div>
-          </div>
-        </div>
-      </div>
-      <div
-        class="tw-mb-6 tw-mt-10 tw-text-center tw-text-3xl tw-font-medium md:tw-mb-12 md:tw-mt-20 md:tw-text-6xl"
-      >
-        It's that simple.
-      </div>
-      <v-img
-        alt="schej character"
-        src="@/assets/brand/illustrations/robot-point.png"
-        :height="isPhone ? 200 : 300"
-        transition="fade-transition"
-        contain
-        class="-tw-mb-12"
-      />
-    </div>
-
-    <!-- Video -->
-    <div
-      class="tw-flex tw-justify-center tw-bg-green tw-px-4 tw-pb-12 tw-pt-24 md:tw-pb-16"
-    >
-      <div
-        class="tw-h-[300px] tw-max-w-3xl tw-flex-1 sm:tw-h-[400px] md:tw-h-[450px]"
-      >
-        <iframe
-          class="tw-h-full tw-w-full"
-          src="https://www.youtube.com/embed/vFkBC8BrkOk?si=pF64JAIyDhom_1do"
-          title="Timeful demo"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
-
-    <!-- FAQ -->
-    <div class="tw-flex tw-justify-center tw-pt-12">
-      <div class="tw-mx-4 tw-mb-12 tw-max-w-3xl tw-flex-1 sm:tw-mx-16">
-        <div id="faq-section" class="tw-text-center lg:tw-pt-3">
-          <Header> Frequently Asked Questions </Header>
-          <div
-            class="tw-grid tw-grid-cols-1 tw-gap-3 sm:tw-text-xl lg:tw-text-2xl"
+          <h2 class="tw-text-3xl tw-font-semibold sm:tw-text-4xl">
+            Stop asking "what works for everyone?"
+          </h2>
+          <v-btn
+            class="tw-mt-8 tw-rounded-lg tw-bg-white tw-px-8 tw-text-ink"
+            large
+            @click="startMuster"
+            >Start a Muster</v-btn
           >
-            <FAQ
-              v-for="faq in faqs"
-              :key="faq.question"
-              @signIn="signIn"
-              v-bind="faq"
-            />
-          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
     <Footer />
 
-    <!-- Sign in dialog -->
     <SignInDialog
       v-model="signInDialog"
       @signIn="_signIn"
       @emailSignIn="_emailSignIn"
     />
-
-    <!-- New event dialog -->
     <NewDialog v-model="newDialog" no-tabs @signIn="signIn" />
-
-    <!-- Add the dialog component -->
-    <HowItWorksDialog
-      v-if="showHowItWorksDialog"
-      v-model="showHowItWorksDialog"
-    />
   </div>
 </template>
 
-<style scoped>
-@media screen and (min-width: 375px) and (max-width: 640px) {
-  #header {
-    font-size: 1.875rem !important; /* 30px */
-    line-height: 2.25rem !important; /* 36px */
-  }
-}
-</style>
-<style>
-.rdt-h {
-  @apply tw-rounded tw-bg-light-green/20 tw-px-px tw-text-black;
-}
-</style>
-
 <script>
 import LandingPageCalendar from "@/components/landing/LandingPageCalendar.vue"
-import { isPhone, signInGoogle, signInOutlook } from "@/utils"
+import { signInGoogle, signInOutlook } from "@/utils"
 import FAQ from "@/components/FAQ.vue"
-import Header from "@/components/Header.vue"
-import NumberBullet from "@/components/NumberBullet.vue"
-import NewEvent from "@/components/NewEvent.vue"
 import NewDialog from "@/components/NewDialog.vue"
-import LandingPageHeader from "@/components/landing/LandingPageHeader.vue"
 import Logo from "@/components/Logo.vue"
-import GithubButton from "vue-github-button"
 import SignInDialog from "@/components/SignInDialog.vue"
 import { calendarTypes } from "@/constants"
-import HowItWorksDialog from "@/components/HowItWorksDialog.vue"
-import { vueVimeoPlayer } from "vue-vimeo-player"
 import Footer from "@/components/Footer.vue"
 import { mapState, mapMutations } from "vuex"
 import AuthUserMenu from "@/components/AuthUserMenu.vue"
@@ -262,22 +235,15 @@ export default {
   name: "Landing",
 
   metaInfo: {
-    title: "Timeful (formerly Schej) - Find a time to meet",
+    title: "Asymbl Muster: find a time that works for everyone",
   },
 
   components: {
     LandingPageCalendar,
     FAQ,
-    Header,
-    NumberBullet,
-    NewEvent,
     NewDialog,
-    LandingPageHeader,
-    GithubButton,
     Logo,
     SignInDialog,
-    HowItWorksDialog,
-    vueVimeoPlayer,
     Footer,
     AuthUserMenu,
   },
@@ -285,108 +251,80 @@ export default {
   data: () => ({
     signInDialog: false,
     newDialog: false,
-    githubSnackbar: true,
-    howItWorksSteps: [
-      "Create a Timeful event",
-      "Share the Timeful link with your group for them to fill out",
-      "See where everybody's availability overlaps!",
+    calendarTypes,
+    steps: [
+      {
+        n: "1",
+        color: "#038FF8",
+        title: "Create a Muster",
+        body: "Pick the dates and hours you want to offer.",
+      },
+      {
+        n: "2",
+        color: "#ED489E",
+        title: "Share one link",
+        body: "Drop it in email, WhatsApp, Slack or Teams.",
+      },
+      {
+        n: "3",
+        color: "#8856FF",
+        title: "See the overlap",
+        body: "Everyone's free time lines up. Pick the slot and send the invite.",
+      },
+    ],
+    privacyPills: [
+      "Free/busy only",
+      "Read-only access",
+      "Revoke anytime",
+      "No data selling",
     ],
     faqs: [
       {
-        question: "Does Timeful support timezones?",
+        question: "What is Muster?",
         answer:
-          "Yes! Timeful automatically converts all times to the viewer's local timezone. There's also a timezone selector at the bottom of every meeting poll if you would like to manually change it.",
+          "Asymbl Muster helps a group find a time that works for everyone. You send one link, people mark when they are free, and Muster shows the overlap.",
       },
       {
-        question: "How many people can respond to an event?",
+        question: "Is Muster free?",
         answer:
-          "Unlimited! We've tested events with over 500+ responses and it works great.",
+          "Yes. There is no event limit and no paid tier. Create as many Musters as you need.",
       },
       {
-        question: "What calendars does Timeful integrate with?",
+        question: "Which calendars work?",
         answer:
-          "Timeful allows you to autofill your availability from your Google Calendar, Outlook, Apple Calendar, or an ICS feed URL. We are working on adding more calendar types soon!",
+          "Google Calendar, Outlook, and Apple Calendar or iCloud. You can also paste an ICS feed, or fill in availability by hand.",
       },
       {
-        question: "Is calendar access required in order to use Timeful?",
+        question: "What can Muster see on my calendar?",
         answer:
-          "Nope! You can manually input your availability, but we highly recommend allowing calendar access in order to view your calendar events while doing so.",
+          "Muster reads free/busy and event times so it can compute overlap. It does not write to your calendar, and other people only see the availability you enter.",
       },
       {
-        question: "Will other people be able to see my calendar events?",
+        question: "How do I disconnect a calendar?",
         answer:
-          "Nope! All other users will be able to see is the availability that you enter for an event.",
+          "Open Settings and disconnect the account. You can also revoke Muster from your Google or Microsoft account permissions.",
       },
       {
-        question: "How do I edit my availability?",
+        question: "Is it open source?",
         answer:
-          'If you are signed in, simply click the "Edit availability" button. If you entered your availability as a guest, hover over your name and click the pencil icon next to it.',
-      },
-      {
-        question: "How is Timeful different from Lettucemeet or When2meet?",
-        points: [
-          "Much better UI (web and mobile)",
-          "Seamless and working calendar integration",
-          "A slew of other features that we don't have space to list here",
-        ],
-      },
-      {
-        question: `I want it so that only I can see people's responses.`,
-        answer: `Just check "Only show responses to event creator" under Advanced Options when creating your event! Other respondees will not be able to see each other's names or availability.`,
-        authRequired: true,
-      },
-      {
-        question: `Can I receive emails when someone fills out my event?`,
-        answer: `Absolutely! Check "Email me each time someone joins my event" when creating an event. <br><br>To receive email notifications after a specific number (X) of responses are added, check "Email me after X responses" in Advanced Options.`,
-        authRequired: true,
-      },
-      {
-        question: `How do I send reminders to people to fill out an event?`,
-        answer: `Open the "Email Reminders" section when creating an event and input everybody's email address. Reminder emails will be sent the day of event creation, one day after, and three days after. <br><br>You will also receive an email once everybody has filled out the Timeful.`,
-        authRequired: true,
+          'Yes. Muster is licensed under AGPL-3.0. The source is at <a href="https://github.com/shivasymbl/muster">github.com/shivasymbl/muster</a>.',
       },
     ],
-    rive: null,
-    showSchejy: false,
-    showHowItWorksDialog: false,
-    isVideoPlaying: false,
   }),
 
   computed: {
     ...mapState(["authUser"]),
-    isPhone() {
-      return isPhone(this.$vuetify)
-    },
   },
 
   methods: {
     ...mapMutations(["setAuthUser"]),
-    loadRiveAnimation() {
-      // if (!this.rive) {
-      //   this.rive = new Rive({
-      //     src: "/rive/schej.riv",
-      //     canvas: document.querySelector("canvas"),
-      //     autoplay: false,
-      //     stateMachines: "wave",
-      //     onLoad: () => {
-      //       // r.resizeDrawingSurfaceToCanvas()
-      //     },
-      //   })
-      //   setTimeout(() => {
-      //     this.showSchejy = true
-      //     setTimeout(() => {
-      //       this.rive.play("wave")
-      //     }, 1000)
-      //   }, 4000)
-      // } else {
-      //   this.rive.play("wave")
-      // }
+    startMuster() {
+      this.newDialog = true
     },
     _signIn(calendarType) {
       if (calendarType === calendarTypes.GOOGLE) {
         signInGoogle({ state: null, selectAccount: true })
       } else if (calendarType === calendarTypes.OUTLOOK) {
-        // NOTE: selectAccount is not supported implemented yet for Outlook, maybe add it later
         signInOutlook({ state: null, selectAccount: true })
       }
     },
@@ -401,35 +339,6 @@ export default {
     },
     signIn() {
       this.$router.push({ name: "sign-in" })
-    },
-    openHowItWorksDialog() {
-      this.showHowItWorksDialog = true
-      this.$posthog.capture("how_it_works_clicked")
-    },
-    onPlay() {
-      setTimeout(() => {
-        this.isVideoPlaying = true
-      }, 1000)
-    },
-    openDashboard() {
-      this.$router.push({ name: "home" })
-    },
-  },
-
-  beforeDestroy() {
-    this.rive?.cleanup()
-  },
-
-  watch: {
-    [`$vuetify.breakpoint.name`]: {
-      immediate: true,
-      handler() {
-        if (this.$vuetify.breakpoint.mdAndUp) {
-          setTimeout(() => {
-            this.loadRiveAnimation()
-          }, 0)
-        }
-      },
     },
   },
 }

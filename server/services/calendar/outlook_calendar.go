@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/services"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/models"
-	"schej.it/server/services"
-	"schej.it/server/utils"
 )
 
 type OutlookCalendar struct {

@@ -1,4 +1,4 @@
-module schej.it/server
+module github.com/shivasymbl/muster/server
 
 go 1.20
 

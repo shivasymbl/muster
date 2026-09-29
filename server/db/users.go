@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"schej.it/server/logger"
-	"schej.it/server/models"
 )
 
 // Returns a user based on their _id

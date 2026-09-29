@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the API for Schej.it!",
-        "title": "Schej.it API",
+        "description": "This is the API for Asymbl Muster.",
+        "title": "Asymbl Muster API",
         "contact": {},
         "version": "1.0"
     },
@@ -632,7 +632,7 @@
                 "tags": [
                     "events"
                 ],
-                "summary": "Import a Timeful event from a remote instance",
+                "summary": "Import a Muster event from a remote instance",
                 "parameters": [
                     {
                         "description": "Object containing the URL of the remote event",

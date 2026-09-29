@@ -257,7 +257,7 @@ export default {
 
   metaInfo() {
     return {
-      title: this.isSignUp ? "Sign Up - Timeful" : "Sign In - Timeful",
+      title: this.isSignUp ? "Sign Up - Asymbl Muster" : "Sign In - Asymbl Muster",
     }
   },
 

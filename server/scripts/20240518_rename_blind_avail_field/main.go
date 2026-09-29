@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/shivasymbl/muster/server/db"
 	"go.mongodb.org/mongo-driver/bson"
-	"schej.it/server/db"
 )
 
 func main() {

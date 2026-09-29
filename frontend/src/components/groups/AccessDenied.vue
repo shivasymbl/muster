@@ -3,7 +3,7 @@
     class="tw-flex tw-h-full tw-flex-col tw-items-center tw-justify-center tw-p-2"
   >
     <v-img
-      alt="schejie sad"
+      alt="Muster mark"
       src="@/assets/brand/illustrations/robot-logo-dot.png"
       transition="fade-transition"
       contain

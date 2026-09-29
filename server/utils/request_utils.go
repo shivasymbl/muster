@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"schej.it/server/logger"
+	"github.com/shivasymbl/muster/server/logger"
 )
 
 func ParseArrayQueryParam(s string) []string {
@@ -17,7 +17,7 @@ func ParseArrayQueryParam(s string) []string {
 	return arr
 }
 
-// Returns origin of the given request (i.e. http://localhost:8080 or http://localhost:3002 or https://schej.it)
+// Returns origin of the given request (i.e. http://localhost:8080 or http://localhost:3002 or https://muster.asymbl.app)
 func GetOrigin(c *gin.Context) string {
 	return c.Request.Header.Get("Origin")
 }

@@ -380,8 +380,8 @@ definitions:
 host: localhost:3002/api
 info:
   contact: {}
-  description: This is the API for Schej.it!
-  title: Schej.it API
+  description: This is the API for Asymbl Muster.
+  title: Asymbl Muster API
   version: "1.0"
 paths:
   /analytics/change-email:
@@ -1210,7 +1210,7 @@ paths:
               shortId:
                 type: string
             type: object
-      summary: Import a Timeful event from a remote instance
+      summary: Import a Muster event from a remote instance
       tags:
       - events
   /user:

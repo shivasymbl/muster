@@ -3,8 +3,8 @@ package utils
 import (
 	"os"
 
+	"github.com/shivasymbl/muster/server/logger"
 	"gopkg.in/gomail.v2"
-	"schej.it/server/logger"
 )
 
 // Send email to the given email
@@ -14,7 +14,7 @@ func SendEmail(toEmail string, subject string, body string, contentType string) 
 	}
 
 	appPassword := os.Getenv("GMAIL_APP_PASSWORD")
-	fromEmail := os.Getenv("SCHEJ_EMAIL_ADDRESS")
+	fromEmail := os.Getenv("MUSTER_EMAIL_ADDRESS")
 	if appPassword == "" || fromEmail == "" {
 		return
 	}
@@ -32,4 +32,3 @@ func SendEmail(toEmail string, subject string, body string, contentType string) 
 		logger.StdErr.Println(err)
 	}
 }
-

@@ -35,3 +35,9 @@
 - Fix: added `//go:build ignore` so the package build skips them. They are not part of the server.
 - Source: `go build ./...` error output.
 
+## 2026-09-29 · Phase 3 · Privacy page
+
+- The privacy page is a plain-language draft. Asymbl legal still needs to review it before it is treated as the final policy.
+- Controller: Asymbl Inc. Contact: muster@asymbl.com.
+
+

@@ -117,9 +117,9 @@
           <div class="tw-text-black">
             Email us at
             <a
-              href="mailto:contact@timeful.app"
+              href="mailto:muster@asymbl.com"
               class="tw-text-black tw-underline"
-              >contact@timeful.app</a
+              >muster@asymbl.com</a
             >
             with any questions!
           </div>
@@ -180,7 +180,7 @@ export default {
   name: "Settings",
 
   metaInfo: {
-    title: "Settings - Timeful",
+    title: "Settings - Asymbl Muster",
   },
 
   components: { CalendarAccounts },

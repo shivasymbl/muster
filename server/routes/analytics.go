@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"schej.it/server/db"
-	"schej.it/server/models"
-	"schej.it/server/utils"
 )
 
 // BasicAuth middleware for analytics routes

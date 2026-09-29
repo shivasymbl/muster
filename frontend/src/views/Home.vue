@@ -84,7 +84,7 @@ export default {
   name: "Home",
 
   metaInfo: {
-    title: "Home - Timeful",
+    title: "Home - Asymbl Muster",
   },
 
   components: {

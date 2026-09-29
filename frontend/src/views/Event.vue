@@ -69,7 +69,7 @@
           <v-card-text>
             <p>
               <span class="tw-font-bold"
-                >You haven't filled out all pages of this Timeful.</span
+                >You haven't filled out all pages of this Muster.</span
               >
               Availability for the pages you didn't visit won't be saved.
             </p>
@@ -318,10 +318,10 @@
             block
             id="feedback-btn"
             text
-            href="https://forms.gle/A96i4TTWeKgH3P1W6"
+            href="mailto:muster@asymbl.com"
             target="_blank"
           >
-            Give feedback to Timeful team
+            Send feedback
           </v-btn>
           <!-- <div
             class="tw-w-full tw-border-t tw-border-solid tw-border-gray"
@@ -1804,7 +1804,7 @@ export default {
         this.$nextTick(() => {
           this.scheduleOverlapComponent = this.$refs.scheduleOverlap
         })
-        document.title = `${this.event.name} - Timeful`
+        document.title = `${this.event.name} - Asymbl Muster`
       }
     },
     scheduleOverlapComponent() {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"schej.it/server/models"
+	"github.com/shivasymbl/muster/server/models"
 )
 
 func TestGetUserInfo(t *testing.T) {

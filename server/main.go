@@ -19,21 +19,21 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"schej.it/server/db"
-	"schej.it/server/logger"
-	"schej.it/server/routes"
-	"schej.it/server/services/gcloud"
-	"schej.it/server/utils"
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/routes"
+	"github.com/shivasymbl/muster/server/services/gcloud"
+	"github.com/shivasymbl/muster/server/utils"
 
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "schej.it/server/docs"
+	_ "github.com/shivasymbl/muster/server/docs"
 )
 
-// @title Schej.it API
+// @title Asymbl Muster API
 // @version 1.0
-// @description This is the API for Schej.it!
+// @description This is the API for Asymbl Muster.
 
 // @host localhost:3002/api
 
@@ -100,7 +100,7 @@ func main() {
 	// Cors
 	corsOrigins := os.Getenv("CORS_ORIGINS")
 	if corsOrigins == "" {
-		corsOrigins = "https://www.schej.it,https://schej.it,https://www.timeful.app,https://timeful.app,http://localhost:8080"
+		corsOrigins = "https://muster.asymbl.app,http://localhost:8080"
 	}
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     strings.Split(corsOrigins, ","),
@@ -217,7 +217,7 @@ func noRouteHandler() gin.HandlerFunc {
 			// params["enableStickyFooter"] = true
 
 			if event != nil {
-				title := fmt.Sprintf("%s - Timeful (formerly Schej)", event.Name)
+				title := fmt.Sprintf("%s - Asymbl Muster", event.Name)
 				params["title"] = title
 				params["ogTitle"] = title
 

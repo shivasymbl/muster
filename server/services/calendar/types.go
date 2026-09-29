@@ -3,7 +3,7 @@ package calendar
 import (
 	"time"
 
-	"schej.it/server/models"
+	"github.com/shivasymbl/muster/server/models"
 )
 
 type CalendarProvider interface {

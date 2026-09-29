@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"schej.it/server/logger"
-	"schej.it/server/models"
 )
 
 // Optional overrides for a transactional email

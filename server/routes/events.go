@@ -14,18 +14,18 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/errs"
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/middleware"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/responses"
+	"github.com/shivasymbl/muster/server/services/calendar"
+	"github.com/shivasymbl/muster/server/services/gcloud"
+	"github.com/shivasymbl/muster/server/services/listmonk"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/db"
-	"schej.it/server/errs"
-	"schej.it/server/logger"
-	"schej.it/server/middleware"
-	"schej.it/server/models"
-	"schej.it/server/responses"
-	"schej.it/server/services/calendar"
-	"schej.it/server/services/gcloud"
-	"schej.it/server/services/listmonk"
-	"schej.it/server/utils"
 )
 
 func InitEvents(router *gin.RouterGroup) {
@@ -1648,7 +1648,7 @@ func archiveEvent(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// @Summary Import a Timeful event from a remote instance
+// @Summary Import a Muster event from a remote instance
 // @Tags events
 // @Accept json
 // @Produce json
