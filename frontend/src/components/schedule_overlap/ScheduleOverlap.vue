@@ -432,8 +432,8 @@
                                   class="tw-h-full tw-w-full tw-border-2"
                                   :class="
                                     timeBlock.type === 'available'
-                                      ? 'overlay-avail-shadow-green tw-border-[#00994CB3] tw-bg-[#00994C66]'
-                                      : 'overlay-avail-shadow-yellow tw-border-[#997700CC] tw-bg-[#FFE8B8B3]'
+                                      ? 'overlay-avail-shadow-green tw-border-[#038FF8B3] tw-bg-[#038FF866]'
+                                      : 'overlay-avail-shadow-yellow tw-border-[#FFBB00CC] tw-bg-[#FFF8E5B3]'
                                   "
                                 ></div>
                               </div>
@@ -3122,7 +3122,7 @@ export default {
               c += "tw-bg-white "
             } else {
               if (this.availabilityType === availabilityTypes.AVAILABLE) {
-                s.backgroundColor = "#00994C77"
+                s.backgroundColor = "#038FF877"
               } else if (
                 this.availabilityType === availabilityTypes.IF_NEEDED
               ) {
@@ -3145,7 +3145,7 @@ export default {
             }
           } else {
             if (this.availability.has(date.getTime())) {
-              s.backgroundColor = "#00994C77"
+              s.backgroundColor = "#038FF877"
             } else if (this.ifNeeded.has(date.getTime())) {
               c += "tw-bg-yellow "
             }
@@ -3160,7 +3160,7 @@ export default {
           if (this.parsedResponses[respondent]?.ifNeeded?.has(date.getTime())) {
             c += "tw-bg-yellow "
           } else {
-            s.backgroundColor = "#00994C77"
+            s.backgroundColor = "#038FF877"
           }
         } else {
           s.backgroundColor = "#E523230D"
@@ -3215,10 +3215,10 @@ export default {
             // Only set timeslot to green for the times that most people are available
             if (totalRespondents === 1 || this.overlayAvailability) {
               // Make single responses less saturated
-              const green = "#00994C88"
+              const green = "#038FF888"
               s.backgroundColor = green
             } else {
-              const green = "#00994C"
+              const green = "#038FF8"
               s.backgroundColor = green
             }
           }
@@ -3236,13 +3236,13 @@ export default {
               ) {
                 c += "tw-bg-yellow "
               } else {
-                const green = "#00994C88"
+                const green = "#038FF888"
                 s.backgroundColor = green
               }
             } else {
               // Determine color of timeslot based on number of people available
               const frac = numRespondents / max
-              const green = "#00994C"
+              const green = "#038FF8"
               let alpha
               if (!this.overlayAvailability) {
                 alpha = Math.floor(frac * (255 - 30))
@@ -3310,8 +3310,8 @@ export default {
       }
 
       // Change edit green
-      // if (classStyle.style.backgroundColor === "#00994C88") {
-      //   classStyle.style.backgroundColor = "#29BC6880"
+      // if (classStyle.style.backgroundColor === "#038FF888") {
+      //   classStyle.style.backgroundColor = "#35A6FA80"
       // }
 
       // Border style

@@ -11,7 +11,7 @@
         <div class="tw-flex tw-flex-col tw-items-center tw-gap-4">
           <v-img
             alt="schejie heart"
-            src="@/assets/schejie/heart.png"
+            src="@/assets/brand/illustrations/robot-thumbs-up.png"
             transition="fade-transition"
             contain
             class="tw-mb-0 tw-h-[150px] tw-flex-none sm:tw-h-[200px]"

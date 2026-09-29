@@ -35,7 +35,7 @@
         <v-expand-x-transition>
           <span
             v-if="isPremiumUser"
-            class="tw-ml-2 tw-cursor-default tw-rounded-md tw-bg-[linear-gradient(-25deg,#0a483d,#00994c,#126045,#0a483d)] tw-px-2 tw-py-1 tw-text-sm tw-font-semibold tw-text-white tw-opacity-80"
+            class="tw-ml-2 tw-cursor-default tw-rounded-md tw-bg-[linear-gradient(-25deg,#191D47,#038FF8,#0270C4,#191D47)] tw-px-2 tw-py-1 tw-text-sm tw-font-semibold tw-text-white tw-opacity-80"
           >
             Premium
           </span>
@@ -74,7 +74,7 @@
           color="primary"
           class="tw-mx-2 tw-rounded-md"
           :style="{
-            boxShadow: '0px 2px 8px 0px #00994C80 !important',
+            boxShadow: '0px 2px 8px 0px #038FF880 !important',
           }"
           @click="() => _createNew()"
         >
@@ -103,16 +103,20 @@
 </template>
 
 <style>
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans&display=swap");
-
 html {
   overflow-y: auto !important;
   /* overscroll-behavior: none; */
   scroll-behavior: smooth;
 }
 
+html,
+body,
+.v-application {
+  font-family: Inter, Arial, sans-serif;
+}
+
 * {
-  font-family: "DM Sans", sans-serif;
+  font-family: Inter, Arial, sans-serif;
   /* touch-action: manipulation !important; */
 }
 
@@ -152,9 +156,9 @@ html {
 .v-btn.v-btn--is-elevated.primary,
 .v-btn.v-btn--is-elevated.tw-bg-green,
 .v-btn.v-btn--is-elevated.tw-bg-white.tw-text-green {
-  -webkit-box-shadow: 0px 2px 8px 0px #00994c80 !important;
-  -moz-box-shadow: 0px 2px 8px 0px #00994c80 !important;
-  box-shadow: 0px 2px 8px 0px #00994c80 !important;
+  -webkit-box-shadow: 0px 2px 8px 0px #038FF880 !important;
+  -moz-box-shadow: 0px 2px 8px 0px #038FF880 !important;
+  box-shadow: 0px 2px 8px 0px #038FF880 !important;
   border: 1px solid theme("colors.light-green") !important;
 }
 
@@ -187,10 +191,10 @@ html {
     0px 8px 10px 0.5px rgba(0, 0, 0, 0.07), 0px 3px 14px 1px rgba(0, 0, 0, 0.06) !important;
 }
 .overlay-avail-shadow-green {
-  box-shadow: 0px 3px 6px 0px #1c7d454d !important;
+  box-shadow: 0px 3px 6px 0px #0270C44d !important;
 }
 .overlay-avail-shadow-yellow {
-  box-shadow: 0px 2px 8px 0px #e5a8004d !important;
+  box-shadow: 0px 2px 8px 0px #FFBB004d !important;
 }
 
 /** Switch  */

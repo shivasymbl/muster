@@ -3,7 +3,7 @@
     <div class="tw-text-sm tw-font-medium">Legend:</div>
     <div class="tw-flex tw-items-center tw-gap-2">
       <div
-        class="tw-h-4 tw-w-4 tw-rounded tw-border tw-border-gray tw-bg-[#00994C77]"
+        class="tw-h-4 tw-w-4 tw-rounded tw-border tw-border-gray tw-bg-[#038FF877]"
       ></div>
       <span class="tw-text-sm">Available</span>
     </div>

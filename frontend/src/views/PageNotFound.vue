@@ -4,7 +4,7 @@
   >
     <v-img
       alt="schejie sad"
-      src="@/assets/schejie/sad.png"
+      src="@/assets/brand/illustrations/robot-logo-dot.png"
       transition="fade-transition"
       contain
       class="tw-mb-6 tw-h-[150px] tw-flex-none sm:tw-h-[200px]"

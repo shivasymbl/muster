@@ -6,14 +6,7 @@
       <!-- Logo -->
       <div class="tw-mb-8 tw-flex tw-justify-center">
         <router-link :to="{ name: 'landing' }">
-          <v-img
-            alt="Timeful Logo"
-            class="shrink tw-cursor-pointer"
-            contain
-            src="@/assets/timeful_logo_with_text.png"
-            transition="fade-transition"
-            width="160"
-          />
+          <Logo color="navy" :width="160" />
         </router-link>
       </div>
 

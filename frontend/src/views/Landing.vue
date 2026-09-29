@@ -160,7 +160,7 @@
       </div>
       <v-img
         alt="schej character"
-        src="@/assets/schej_character.png"
+        src="@/assets/brand/illustrations/robot-point.png"
         :height="isPhone ? 200 : 300"
         transition="fade-transition"
         contain
@@ -305,7 +305,6 @@ import { calendarTypes } from "@/constants"
 import HowItWorksDialog from "@/components/HowItWorksDialog.vue"
 import { vueVimeoPlayer } from "vue-vimeo-player"
 import Footer from "@/components/Footer.vue"
-import PronunciationMenu from "@/components/PronunciationMenu.vue"
 import { mapState, mapMutations } from "vuex"
 import AuthUserMenu from "@/components/AuthUserMenu.vue"
 import FormerlyKnownAs from "@/components/FormerlyKnownAs.vue"
@@ -331,7 +330,6 @@ export default {
     HowItWorksDialog,
     vueVimeoPlayer,
     Footer,
-    PronunciationMenu,
     AuthUserMenu,
     FormerlyKnownAs,
   },
