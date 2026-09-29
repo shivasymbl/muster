@@ -1,0 +1,90 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - unattended-upgrades
+  - ca-certificates
+  - curl
+  - gnupg
+
+write_files:
+  - path: /usr/local/sbin/muster-mount
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      set -eu
+      dev=/dev/disk/by-id/scsi-0DO_Volume_muster-data
+      mkdir -p /mnt/muster_data
+      if [ ! -e "$dev" ]; then
+        echo "muster volume is not attached yet" >&2
+        exit 0
+      fi
+      if ! blkid "$dev" >/dev/null 2>&1; then
+        mkfs.ext4 -L muster-data "$dev"
+      fi
+      uuid=$(blkid -s UUID -o value "$dev")
+      grep -q '/mnt/muster_data' /etc/fstab || echo "UUID=${uuid} /mnt/muster_data ext4 defaults,nofail 0 2" >> /etc/fstab
+      mountpoint -q /mnt/muster_data || mount /mnt/muster_data
+      mkdir -p /mnt/muster_data/mongo /mnt/muster_data/backups
+  - path: /etc/systemd/system/muster-mount.service
+    content: |
+      [Unit]
+      Description=Mount the Muster data volume
+      After=local-fs.target
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/muster-mount
+      RemainAfterExit=yes
+      [Install]
+      WantedBy=multi-user.target
+  - path: /etc/caddy/Caddyfile
+    content: |
+      {
+          email it@asymbl.com
+      }
+      muster.asymbl.app {
+          reverse_proxy 127.0.0.1:3002
+          encode zstd gzip
+          header {
+              Strict-Transport-Security "max-age=31536000; includeSubDomains"
+              X-Content-Type-Options nosniff
+              X-Frame-Options SAMEORIGIN
+              Referrer-Policy strict-origin-when-cross-origin
+              -Server
+          }
+          log {
+              output file /var/log/caddy/muster.log
+              format json
+          }
+      }
+  - path: /etc/cron.d/muster-backup
+    content: |
+      SHELL=/bin/sh
+      PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      15 3 * * * deploy /opt/muster/backup.sh
+
+runcmd:
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - bash -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list'
+  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  - curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt -o /etc/apt/sources.list.d/caddy-stable.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin caddy
+  - systemctl enable --now docker
+  - systemctl enable --now muster-mount.service
+  - /usr/local/sbin/muster-mount || true
+  - id deploy >/dev/null 2>&1 || useradd --create-home --shell /bin/bash --groups docker deploy
+  - usermod -aG docker deploy
+  - install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
+  - cp /root/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys
+  - chown deploy:deploy /home/deploy/.ssh/authorized_keys
+  - chmod 600 /home/deploy/.ssh/authorized_keys
+  - sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+  - systemctl reload ssh || systemctl reload sshd
+  - echo 'unattended-upgrades unattended-upgrades/enable_auto_updates boolean true' | debconf-set-selections
+  - dpkg-reconfigure -f noninteractive unattended-upgrades
+  - install -d -o deploy -g deploy /opt/muster /var/log/caddy
+  - systemctl reload caddy || true

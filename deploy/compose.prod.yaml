@@ -1,0 +1,28 @@
+name: muster
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes: ["/mnt/muster_data/mongo:/data/db"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  app:
+    image: ${MUSTER_IMAGE}
+    restart: unless-stopped
+    env_file: [/opt/muster/.env]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGO_DB_NAME: muster
+      GIN_MODE: release
+      BASE_URL: https://muster.asymbl.app
+    ports: ["127.0.0.1:3002:3002"]
+    depends_on:
+      mongo: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

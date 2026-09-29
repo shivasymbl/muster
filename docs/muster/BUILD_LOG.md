@@ -40,4 +40,20 @@
 - The privacy page is a plain-language draft. Asymbl legal still needs to review it before it is treated as the final policy.
 - Controller: Asymbl Inc. Contact: muster@asymbl.com.
 
+## 2026-09-29 · Phase 5 · OAuth redirect URIs
+
+- Google and Microsoft both use `${window.location.origin}/auth` (`frontend/src/utils/sign_in_utils.js`). The server exchanges the code with the same origin (`server/services/auth/auth.go`).
+- Production redirect URI: `https://muster.asymbl.app/auth`
+- Authorized JavaScript origin: `https://muster.asymbl.app`
+- Google scopes still include `contacts.readonly` and `directory.readonly` because contact search is still in the product. Waiting on a decision before dropping them.
+- Logo for the consent screen: `frontend/src/assets/brand/muster-mark-1024.png`
+
+## 2026-09-29 · Phase 5 · Image smoke test and DNS
+
+- `docker build -t muster:local .` succeeded. `GET /api/health` returned `{"ok":true}` with the image pointed at a local Mongo 7 container. The containers were removed after the check.
+- `dig NS asymbl.app` returns Cloudflare (`maciej.ns.cloudflare.com`, `liv.ns.cloudflare.com`). The zone is not on DigitalOcean, so no DigitalOcean DNS record was created.
+- Depot, DigitalOcean, Google, and Microsoft credentials are not in the environment. Droplet creation and the Depot push are waiting on those values. The A record cannot be handed over until the droplet IP exists.
+
+
+
 
