@@ -125,6 +125,9 @@ func main() {
 
 	// Init routes
 	apiRouter := router.Group("/api")
+	apiRouter.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
 	routes.InitAuth(apiRouter)
 	routes.InitUser(apiRouter)
 	routes.InitUsers(apiRouter)

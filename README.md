@@ -1,51 +1,54 @@
-<div align="center">
-  
-<img src="./.github/assets/images/logo.svg" width="200px" alt="Timeful logo" />
+<img src="./frontend/src/assets/brand/muster-wordmark-navy.png" width="220" alt="Asymbl Muster" />
 
-</div>
-<br />
-<div align="center">
-
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-orange.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Donate](https://img.shields.io/badge/-Donate%20with%20Paypal-blue?logo=paypal)](https://www.paypal.com/donate/?hosted_button_id=KWCH6LGJCP6E6)
-[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/timeful_app?label=%40timeful_app&labelColor=white)](https://x.com/timeful_app)
-[![Discord](https://img.shields.io/badge/-Join%20Discord-7289DA?logo=discord&logoColor=white)](https://discord.gg/v6raNqYxx3)
-[![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/schej?label=join%20r%2Fschej)](https://www.reddit.com/r/schej/)
-
-</div>
-
-<img src="./.github/assets/images/hero.jpg" alt="Timeful hero" />
-
-Timeful is a scheduling platform helps you find the best time for a group to meet. It is a free availability poll that is easy to use and integrates with your calendar.
-
-Hosted version of the site: https://timeful.app
-
-Built with [Vue 2](https://github.com/vuejs/vue), [MongoDB](https://github.com/mongodb/mongo), [Go](https://github.com/golang/go), and [TailwindCSS](https://github.com/tailwindlabs/tailwindcss)
-
-## Demo
-
-[![demo video](http://markdown-videos-api.jorgenkh.no/youtube/vFkBC8BrkOk)](https://www.youtube.com/watch?v=vFkBC8BrkOk)
+Asymbl Muster helps a group find a time that works for everyone. Send one link, everyone connects their calendar, and Muster shows the overlap. Hosted at https://muster.asymbl.app.
 
 ## Features
 
 - See when everybody's availability overlaps
-- Easily specify date + time ranges to meet between
-- Google calendar, Outlook, Apple calendar integration
-- "Available" vs. "If needed" times
-- Determine when a subset of people are available
-- Schedule across different time zones
-- Email notifications + reminders
-- Duplicating polls
-- Availability groups - stay up to date with people's real-time calendar availability
+- Specify the dates and hours a group can meet
+- Google Calendar, Outlook, and Apple Calendar
+- Available and if-needed times
+- See when a subset of people is free
+- Schedule across time zones
+- Email notifications and reminders, when email is configured
+- Duplicate a poll
+- Availability groups
 - Export availability as CSV
-- Only show responses to event creator
+- Show responses only to the person who created the event
+- Import a When2meet poll
 
-## Plugin API
+## Tech stack
 
-Read these docs to design your own browser plugins to get + set availability on Timeful events programmatically!
+Vue 2, Vuetify 2, Tailwind 3, Go (Gin), MongoDB 7.
 
-[Plugin API Docs](./PLUGIN_API_README.md)
+## Local development
 
-## Self-hosting
+Frontend, from `frontend/` with Node 18:
 
-See the [Deployment Guide](./DEPLOYMENT.md) for Docker Compose and NixOS setup instructions.
+```
+npm ci
+npm run serve
+```
+
+Server, from `server/`:
+
+```
+cp .env.template .env
+go run .
+```
+
+Set `SESSION_SECRET` (at least 32 characters), `ENCRYPTION_KEY`, and the Google OAuth client values before signing in. `BASE_URL` defaults to `https://muster.asymbl.app`. For local links, set `BASE_URL=http://localhost:8080` and `CORS_ORIGINS=http://localhost:8080`. Mongo uses `MONGO_DB_NAME`, which defaults to `muster`.
+
+`compose.yaml` starts Mongo, the frontend build, and the API for local Docker.
+
+## Deployment
+
+Production runs as one image on a DigitalOcean droplet, built with Depot. See [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+## License
+
+Muster is licensed under AGPL-3.0. Anyone using the hosted service can get the source from the source-code link in the footer.
+
+## Credits
+
+Muster is a fork of Timeful (https://github.com/schej-it/timeful.app) by the Schej team, used under AGPL-3.0.

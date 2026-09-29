@@ -1,10 +1,10 @@
 # Plugin API Documentation
 
-This document describes the plugin API for interacting with Timeful events. Plugins can retrieve and update user availability through `get-slots` and `set-slots` methods.
+This document describes the plugin API for interacting with Muster events. Plugins can retrieve and update user availability through `get-slots` and `set-slots` methods.
 
 ## Overview
 
-Plugins communicate with the Timeful frontend via `window.postMessage`. The frontend validates incoming messages and routes them to the appropriate handler method. Responses are sent back using the same mechanism.
+Plugins communicate with the Muster frontend via `window.postMessage`. The frontend validates incoming messages and routes them to the appropriate handler method. Responses are sent back using the same mechanism.
 
 ## Message Handler
 
