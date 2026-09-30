@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"schej.it/server/db"
+	"github.com/shivasymbl/muster/server/db"
 )
 
 func TestGetDailyUserLogByDate(t *testing.T) {

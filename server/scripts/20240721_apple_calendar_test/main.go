@@ -8,7 +8,7 @@ import (
 
 	"github.com/jonyTF/go-webdav"
 	"github.com/jonyTF/go-webdav/caldav"
-	"schej.it/server/utils"
+	"github.com/shivasymbl/muster/server/utils"
 )
 
 func main() {

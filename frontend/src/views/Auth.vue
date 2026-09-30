@@ -135,21 +135,6 @@ export default {
               })
             }
             break
-          case authTypes.UPGRADE:
-            try {
-              const params = JSON.parse(state.upgradeParams)
-              const res = await post("/stripe/create-checkout-session", {
-                priceId: params.priceId,
-                userId: this.authUser._id,
-                isSubscription: params.isSubscription,
-                originUrl: params.originUrl,
-              })
-              window.location.href = res.url
-            } catch (e) {
-              console.error(e)
-              this.$router.replace({ name: "home" })
-            }
-            break
           default:
             this.$router.replace({ name: "home" })
         }

@@ -68,19 +68,14 @@ const routes = [
     component: () => import("@/views/PrivacyPolicy.vue"),
   },
   {
+    path: "/terms",
+    name: "terms",
+    component: () => import("@/views/Terms.vue"),
+  },
+  {
     path: "/cookie-settings",
     name: "cookie-settings",
     component: () => import("@/components/CookieSettings.vue"),
-  },
-  {
-    path: "/stripe-redirect",
-    name: "stripe-redirect",
-    component: () => import("@/views/StripeRedirect.vue"),
-  },
-  {
-    path: "/test",
-    name: "test",
-    component: () => import("@/views/Test.vue"),
   },
   {
     path: "*",
@@ -114,12 +109,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  if (to.name !== "event" && to.name !== "group") {
-    const fusetag = window.fusetag || (window.fusetag = { que: [] })
-    fusetag.que.push(function () {
-      fusetag.destroySticky()
-    })
-  }
 })
 
 export default router

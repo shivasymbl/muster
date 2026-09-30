@@ -1,6 +1,5 @@
 <template>
   <v-app>
-    <DiscordBanner />
     <AutoSnackbar color="error" :text="error" />
     <AutoSnackbar color="tw-bg-blue" :text="info" />
     <SignInNotSupportedDialog v-model="webviewDialog" />
@@ -16,11 +15,6 @@
       :no-tabs="newDialogOptions.eventOnly"
       :folder-id="newDialogOptions.folderId"
     />
-    <UpgradeDialog
-      :value="upgradeDialogVisible"
-      @input="handleUpgradeDialogInput"
-    />
-    <UpvoteRedditSnackbar />
     <div
       v-if="showHeader"
       class="tw-fixed tw-z-40 tw-h-14 tw-w-screen tw-bg-white sm:tw-h-16"
@@ -30,16 +24,8 @@
         class="tw-relative tw-m-auto tw-flex tw-h-full tw-max-w-6xl tw-items-center tw-justify-center tw-px-4"
       >
         <router-link :to="{ name: 'home' }">
-          <Logo type="timeful" />
+          <Logo color="navy" :width="110" />
         </router-link>
-        <v-expand-x-transition>
-          <span
-            v-if="isPremiumUser"
-            class="tw-ml-2 tw-cursor-default tw-rounded-md tw-bg-[linear-gradient(-25deg,#0a483d,#00994c,#126045,#0a483d)] tw-px-2 tw-py-1 tw-text-sm tw-font-semibold tw-text-white tw-opacity-80"
-          >
-            Premium
-          </span>
-        </v-expand-x-transition>
 
         <v-spacer />
 
@@ -61,20 +47,12 @@
         >
           Give feedback
         </v-btn>
-        <!-- <v-btn
-          v-if="!isPhone"
-          text
-          href="https://www.paypal.com/donate/?hosted_button_id=KWCH6LGJCP6E6"
-          target="_blank"
-        >
-          Donate
-        </v-btn> -->
         <v-btn
           v-if="$route.name === 'home' && !isPhone"
           color="primary"
           class="tw-mx-2 tw-rounded-md"
           :style="{
-            boxShadow: '0px 2px 8px 0px #00994C80 !important',
+            boxShadow: '0px 2px 8px 0px #038FF880 !important',
           }"
           @click="() => _createNew()"
         >
@@ -103,16 +81,20 @@
 </template>
 
 <style>
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans&display=swap");
-
 html {
   overflow-y: auto !important;
   /* overscroll-behavior: none; */
   scroll-behavior: smooth;
 }
 
+html,
+body,
+.v-application {
+  font-family: Inter, Arial, sans-serif;
+}
+
 * {
-  font-family: "DM Sans", sans-serif;
+  font-family: Inter, Arial, sans-serif;
   /* touch-action: manipulation !important; */
 }
 
@@ -152,9 +134,9 @@ html {
 .v-btn.v-btn--is-elevated.primary,
 .v-btn.v-btn--is-elevated.tw-bg-green,
 .v-btn.v-btn--is-elevated.tw-bg-white.tw-text-green {
-  -webkit-box-shadow: 0px 2px 8px 0px #00994c80 !important;
-  -moz-box-shadow: 0px 2px 8px 0px #00994c80 !important;
-  box-shadow: 0px 2px 8px 0px #00994c80 !important;
+  -webkit-box-shadow: 0px 2px 8px 0px #038FF880 !important;
+  -moz-box-shadow: 0px 2px 8px 0px #038FF880 !important;
+  box-shadow: 0px 2px 8px 0px #038FF880 !important;
   border: 1px solid theme("colors.light-green") !important;
 }
 
@@ -187,10 +169,10 @@ html {
     0px 8px 10px 0.5px rgba(0, 0, 0, 0.07), 0px 3px 14px 1px rgba(0, 0, 0, 0.06) !important;
 }
 .overlay-avail-shadow-green {
-  box-shadow: 0px 3px 6px 0px #1c7d454d !important;
+  box-shadow: 0px 3px 6px 0px #0270C44d !important;
 }
 .overlay-avail-shadow-yellow {
-  box-shadow: 0px 2px 8px 0px #e5a8004d !important;
+  box-shadow: 0px 2px 8px 0px #FFBB004d !important;
 }
 
 /** Switch  */
@@ -229,7 +211,7 @@ html {
 </style>
 
 <script>
-import { mapMutations, mapState, mapActions, mapGetters } from "vuex"
+import { mapMutations, mapState, mapActions } from "vuex"
 import {
   get,
   getLocation,
@@ -237,25 +219,15 @@ import {
   post,
   signInGoogle,
   signInOutlook,
-  isPremiumUser,
 } from "@/utils"
-import {
-  authTypes,
-  calendarTypes,
-  eventTypes,
-  numFreeEvents,
-  upgradeDialogTypes,
-} from "@/constants"
+import { authTypes, calendarTypes, eventTypes } from "@/constants"
 import AutoSnackbar from "@/components/AutoSnackbar"
 import AuthUserMenu from "@/components/AuthUserMenu.vue"
 import SignInNotSupportedDialog from "@/components/SignInNotSupportedDialog.vue"
-import UpvoteRedditSnackbar from "@/components/UpvoteRedditSnackbar.vue"
 import Logo from "@/components/Logo.vue"
 import isWebview from "is-ua-webview"
 import NewDialog from "./components/NewDialog.vue"
-import UpgradeDialog from "@/components/pricing/UpgradeDialog.vue"
 import SignInDialog from "@/components/SignInDialog.vue"
-import DiscordBanner from "@/components/DiscordBanner.vue"
 
 export default {
   name: "App",
@@ -271,11 +243,8 @@ export default {
     AuthUserMenu,
     SignInNotSupportedDialog,
     NewDialog,
-    UpvoteRedditSnackbar,
     Logo,
-    UpgradeDialog,
     SignInDialog,
-    DiscordBanner,
   },
 
   data: () => ({
@@ -287,15 +256,7 @@ export default {
   }),
 
   computed: {
-    ...mapGetters(["isPremiumUser"]),
-    ...mapState([
-      "authUser",
-      "error",
-      "info",
-      "enablePaywall",
-      "upgradeDialogVisible",
-      "newDialogOptions",
-    ]),
+    ...mapState(["authUser", "error", "info", "newDialogOptions"]),
     isPhone() {
       return isPhone(this.$vuetify)
     },
@@ -305,7 +266,8 @@ export default {
         this.$route.name !== "auth" &&
         this.$route.name !== "sign-in" &&
         this.$route.name !== "sign-up" &&
-        this.$route.name !== "privacy-policy"
+        this.$route.name !== "privacy-policy" &&
+        this.$route.name !== "terms"
       )
     },
     showFeedbackBtn() {
@@ -325,19 +287,8 @@ export default {
   },
 
   methods: {
-    ...mapMutations([
-      "setAuthUser",
-      "setSignUpFormEnabled",
-      "setPricingPageConversion",
-      "setEnablePaywall",
-      "setFeatureFlagsLoaded",
-    ]),
-    ...mapActions([
-      "getEvents",
-      "showUpgradeDialog",
-      "hideUpgradeDialog",
-      "createNew",
-    ]),
+    ...mapMutations(["setAuthUser", "setSignUpFormEnabled", "setFeatureFlagsLoaded"]),
+    ...mapActions(["getEvents", "createNew"]),
     handleScroll(e) {
       this.scrollY = window.scrollY
     },
@@ -408,21 +359,10 @@ export default {
     setFeatureFlags() {
       if (!this.$posthog) return
 
-      // this.setSignUpFormEnabled(this.$posthog.isFeatureEnabled("sign-up-form"))
-      // this.setPricingPageConversion(
-      // this.$posthog.getFeatureFlag("pricing-page-conversion")
-      // )
-      // )
-      // this.setEnablePaywall(this.$posthog.isFeatureEnabled("enable-paywall"))
       this.setFeatureFlagsLoaded(true)
     },
     trackFeedbackClick() {
       this.$posthog.capture("give_feedback_button_clicked")
-    },
-    handleUpgradeDialogInput(value) {
-      if (!value) {
-        this.hideUpgradeDialog()
-      }
     },
   },
 

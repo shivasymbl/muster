@@ -6,14 +6,7 @@
       <!-- Logo -->
       <div class="tw-mb-8 tw-flex tw-justify-center">
         <router-link :to="{ name: 'landing' }">
-          <v-img
-            alt="Timeful Logo"
-            class="shrink tw-cursor-pointer"
-            contain
-            src="@/assets/timeful_logo_with_text.png"
-            transition="fade-transition"
-            width="160"
-          />
+          <Logo color="navy" :width="160" />
         </router-link>
       </div>
 
@@ -100,6 +93,10 @@
             </div>
             <div class="tw-text-center tw-text-xs">
               By continuing, you agree to our
+              <router-link class="tw-text-blue" :to="{ name: 'terms' }">
+                terms
+              </router-link>
+              and
               <router-link
                 class="tw-text-blue"
                 :to="{ name: 'privacy-policy' }"
@@ -264,18 +261,12 @@ export default {
 
   metaInfo() {
     return {
-      title: this.isSignUp ? "Sign Up - Timeful" : "Sign In - Timeful",
+      title: this.isSignUp ? "Sign Up - Asymbl Muster" : "Sign In - Asymbl Muster",
     }
   },
 
   components: {
     Logo,
-  },
-
-  computed: {
-    upgradeRedirect() {
-      return this.$route.query.redirect === "upgrade"
-    },
   },
 
   data() {
@@ -300,9 +291,7 @@ export default {
   methods: {
     ...mapMutations(["setAuthUser"]),
     signIn(provider) {
-      const state = this.upgradeRedirect
-        ? { type: authTypes.UPGRADE, upgradeParams: this.$route.query.upgradeParams }
-        : null
+      const state = null
       if (provider === calendarTypes.GOOGLE) {
         signInGoogle({ state, selectAccount: true })
       } else if (provider === calendarTypes.OUTLOOK) {
@@ -413,22 +402,7 @@ export default {
         this.verifying = false
       }
     },
-    async handlePostAuthRedirect(user) {
-      if (this.upgradeRedirect) {
-        try {
-          const params = JSON.parse(this.$route.query.upgradeParams)
-          const res = await post("/stripe/create-checkout-session", {
-            priceId: params.priceId,
-            userId: user._id,
-            isSubscription: params.isSubscription,
-            originUrl: params.originUrl,
-          })
-          window.location.href = res.url
-          return
-        } catch (e) {
-          console.error(e)
-        }
-      }
+    async handlePostAuthRedirect() {
       this.$router.replace({ name: "home" })
     },
     startResendCooldown() {

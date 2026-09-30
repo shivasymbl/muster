@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -5,9 +7,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"schej.it/server/db"
-	"schej.it/server/models"
 )
 
 func main() {

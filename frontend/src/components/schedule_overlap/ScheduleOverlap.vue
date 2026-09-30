@@ -432,8 +432,8 @@
                                   class="tw-h-full tw-w-full tw-border-2"
                                   :class="
                                     timeBlock.type === 'available'
-                                      ? 'overlay-avail-shadow-green tw-border-[#00994CB3] tw-bg-[#00994C66]'
-                                      : 'overlay-avail-shadow-yellow tw-border-[#997700CC] tw-bg-[#FFE8B8B3]'
+                                      ? 'overlay-avail-shadow-green tw-border-[#038FF8B3] tw-bg-[#038FF866]'
+                                      : 'overlay-avail-shadow-yellow tw-border-[#FFBB00CC] tw-bg-[#FFF8E5B3]'
                                   "
                                 ></div>
                               </div>
@@ -806,19 +806,6 @@
                 </div>
               </div>
               <template v-else>
-                <PubliftAd
-                  :showAd="showAds"
-                  fuseId="meet_incontent"
-                  class="-tw-mx-4 tw-my-4 tw-block !tw-rounded-none sm:tw-hidden"
-                >
-                  <div class="tw-h-[375px] publift-m:tw-h-[90px]">
-                    <div
-                      id="meet_incontent"
-                      data-fuse="meet_incontent"
-                      class="tw-flex tw-items-center tw-justify-center"
-                    ></div>
-                  </div>
-                </PubliftAd>
                 <RespondentsList
                   ref="respondentsList"
                   :event="event"
@@ -1045,7 +1032,6 @@ import {
   getScheduleTimezoneOffset,
   getTimezoneReferenceDateForEvent,
   timeNumToTimeString,
-  isPremiumUser,
   prefersStartOnMonday,
 } from "@/utils"
 import {
@@ -1055,13 +1041,10 @@ import {
   guestUserId,
   timeTypes,
   timeslotDurations,
-  upgradeDialogTypes,
 } from "@/constants"
-import { mapMutations, mapActions, mapState, mapGetters } from "vuex"
+import { mapMutations, mapActions, mapState } from "vuex"
 import UserAvatarContent from "@/components/UserAvatarContent.vue"
 import CalendarAccounts from "@/components/settings/CalendarAccounts.vue"
-import Advertisement from "@/components/event/Advertisement.vue"
-import PubliftAd from "@/components/event/PubliftAd.vue"
 import SignUpBlock from "@/components/sign_up_form/SignUpBlock.vue"
 import SignUpCalendarBlock from "@/components/sign_up_form/SignUpCalendarBlock.vue"
 import SignUpBlocksList from "@/components/sign_up_form/SignUpBlocksList.vue"
@@ -1091,7 +1074,6 @@ export default {
   name: "ScheduleOverlap",
   props: {
     event: { type: Object, required: true },
-    ownerIsPremium: { type: Boolean, default: false },
     fromEditEvent: { type: Boolean, default: false },
 
     loadingCalendarEvents: { type: Boolean, default: false }, // Whether we are currently loading the calendar events
@@ -1099,7 +1081,7 @@ export default {
     sampleCalendarEventsByDay: { type: Array, required: false }, // Sample calendar events to use for example calendars
     calendarPermissionGranted: { type: Boolean, default: false }, // Whether user has granted google calendar permissions
 
-    weekOffset: { type: Number, default: 0 }, // Week offset used for displaying calendar events on weekly Timefuls
+    weekOffset: { type: Number, default: 0 }, // Week offset used for displaying calendar events on weekly Musters
 
     alwaysShowCalendarEvents: { type: Boolean, default: false }, // Whether to show calendar events all the time
     noEventNames: { type: Boolean, default: false }, // Whether to show "busy" instead of the event name
@@ -1248,14 +1230,6 @@ export default {
   },
   computed: {
     ...mapState(["authUser", "overlayAvailabilitiesEnabled"]),
-    ...mapGetters(["isPremiumUser"]),
-    showAds() {
-      return (
-        !this.ownerIsPremium &&
-        !this.isPremiumUser &&
-        this.state !== this.states.SET_SPECIFIC_TIMES
-      )
-    },
     /** Returns the width of the right side of the calendar */
     rightSideWidth() {
       if (this.isPhone) return "100%"
@@ -1748,7 +1722,7 @@ export default {
       style.height = `calc(${height} * 1rem)`
       return style
     },
-    /** Parses the responses to the Timeful, makes necessary changes based on the type of event, and returns it */
+    /** Parses the responses to the Muster, makes necessary changes based on the type of event, and returns it */
     parsedResponses() {
       const parsed = {}
 
@@ -2291,7 +2265,7 @@ export default {
   },
   methods: {
     ...mapMutations(["setAuthUser"]),
-    ...mapActions(["showInfo", "showError", "showUpgradeDialog"]),
+    ...mapActions(["showInfo", "showError"]),
 
     // -----------------------------------
     //#region Date
@@ -3122,7 +3096,7 @@ export default {
               c += "tw-bg-white "
             } else {
               if (this.availabilityType === availabilityTypes.AVAILABLE) {
-                s.backgroundColor = "#00994C77"
+                s.backgroundColor = "#038FF877"
               } else if (
                 this.availabilityType === availabilityTypes.IF_NEEDED
               ) {
@@ -3145,7 +3119,7 @@ export default {
             }
           } else {
             if (this.availability.has(date.getTime())) {
-              s.backgroundColor = "#00994C77"
+              s.backgroundColor = "#038FF877"
             } else if (this.ifNeeded.has(date.getTime())) {
               c += "tw-bg-yellow "
             }
@@ -3160,7 +3134,7 @@ export default {
           if (this.parsedResponses[respondent]?.ifNeeded?.has(date.getTime())) {
             c += "tw-bg-yellow "
           } else {
-            s.backgroundColor = "#00994C77"
+            s.backgroundColor = "#038FF877"
           }
         } else {
           s.backgroundColor = "#E523230D"
@@ -3215,10 +3189,10 @@ export default {
             // Only set timeslot to green for the times that most people are available
             if (totalRespondents === 1 || this.overlayAvailability) {
               // Make single responses less saturated
-              const green = "#00994C88"
+              const green = "#038FF888"
               s.backgroundColor = green
             } else {
-              const green = "#00994C"
+              const green = "#038FF8"
               s.backgroundColor = green
             }
           }
@@ -3236,13 +3210,13 @@ export default {
               ) {
                 c += "tw-bg-yellow "
               } else {
-                const green = "#00994C88"
+                const green = "#038FF888"
                 s.backgroundColor = green
               }
             } else {
               // Determine color of timeslot based on number of people available
               const frac = numRespondents / max
-              const green = "#00994C"
+              const green = "#038FF8"
               let alpha
               if (!this.overlayAvailability) {
                 alpha = Math.floor(frac * (255 - 30))
@@ -3310,8 +3284,8 @@ export default {
       }
 
       // Change edit green
-      // if (classStyle.style.backgroundColor === "#00994C88") {
-      //   classStyle.style.backgroundColor = "#29BC6880"
+      // if (classStyle.style.backgroundColor === "#038FF888") {
+      //   classStyle.style.backgroundColor = "#35A6FA80"
       // }
 
       // Border style
@@ -3566,15 +3540,6 @@ export default {
     /** Redirect user to Google Calendar to finish the creation of the event */
     confirmScheduleEvent(googleCalendar = true) {
       if (!this.curScheduledEvent) return
-      // if (!isPremiumUser(this.authUser)) {
-      //   this.showUpgradeDialog({
-      //     type: upgradeDialogTypes.SCHEDULE_EVENT,
-      //     data: {
-      //       scheduledEvent: this.curScheduledEvent,
-      //     },
-      //   })
-      //   return
-      // }
 
       this.$posthog.capture("schedule_event_confirmed")
       // Get start date, and end date from the area that the user has dragged out
@@ -3626,13 +3591,13 @@ export default {
         url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
           this.event.name
         )}&dates=${start}/${end}&details=${encodeURIComponent(
-          "\n\nThis event was scheduled with Timeful: https://timeful.app/e/"
+          "\n\nThis event was scheduled with Asymbl Muster: https://muster.asymbl.app/e/"
         )}${eventId}&ctz=${this.curTimezone.value}&add=${emailsString}`
       } else {
         url = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(
           this.event.name
         )}&body=${encodeURIComponent(
-          "\n\nThis event was scheduled with Timeful: https://timeful.app/e/" +
+          "\n\nThis event was scheduled with Asymbl Muster: https://muster.asymbl.app/e/" +
             eventId
         )}&startdt=${startDate.toISOString()}&enddt=${endDate.toISOString()}&location=${encodeURIComponent(
           this.event.location || ""
@@ -4647,8 +4612,6 @@ export default {
     ToolRow,
     CalendarAccounts,
     RespondentsList,
-    Advertisement,
-    PubliftAd,
     GCalWeekSelector,
     WorkingHoursToggle,
     SignUpBlock,

@@ -3,7 +3,7 @@
     <div
       class="tw-text-md tw-flex tw-flex-col tw-items-center tw-gap-2 tw-font-normal"
     >
-      Create a Timeful account to link your
+      Create a Muster account to link your
       <div class="tw-flex tw-items-center tw-gap-1">
         <v-img
           class="-tw-mt-1 tw-flex-initial"
@@ -24,6 +24,13 @@
         <router-link
           class="tw-text-blue"
           target="_blank"
+          :to="{ name: 'terms' }"
+          >terms</router-link
+        >
+        and
+        <router-link
+          class="tw-text-blue"
+          target="_blank"
           :to="{ name: 'privacy-policy' }"
           >privacy policy</router-link
         >
@@ -36,7 +43,7 @@
         <v-icon class="tw-mx-2 tw-text-green" size="16"
           >mdi-check-circle</v-icon
         >
-        Timeful account created
+        Muster account created
       </div>
     </div>
     <div class="tw-flex tw-items-center tw-gap-2">

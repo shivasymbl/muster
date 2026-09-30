@@ -1,0 +1,19 @@
+Asymbl Muster
+Copyright (C) 2026 Asymbl Inc
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Muster is a fork of Timeful (https://github.com/schej-it/timeful.app)
+by the Schej team, taken on 2026-09-29 at commit cd03b3fc
+(tag upstream-base-20260929).
+
+What this fork changes:
+
+- Rebrand to Asymbl Muster, including the palette, wordmark, and landing page
+- Removal of premium gating, ads, Stripe, and the upstream Discord, Slack, and Reddit integrations
+- Deployment aimed at https://muster.asymbl.app
+
+The original license is in LICENSE and is unchanged.

@@ -1,18 +1,19 @@
 <template>
-  <v-dialog v-model="dialog" max-width="800px" content-class="tw-m-0 pa-0">
-    <div class="video-container">
-      <iframe
-        width="100%"
-        height="100%"
-        src="https://www.youtube.com/embed/vFkBC8BrkOk?si=pF64JAIyDhom_1do&autoplay=1"
-        title="YouTube video player - How Timeful Works"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen
-      >
-      </iframe>
-    </div>
+  <v-dialog v-model="dialog" max-width="32rem">
+    <v-card class="tw-p-2">
+      <v-card-title class="tw-text-xl tw-font-medium">How Muster works</v-card-title>
+      <v-card-text class="tw-text-very-dark-gray">
+        <ol class="tw-list-decimal tw-space-y-2 tw-pl-5">
+          <li>Create a Muster and pick the dates and hours you want to offer.</li>
+          <li>Share one link in email, WhatsApp, Slack, or Teams.</li>
+          <li>See the overlap, pick the slot, and send the invite.</li>
+        </ol>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn text @click="dialog = false">Close</v-btn>
+      </v-card-actions>
+    </v-card>
   </v-dialog>
 </template>
 
@@ -20,7 +21,7 @@
 export default {
   name: "HowItWorksDialog",
   props: {
-    value: Boolean, // v-model for dialog visibility
+    value: Boolean,
   },
   computed: {
     dialog: {
@@ -34,21 +35,3 @@ export default {
   },
 }
 </script>
-
-<style scoped>
-.video-container {
-  position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-  height: 0;
-  overflow: hidden;
-  background-color: #000; /* Optional: background for when video loads */
-}
-
-.video-container iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-</style>

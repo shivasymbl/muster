@@ -1,4 +1,4 @@
-# timeful
+# Asymbl Muster frontend
 
 ## Project setup
 

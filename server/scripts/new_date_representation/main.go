@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/db"
-	"schej.it/server/models"
 )
 
 func main() {
