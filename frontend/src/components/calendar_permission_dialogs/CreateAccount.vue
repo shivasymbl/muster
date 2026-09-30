@@ -24,6 +24,13 @@
         <router-link
           class="tw-text-blue"
           target="_blank"
+          :to="{ name: 'terms' }"
+          >terms</router-link
+        >
+        and
+        <router-link
+          class="tw-text-blue"
+          target="_blank"
           :to="{ name: 'privacy-policy' }"
           >privacy policy</router-link
         >

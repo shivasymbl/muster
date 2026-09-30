@@ -43,7 +43,23 @@ write_files:
           email it@asymbl.com
       }
       muster.asymbl.app {
-          reverse_proxy 127.0.0.1:3002
+          handle /legal-assets/* {
+              root * /var/www/muster
+              file_server
+          }
+          handle /privacy-policy {
+              root * /var/www/muster
+              rewrite * /privacy-policy.html
+              file_server
+          }
+          handle /terms {
+              root * /var/www/muster
+              rewrite * /terms.html
+              file_server
+          }
+          handle {
+              reverse_proxy 127.0.0.1:3002
+          }
           encode zstd gzip
           header {
               Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -86,5 +102,6 @@ runcmd:
   - systemctl reload ssh || systemctl reload sshd
   - echo 'unattended-upgrades unattended-upgrades/enable_auto_updates boolean true' | debconf-set-selections
   - dpkg-reconfigure -f noninteractive unattended-upgrades
-  - install -d -o deploy -g deploy /opt/muster /var/log/caddy
-  - systemctl reload caddy || true
+  - install -d -o deploy -g deploy /opt/muster
+  - install -d -o caddy -g caddy /var/log/caddy /var/www/muster
+  - systemctl enable --now caddy || true

@@ -18,6 +18,11 @@
           class="tw-hidden tw-text-sm tw-font-medium tw-text-ink sm:tw-inline"
           >Privacy</router-link
         >
+        <router-link
+          :to="{ name: 'terms' }"
+          class="tw-hidden tw-text-sm tw-font-medium tw-text-ink sm:tw-inline"
+          >Terms</router-link
+        >
         <AuthUserMenu v-if="authUser" class="tw-ml-1" />
         <v-btn
           v-else

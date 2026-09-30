@@ -18,6 +18,9 @@
         <router-link :to="{ name: 'privacy-policy' }" class="tw-text-ink">
           Privacy
         </router-link>
+        <router-link :to="{ name: 'terms' }" class="tw-text-ink">
+          Terms
+        </router-link>
         <a href="https://github.com/shivasymbl/muster" class="tw-text-ink">
           Source code
         </a>

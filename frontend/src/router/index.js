@@ -68,6 +68,11 @@ const routes = [
     component: () => import("@/views/PrivacyPolicy.vue"),
   },
   {
+    path: "/terms",
+    name: "terms",
+    component: () => import("@/views/Terms.vue"),
+  },
+  {
     path: "/cookie-settings",
     name: "cookie-settings",
     component: () => import("@/components/CookieSettings.vue"),

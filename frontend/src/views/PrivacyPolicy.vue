@@ -1,7 +1,9 @@
 <template>
-  <div class="tw-mx-auto tw-max-w-3xl tw-px-4 tw-py-12 tw-text-ink">
-    <h1 class="tw-text-3xl tw-font-semibold">Privacy policy</h1>
-    <p class="tw-mt-2 tw-text-sm tw-text-slate">
+  <LegalLayout>
+    <h1 class="tw-mt-2 tw-text-4xl tw-font-semibold">Privacy policy</h1>
+    <p
+      class="tw-mt-4 tw-inline-block tw-rounded-full tw-bg-ligher-green tw-px-3 tw-py-2 tw-text-sm tw-text-slate"
+    >
       This page needs review by Asymbl legal before it is treated as final.
     </p>
     <div class="tw-mt-8 tw-space-y-4 tw-leading-relaxed">
@@ -23,12 +25,15 @@
         Muster is hosted at muster.asymbl.app. Calendar access is read-only.
       </p>
     </div>
-  </div>
+  </LegalLayout>
 </template>
 
 <script>
+import LegalLayout from "@/components/LegalLayout.vue"
+
 export default {
   name: "PrivacyPolicy",
+  components: { LegalLayout },
   metaInfo: {
     title: "Privacy policy - Asymbl Muster",
   },

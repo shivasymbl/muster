@@ -3,7 +3,23 @@
 }
 
 muster.asymbl.app {
-    reverse_proxy 127.0.0.1:3002
+    handle /legal-assets/* {
+        root * /var/www/muster
+        file_server
+    }
+    handle /privacy-policy {
+        root * /var/www/muster
+        rewrite * /privacy-policy.html
+        file_server
+    }
+    handle /terms {
+        root * /var/www/muster
+        rewrite * /terms.html
+        file_server
+    }
+    handle {
+        reverse_proxy 127.0.0.1:3002
+    }
     encode zstd gzip
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
