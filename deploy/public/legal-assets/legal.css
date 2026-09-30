@@ -26,9 +26,7 @@ body {
   font-family: Inter, Arial, sans-serif;
   line-height: 1.6;
 }
-a { color: #038ff8; text-decoration: none; }
-a:hover { text-decoration: underline; }
-
+a { color: #038ff8; }
 .top {
   position: sticky;
   top: 0;
@@ -38,48 +36,41 @@ a:hover { text-decoration: underline; }
   justify-content: space-between;
   gap: 16px;
   padding: 14px 24px;
-  background: rgba(255, 255, 255, 0.95);
+  background: #fff;
   border-bottom: 1px solid #e3e5ea;
 }
 .brand img { display: block; width: 132px; height: auto; }
 .nav { display: flex; gap: 18px; font-size: 14px; font-weight: 500; }
-.nav a { color: #191d47; }
+.nav a { color: #191d47; text-decoration: none; }
 .nav a[aria-current="page"] { color: #038ff8; }
-
-.wrap { max-width: 46rem; margin: 0 auto; padding: 56px 24px 72px; }
+.band {
+  padding: 56px 24px;
+  color: #fff;
+  background: linear-gradient(180deg, #191d47, #2c1169);
+}
+.band-inner, .wrap, .foot-inner, .copy { max-width: 46rem; margin-left: auto; margin-right: auto; }
 .eyebrow {
-  margin: 0 0 8px;
-  color: #038ff8;
-  font-size: 13px;
+  margin: 0;
+  color: #b2deff;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-h1 { margin: 0; font-size: 40px; line-height: 1.15; font-weight: 600; }
+.band h1 { margin: 8px 0 0; font-size: 40px; line-height: 1.15; font-weight: 600; }
+.wrap { padding: 40px 24px 72px; }
 .note {
   display: inline-block;
-  margin-top: 16px;
+  margin: 0 0 28px;
   padding: 8px 12px;
   border-radius: 999px;
   background: #eef7ff;
   color: #5b6070;
   font-size: 14px;
 }
-.prose { margin-top: 28px; }
 .prose p { margin: 0 0 16px; }
-
-.foot {
-  border-top: 1px solid #e3e5ea;
-  padding: 36px 24px 28px;
-}
-.foot-inner {
-  max-width: 72rem;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-}
+.foot { border-top: 1px solid #e3e5ea; padding: 36px 24px 28px; }
+.foot-inner { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; }
 .product { display: flex; align-items: center; gap: 12px; color: #5b6070; font-size: 14px; }
 .product img { height: 20px; width: auto; }
-.copy { max-width: 72rem; margin: 24px auto 0; color: #5b6070; font-size: 12px; }
+.copy { margin-top: 24px; color: #5b6070; font-size: 12px; }

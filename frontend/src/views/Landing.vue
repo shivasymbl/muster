@@ -1,5 +1,5 @@
 <template>
-  <div class="tw-bg-white tw-text-ink">
+  <div class="tw-overflow-x-hidden tw-bg-white tw-text-ink">
     <header
       class="tw-sticky tw-top-0 tw-z-20 tw-border-b tw-border-light-gray-stroke tw-bg-white/95 tw-backdrop-blur"
     >
@@ -41,34 +41,25 @@
     </header>
 
     <main>
-      <section class="tw-relative tw-overflow-hidden tw-px-4 tw-py-8 sm:tw-px-6 sm:tw-py-12">
-        <img
-          src="@/assets/brand/illustrations/blob-blue.png"
-          alt=""
-          class="tw-pointer-events-none tw-absolute -tw-left-24 tw-top-8 tw-w-56 tw-opacity-40"
-        />
-        <img
-          src="@/assets/brand/illustrations/blob-purple-orb.png"
-          alt=""
-          class="tw-pointer-events-none tw-absolute -tw-right-16 tw-bottom-0 tw-w-48 tw-opacity-30"
-        />
+      <section class="tw-px-4 tw-py-8 sm:tw-px-6 sm:tw-py-12">
         <div
-          class="tw-relative tw-mx-auto tw-flex tw-max-w-6xl tw-flex-col tw-items-center tw-gap-10 tw-overflow-hidden tw-rounded-3xl tw-px-6 tw-py-12 sm:tw-px-12 lg:tw-flex-row lg:tw-py-16"
+          class="tw-mx-auto tw-grid tw-w-full tw-max-w-6xl tw-items-center tw-gap-10 tw-rounded-3xl tw-px-6 tw-py-12 sm:tw-px-12 lg:tw-grid-cols-2 lg:tw-py-16"
           style="background: linear-gradient(180deg, #191d47, #2c1169)"
         >
-          <div class="tw-max-w-xl tw-text-white">
+          <div class="tw-min-w-0 tw-text-white">
             <div
               class="tw-mb-4 tw-inline-flex tw-rounded-full tw-border tw-border-white/30 tw-px-3 tw-py-1 tw-text-sm"
             >
-              Group scheduling, without the thread
+              Scheduling for recruiting teams
             </div>
             <h1 class="tw-text-4xl tw-font-semibold tw-leading-tight sm:tw-text-5xl">
-              Find the time that works for
-              <span style="color: #b2deff">everyone</span>.
+              Find a time the hiring panel can
+              <span style="color: #b2deff">make</span>.
             </h1>
             <p class="tw-mt-4 tw-text-base tw-leading-relaxed tw-text-white/90 sm:tw-text-lg">
-              Send one link. Everyone connects their calendar. Muster shows you
-              when the whole group is free, across companies and time zones.
+              Send one link to the candidate, the hiring manager, and the
+              client. Muster shows when the whole panel is free, across
+              companies and time zones.
             </p>
             <div class="tw-mt-8 tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-flex-wrap">
               <v-btn
@@ -94,11 +85,24 @@
               >
             </div>
           </div>
-          <img
-            src="@/assets/brand/illustrations/robot-crew.png"
-            alt="Muster robots standing together"
-            class="tw-h-auto tw-w-full tw-max-w-md tw-object-contain"
-          />
+          <div class="tw-min-w-0 tw-rounded-2xl tw-bg-white tw-p-6 tw-text-ink">
+            <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-green">
+              This week's panel
+            </p>
+            <ul class="tw-mt-4 tw-divide-y tw-divide-light-gray-stroke">
+              <li
+                v-for="item in panel"
+                :key="item.title"
+                class="tw-flex tw-items-center tw-justify-between tw-gap-4 tw-py-3"
+              >
+                <div class="tw-min-w-0">
+                  <p class="tw-font-semibold">{{ item.title }}</p>
+                  <p class="tw-text-sm tw-text-slate">{{ item.who }}</p>
+                </div>
+                <span class="tw-shrink-0 tw-text-sm tw-font-medium tw-text-green">{{ item.when }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -130,9 +134,9 @@
             See the <span class="tw-text-green">overlap</span>
           </h2>
           <p class="tw-mt-2 tw-text-slate">
-            Darker blue means more people are free.
+            Darker blue means more of the panel is free.
           </p>
-          <div class="tw-mt-6 tw-overflow-x-auto">
+          <div class="tw-mt-6 tw-flex tw-justify-center tw-overflow-x-auto">
             <LandingPageCalendar />
           </div>
         </div>
@@ -144,16 +148,16 @@
         >
           <div>
             <h2 class="tw-text-3xl tw-font-semibold">
-              Built for the <span class="tw-text-green">in-between</span>
+              Built for <span class="tw-text-green">recruiting</span>
             </h2>
             <p class="tw-mt-4 tw-text-lg tw-leading-relaxed">
-              Internal and external in one place. Your team, your client and
-              your vendor on the same grid, with no admin setup on either side.
+              Candidate, hiring manager, and client on one grid. No shared
+              calendar, and no admin setup on the client's side.
             </p>
           </div>
           <p class="tw-self-center tw-text-lg tw-leading-relaxed">
-            Each person connects their own calendar. Nobody has to share a
-            calendar with another company.
+            Each person connects their own calendar. The panel sees overlap,
+            not each other's meetings.
           </p>
         </div>
       </section>
@@ -174,9 +178,9 @@
             </div>
           </div>
           <img
-            src="@/assets/brand/illustrations/robot-logo-dot.png"
-            alt=""
-            class="tw-mx-auto tw-h-40 tw-w-auto tw-object-contain"
+            src="@/assets/brand/muster-consent-120.png"
+            alt="Asymbl Muster"
+            class="tw-mx-auto tw-h-28 tw-w-28 tw-rounded-3xl"
           />
         </div>
       </section>
@@ -201,7 +205,7 @@
           style="background: linear-gradient(90deg, #008ff8, #8855ff)"
         >
           <h2 class="tw-text-3xl tw-font-semibold sm:tw-text-4xl">
-            Stop asking "what works for everyone?"
+            Stop the "what time works for the panel?" thread
           </h2>
           <v-btn
             class="tw-mt-8 tw-rounded-lg tw-bg-white tw-px-8 tw-text-ink"
@@ -240,7 +244,7 @@ export default {
   name: "Landing",
 
   metaInfo: {
-    title: "Asymbl Muster: find a time that works for everyone",
+    title: "Asymbl Muster: schedule the hiring panel",
   },
 
   components: {
@@ -257,24 +261,30 @@ export default {
     signInDialog: false,
     newDialog: false,
     calendarTypes,
+    panel: [
+      { title: "Recruiter screen", who: "Priya Shah, candidate", when: "30 min" },
+      { title: "Hiring manager", who: "Alex Chen, engineering", when: "45 min" },
+      { title: "Client interview", who: "Northwind team", when: "60 min" },
+      { title: "Offer call", who: "Priya and the recruiter", when: "20 min" },
+    ],
     steps: [
       {
         n: "1",
         color: "#038FF8",
-        title: "Create a Muster",
-        body: "Pick the dates and hours you want to offer.",
+        title: "Set the interview window",
+        body: "Pick the dates and hours the panel can meet.",
       },
       {
         n: "2",
         color: "#ED489E",
-        title: "Share one link",
-        body: "Drop it in email, WhatsApp, Slack or Teams.",
+        title: "Send one link",
+        body: "The candidate, hiring manager, and client each connect their own calendar.",
       },
       {
         n: "3",
         color: "#8856FF",
-        title: "See the overlap",
-        body: "Everyone's free time lines up. Pick the slot and send the invite.",
+        title: "Book the overlap",
+        body: "Muster shows the slots the whole panel can make. Pick one and send the invite.",
       },
     ],
     privacyPills: [
@@ -287,7 +297,7 @@ export default {
       {
         question: "What is Muster?",
         answer:
-          "Asymbl Muster helps a group find a time that works for everyone. You send one link, people mark when they are free, and Muster shows the overlap.",
+          "Asymbl Muster is how a recruiting team finds a time the candidate, the hiring panel, and the client can all make. You send one link, each person connects a calendar, and Muster shows the overlap.",
       },
       {
         question: "Is Muster free?",
