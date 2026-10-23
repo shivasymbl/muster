@@ -5,25 +5,27 @@ ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
 : "${DROPLET_HOST:?Set DROPLET_HOST to the droplet IP or hostname}"
-: "${DEPOT_ORG_ID:?Set DEPOT_ORG_ID}"
+PROJECT=$(sed -n 's/.*"projectID": *"\([^"]*\)".*/\1/p' depot.json)
 SHA=$(git rev-parse --short HEAD)
-IMAGE="${DEPOT_ORG_ID}.registry.depot.dev/muster:${SHA}"
-LATEST="${DEPOT_ORG_ID}.registry.depot.dev/muster:latest"
+IMAGE="registry.depot.dev/${PROJECT}:${SHA}"
 
 depot build . \
+  --project "$PROJECT" \
   --platform linux/amd64 \
   --build-arg "VUE_APP_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}" \
   --build-arg "VUE_APP_MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-}" \
-  -t "$IMAGE" \
-  -t "$LATEST" \
-  --push
+  --save --save-tag "$SHA" --save-tag latest
 
 ssh "deploy@${DROPLET_HOST}" "mkdir -p /opt/muster"
 scp "$ROOT/deploy/compose.prod.yaml" "deploy@${DROPLET_HOST}:/opt/muster/compose.yaml"
 scp "$ROOT/deploy/backup.sh" "deploy@${DROPLET_HOST}:/opt/muster/backup.sh"
 ssh "deploy@${DROPLET_HOST}" "chmod 755 /opt/muster/backup.sh"
 
-ssh "deploy@${DROPLET_HOST}" "MUSTER_IMAGE='${IMAGE}' docker compose -f /opt/muster/compose.yaml pull && MUSTER_IMAGE='${IMAGE}' docker compose -f /opt/muster/compose.yaml up -d"
+# Short-lived project-scoped pull token; logged out again right after the pull.
+depot pull-token --project "$PROJECT" | ssh "deploy@${DROPLET_HOST}" "docker login registry.depot.dev -u x-token --password-stdin >/dev/null"
+ssh "deploy@${DROPLET_HOST}" "docker pull '${IMAGE}'; rc=\$?; docker logout registry.depot.dev >/dev/null; exit \$rc"
+# Record the image in .env too, so a plain 'docker compose up' later keeps this version.
+ssh "deploy@${DROPLET_HOST}" "sed -i 's|^MUSTER_IMAGE=.*|MUSTER_IMAGE=${IMAGE}|' /opt/muster/.env && docker compose -f /opt/muster/compose.yaml up -d"
 
 deadline=$(( $(date +%s) + 120 ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
@@ -38,7 +40,7 @@ done
 echo "health check failed, rolling back" >&2
 PREV=$(ssh "deploy@${DROPLET_HOST}" "cat /opt/muster/.last_good_sha 2>/dev/null || true")
 if [ -n "$PREV" ]; then
-  PREV_IMAGE="${DEPOT_ORG_ID}.registry.depot.dev/muster:${PREV}"
-  ssh "deploy@${DROPLET_HOST}" "MUSTER_IMAGE='${PREV_IMAGE}' docker compose -f /opt/muster/compose.yaml up -d"
+  PREV_IMAGE="registry.depot.dev/${PROJECT}:${PREV}"
+  ssh "deploy@${DROPLET_HOST}" "sed -i 's|^MUSTER_IMAGE=.*|MUSTER_IMAGE=${PREV_IMAGE}|' /opt/muster/.env && docker compose -f /opt/muster/compose.yaml up -d"
 fi
 exit 1
