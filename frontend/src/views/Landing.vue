@@ -6,7 +6,9 @@
       <div
         class="tw-mx-auto tw-flex tw-max-w-6xl tw-items-center tw-gap-3 tw-px-4 tw-py-3 sm:tw-px-6"
       >
-        <Logo color="navy" :width="118" />
+        <router-link :to="authUser ? { name: 'home' } : { name: 'landing' }">
+          <Logo color="navy" :width="118" />
+        </router-link>
         <v-spacer />
         <a
           href="#how"
@@ -32,10 +34,18 @@
           >Sign in</v-btn
         >
         <v-btn
+          v-if="authUser"
+          outlined
+          class="tw-rounded-lg tw-px-4 tw-text-sm"
+          color="primary"
+          :to="{ name: 'home' }"
+          >Home</v-btn
+        >
+        <v-btn
           class="tw-rounded-lg tw-bg-green tw-px-4 tw-text-sm"
           dark
           @click="startMuster"
-          >Start a Muster</v-btn
+          >Schedule a meeting</v-btn
         >
       </div>
     </header>
@@ -50,39 +60,41 @@
             <div
               class="tw-mb-4 tw-inline-flex tw-rounded-full tw-border tw-border-white/30 tw-px-3 tw-py-1 tw-text-sm"
             >
-              Scheduling for recruiting teams
+              Scheduling for any meeting
             </div>
             <h1 class="tw-text-4xl tw-font-semibold tw-leading-tight sm:tw-text-5xl">
-              Find a time the hiring panel can
-              <span style="color: #b2deff">make</span>.
+              Book the meeting in
+              <span style="color: #b2deff">one link</span>.
             </h1>
             <p class="tw-mt-4 tw-text-base tw-leading-relaxed tw-text-white/90 sm:tw-text-lg">
-              Send one link to the candidate, the hiring manager, and the
-              client. Muster shows when the whole panel is free, across
-              companies and time zones.
+              Send one link. They tap the times they can make, no accounts and
+              no installs. A client interview, a hiring-manager meeting, a
+              sales call, or any other meeting. You see the overlap and book it.
             </p>
-            <div class="tw-mt-8 tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-flex-wrap">
+            <div class="tw-mt-8">
               <v-btn
                 class="tw-rounded-lg tw-bg-green tw-px-6"
                 dark
                 large
                 @click="startMuster"
-                >Start a Muster</v-btn
+                >Schedule a meeting</v-btn
               >
-              <v-btn
-                outlined
-                large
-                class="tw-rounded-lg tw-border-white tw-text-white"
-                @click="_signIn(calendarTypes.GOOGLE)"
-                >Sign in with Google</v-btn
-              >
-              <v-btn
-                outlined
-                large
-                class="tw-rounded-lg tw-border-white tw-text-white"
-                @click="_signIn(calendarTypes.OUTLOOK)"
-                >Sign in with Microsoft</v-btn
-              >
+              <div class="tw-mt-3 tw-flex tw-flex-wrap tw-gap-x-4 tw-gap-y-1 tw-text-sm">
+                <button
+                  type="button"
+                  class="tw-text-white/80 tw-underline"
+                  @click="_signIn(calendarTypes.GOOGLE)"
+                >
+                  Sign in with Google
+                </button>
+                <button
+                  type="button"
+                  class="tw-text-white/80 tw-underline"
+                  @click="_signIn(calendarTypes.OUTLOOK)"
+                >
+                  Sign in with Microsoft
+                </button>
+              </div>
             </div>
           </div>
           <div class="tw-min-w-0 tw-rounded-2xl tw-bg-white tw-p-6 tw-text-ink">
@@ -134,7 +146,7 @@
             See the <span class="tw-text-green">overlap</span>
           </h2>
           <p class="tw-mt-2 tw-text-slate">
-            Darker blue means more of the panel is free.
+            Darker blue means more people are free. Each meeting sits on a slot they can all make.
           </p>
           <div class="tw-mt-6 tw-flex tw-justify-center tw-overflow-x-auto">
             <LandingPageCalendar />
@@ -148,17 +160,20 @@
         >
           <div>
             <h2 class="tw-text-3xl tw-font-semibold">
-              Built for <span class="tw-text-green">recruiting</span>
+              Built for <span class="tw-text-green">agencies</span>
             </h2>
             <p class="tw-mt-4 tw-text-lg tw-leading-relaxed">
-              Candidate, hiring manager, and client on one grid. No shared
-              calendar, and no admin setup on the client's side.
+              The same link works for any meeting. A candidate, a hiring
+              manager, or a sales prospect taps times on their phone, or
+              connects a calendar. Your logo is what they see on the link.
             </p>
           </div>
-          <p class="tw-self-center tw-text-lg tw-leading-relaxed">
-            Each person connects their own calendar. The panel sees overlap,
-            not each other's meetings.
-          </p>
+          <ul class="tw-self-center tw-space-y-2 tw-text-lg">
+            <li>Client interviews and hiring-manager meetings</li>
+            <li>Sales calls</li>
+            <li>Client intake and candidate prep</li>
+            <li>Onboarding calls and contractor check-ins</li>
+          </ul>
         </div>
       </section>
 
@@ -205,13 +220,13 @@
           style="background: linear-gradient(90deg, #008ff8, #8855ff)"
         >
           <h2 class="tw-text-3xl tw-font-semibold sm:tw-text-4xl">
-            Stop the "what time works for the panel?" thread
+            Book the meeting without the email ping-pong
           </h2>
           <v-btn
             class="tw-mt-8 tw-rounded-lg tw-bg-white tw-px-8 tw-text-ink"
             large
             @click="startMuster"
-            >Start a Muster</v-btn
+            >Schedule a meeting</v-btn
           >
         </div>
       </section>
@@ -244,7 +259,7 @@ export default {
   name: "Landing",
 
   metaInfo: {
-    title: "Asymbl Muster: schedule the hiring panel",
+    title: "Asymbl Muster: book the meeting",
   },
 
   components: {
@@ -271,20 +286,20 @@ export default {
       {
         n: "1",
         color: "#038FF8",
-        title: "Set the interview window",
-        body: "Pick the dates and hours the panel can meet.",
+        title: "Set the window",
+        body: "Pick the weekdays and hours. Start from an interview, a hiring-manager meeting, a sales call, or any other meeting.",
       },
       {
         n: "2",
         color: "#ED489E",
         title: "Send one link",
-        body: "The candidate, hiring manager, and client each connect their own calendar.",
+        body: "They tap their times. No sign-up. Or they connect a calendar. Nobody installs anything.",
       },
       {
         n: "3",
         color: "#8856FF",
         title: "Book the overlap",
-        body: "Muster shows the slots the whole panel can make. Pick one and send the invite.",
+        body: "You see the slots everyone can make, across time zones, and book the meeting.",
       },
     ],
     privacyPills: [
@@ -295,34 +310,39 @@ export default {
     ],
     faqs: [
       {
-        question: "What is Muster?",
+        question: "Is this only for interviews?",
         answer:
-          "Asymbl Muster is how a recruiting team finds a time the candidate, the hiring panel, and the client can all make. You send one link, each person connects a calendar, and Muster shows the overlap.",
+          "No. The same link works for any meeting: a client interview, a meeting with a hiring manager, a sales call, an intake, or anything else you need on the calendar.",
+      },
+      {
+        question: "Does the other person need an account?",
+        answer:
+          "No. A candidate, a client, or a prospect opens the link and taps the times they can make. No sign-up and no calendar connection.",
+      },
+      {
+        question: "Does anyone need to install anything?",
+        answer:
+          "No. They open the link in a browser. They can tap times, or connect Google or Outlook if they want the grid filled from their calendar.",
+      },
+      {
+        question: "Does it handle time zones?",
+        answer:
+          "Yes. Each person sees the grid in their own time zone. You can note someone's time zone on the meeting.",
+      },
+      {
+        question: "Does it work with Bullhorn or Salesforce?",
+        answer:
+          'Not yet. Muster does not write meetings back to an ATS or a CRM. Want booked interviews written back to the candidate record in Salesforce? <a href="mailto:muster@asymbl.com">Talk to Asymbl</a>.',
       },
       {
         question: "Is Muster free?",
         answer:
-          "Yes. There is no event limit and no paid tier. Create as many Musters as you need.",
+          "Yes. There is no event limit and no paid tier.",
       },
       {
         question: "Which calendars work?",
         answer:
-          "Google Calendar, Outlook, and Apple Calendar or iCloud. You can also paste an ICS feed, or fill in availability by hand.",
-      },
-      {
-        question: "What can Muster see on my calendar?",
-        answer:
-          "Muster reads free/busy and event times so it can compute overlap. It does not write to your calendar, and other people only see the availability you enter.",
-      },
-      {
-        question: "How do I disconnect a calendar?",
-        answer:
-          "Open Settings and disconnect the account. You can also revoke Muster from your Google or Microsoft account permissions.",
-      },
-      {
-        question: "Is it open source?",
-        answer:
-          'Yes. Muster is licensed under AGPL-3.0. The source is at <a href="https://github.com/shivasymbl/muster">github.com/shivasymbl/muster</a>.',
+          "Google Calendar, Outlook, and Apple Calendar or iCloud. Anyone can skip the calendar and tap times instead.",
       },
     ],
   }),

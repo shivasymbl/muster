@@ -9,7 +9,6 @@
         :interactable="false"
         :showSnackbar="false"
         :alwaysShowCalendarEvents="true"
-        animateTimeslotAlways
         :showHintText="false"
       />
     </div>
@@ -18,13 +17,27 @@
 
 <script>
 import ScheduleOverlap from "@/components//schedule_overlap/ScheduleOverlap"
-import {
-  getDateDayOffset,
-  getDateWithTimeNum,
-  isPhone,
-  dateToTimeNum,
-  processTimeBlocks,
-} from "@/utils"
+import { getDateWithTimeNum, processTimeBlocks } from "@/utils"
+
+function upcomingWeekdays(count) {
+  const days = []
+  const cursor = new Date()
+  cursor.setHours(12, 0, 0, 0)
+  while (days.length < count) {
+    const dow = cursor.getDay()
+    if (dow !== 0 && dow !== 6) days.push(new Date(cursor))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return days
+}
+
+function slots(day, start, end) {
+  const times = []
+  for (let t = start; t < end; t += 0.5) {
+    times.push(getDateWithTimeNum(day, t))
+  }
+  return times
+}
 
 export default {
   name: "LandingPageCalendar",
@@ -33,36 +46,29 @@ export default {
     ScheduleOverlap,
   },
 
-  data: () => ({
-    dates: [
-      getDateWithTimeNum(getDateDayOffset(new Date(), -1), 9),
-      getDateWithTimeNum(new Date(), 9),
-      getDateWithTimeNum(getDateDayOffset(new Date(), 1), 9),
-    ],
-
-    responses: {},
-
-    calendarEventsByDay: [],
-  }),
+  data() {
+    const days = upcomingWeekdays(3).map((day) => getDateWithTimeNum(day, 9))
+    return {
+      dates: days,
+      responses: {},
+      calendarEventsByDay: [],
+    }
+  },
 
   computed: {
     event() {
+      // startTime is a UTC hour. Keep the half hour in zones like India so
+      // the first row is 9:00 local instead of a blank half hour.
+      const offsetMin = new Date().getTimezoneOffset()
+      let startTime = 9 + offsetMin / 60
+      startTime = ((startTime % 24) + 24) % 24
       return {
         dates: this.dates,
-        duration: this.duration,
-        startTime: this.startTime,
-        endTime: this.endTime,
+        duration: 8,
+        startTime,
+        endTime: startTime + 8,
         responses: this.responses,
       }
-    },
-    duration() {
-      return isPhone(this.$vuetify) ? 6 : 8
-    },
-    startTime() {
-      return dateToTimeNum(new Date(this.dates[0]), true)
-    },
-    endTime() {
-      return (this.startTime + this.duration) % 24
     },
   },
 
@@ -72,217 +78,62 @@ export default {
       const events = [
         {
           startDate: getDateWithTimeNum(day1, 9),
-          endDate: getDateWithTimeNum(day1, 10),
+          endDate: getDateWithTimeNum(day1, 9.5),
           summary: "Recruiter screen",
         },
         {
-          startDate: getDateWithTimeNum(day2, 11),
-          endDate: getDateWithTimeNum(day2, 14),
+          startDate: getDateWithTimeNum(day1, 11),
+          endDate: getDateWithTimeNum(day1, 11 + 1 / 3),
+          summary: "Offer call",
+        },
+        {
+          startDate: getDateWithTimeNum(day2, 13),
+          endDate: getDateWithTimeNum(day2, 13.75),
           summary: "Hiring manager interview",
         },
         {
-          startDate: getDateWithTimeNum(day3, 13),
-          endDate: getDateWithTimeNum(day3, 17),
+          startDate: getDateWithTimeNum(day3, 10),
+          endDate: getDateWithTimeNum(day3, 11),
           summary: "Client interview",
         },
       ]
 
-      if (!isPhone(this.$vuetify)) {
-        events.push({
-          startDate: getDateWithTimeNum(day3, 20.5),
-          endDate: getDateWithTimeNum(day3, 22),
-          summary: "Offer call",
-        })
-      }
-
-      this.calendarEventsByDay = processTimeBlocks(
-        this.dates,
-        this.duration,
-        events
-      )
+      this.calendarEventsByDay = processTimeBlocks(this.dates, 8, events)
     },
     getResponses() {
       const [day1, day2, day3] = this.dates
+      const availability = [
+        ...slots(day1, 9, 12),
+        ...slots(day2, 13, 16),
+        ...slots(day3, 10, 12),
+      ]
+      const expanded = []
+      for (const date of availability) {
+        expanded.push(date)
+        const next = new Date(date)
+        next.setMinutes(date.getMinutes() + 15)
+        expanded.push(next)
+      }
       this.responses = {
-        "62828fec1bc681fa020632f2": {
-          user: { _id: "1", name: "1" },
-          availability: [
-            getDateWithTimeNum(day1, 10),
-            getDateWithTimeNum(day1, 10.5),
-            getDateWithTimeNum(day1, 11),
-            getDateWithTimeNum(day1, 11.5),
-            getDateWithTimeNum(day1, 12),
-            getDateWithTimeNum(day1, 12.5),
-            getDateWithTimeNum(day1, 13),
-            getDateWithTimeNum(day1, 14.5),
-            getDateWithTimeNum(day1, 15),
-            getDateWithTimeNum(day1, 15.5),
-            getDateWithTimeNum(day1, 16),
-            getDateWithTimeNum(day1, 16.5),
-            getDateWithTimeNum(day1, 17),
-            getDateWithTimeNum(day1, 17.5),
-            getDateWithTimeNum(day1, 18),
-            getDateWithTimeNum(day1, 18.5),
-            getDateWithTimeNum(day1, 19),
-            getDateWithTimeNum(day1, 20.5),
-            getDateWithTimeNum(day1, 21),
-            getDateWithTimeNum(day1, 21.5),
-
-            getDateWithTimeNum(day2, 9),
-            getDateWithTimeNum(day2, 9.5),
-            getDateWithTimeNum(day2, 14),
-            getDateWithTimeNum(day2, 14.5),
-            getDateWithTimeNum(day2, 15),
-            getDateWithTimeNum(day2, 15.5),
-            getDateWithTimeNum(day2, 16),
-            getDateWithTimeNum(day2, 16.5),
-            getDateWithTimeNum(day2, 17),
-            getDateWithTimeNum(day2, 17.5),
-            getDateWithTimeNum(day2, 18),
-            getDateWithTimeNum(day2, 18.5),
-            getDateWithTimeNum(day2, 19),
-            getDateWithTimeNum(day2, 19.5),
-            getDateWithTimeNum(day2, 20),
-            getDateWithTimeNum(day2, 21.5),
-
-            getDateWithTimeNum(day3, 12.5),
-            getDateWithTimeNum(day3, 17),
-            getDateWithTimeNum(day3, 19.5),
-          ],
+        recruiter: {
+          user: { _id: "recruiter", name: "Recruiter" },
+          availability: expanded,
         },
-        "628292fe6e12d2baa9c01395": {
-          user: { _id: "2", name: "2" },
-          availability: [
-            getDateWithTimeNum(day1, 14),
-            getDateWithTimeNum(day1, 14.5),
-            getDateWithTimeNum(day1, 15),
-            getDateWithTimeNum(day1, 15.5),
-            getDateWithTimeNum(day1, 16),
-            getDateWithTimeNum(day1, 16.5),
-            getDateWithTimeNum(day1, 17),
-            getDateWithTimeNum(day1, 17.5),
-            getDateWithTimeNum(day1, 18),
-            getDateWithTimeNum(day1, 18.5),
-            getDateWithTimeNum(day1, 19),
-            getDateWithTimeNum(day1, 19.5),
-            getDateWithTimeNum(day1, 20),
-            getDateWithTimeNum(day1, 20.5),
-            getDateWithTimeNum(day1, 21),
-            getDateWithTimeNum(day1, 21.5),
-
-            getDateWithTimeNum(day2, 9),
-            getDateWithTimeNum(day2, 9.5),
-            getDateWithTimeNum(day2, 10),
-            getDateWithTimeNum(day2, 10.5),
-            getDateWithTimeNum(day2, 16),
-            getDateWithTimeNum(day2, 16.5),
-            getDateWithTimeNum(day2, 17),
-            getDateWithTimeNum(day2, 17.5),
-            getDateWithTimeNum(day2, 18),
-            getDateWithTimeNum(day2, 18.5),
-            getDateWithTimeNum(day2, 19),
-            getDateWithTimeNum(day2, 19.5),
-            getDateWithTimeNum(day2, 20),
-            getDateWithTimeNum(day2, 20.5),
-            getDateWithTimeNum(day2, 21),
-            getDateWithTimeNum(day2, 21.5),
-
-            getDateWithTimeNum(day3, 9),
-            getDateWithTimeNum(day3, 9.5),
-            getDateWithTimeNum(day3, 10),
-            getDateWithTimeNum(day3, 12.5),
-            getDateWithTimeNum(day3, 17),
-            getDateWithTimeNum(day3, 18),
-            getDateWithTimeNum(day3, 18.5),
-            getDateWithTimeNum(day3, 19),
-            getDateWithTimeNum(day3, 19.5),
-            getDateWithTimeNum(day3, 20),
-          ],
+        candidate: {
+          user: { _id: "candidate", name: "Candidate" },
+          availability: expanded,
         },
-        "628208870df4418ff4213757": {
-          user: { _id: "3", name: "3" },
-          availability: [
-            getDateWithTimeNum(day1, 11),
-            getDateWithTimeNum(day1, 11.5),
-            getDateWithTimeNum(day1, 12),
-            getDateWithTimeNum(day1, 12.5),
-            getDateWithTimeNum(day1, 13),
-            getDateWithTimeNum(day1, 13.5),
-            getDateWithTimeNum(day1, 14),
-            getDateWithTimeNum(day1, 14.5),
-            getDateWithTimeNum(day1, 15),
-            getDateWithTimeNum(day1, 15.5),
-            getDateWithTimeNum(day1, 16),
-            getDateWithTimeNum(day1, 16.5),
-            getDateWithTimeNum(day1, 20),
-            getDateWithTimeNum(day1, 20.5),
-            getDateWithTimeNum(day1, 21),
-            getDateWithTimeNum(day1, 21.5),
-
-            getDateWithTimeNum(day2, 9),
-            getDateWithTimeNum(day2, 9.5),
-            getDateWithTimeNum(day2, 10),
-            getDateWithTimeNum(day2, 10.5),
-            getDateWithTimeNum(day2, 19),
-            getDateWithTimeNum(day2, 19.5),
-            getDateWithTimeNum(day2, 20),
-            getDateWithTimeNum(day2, 20.5),
-            getDateWithTimeNum(day2, 21),
-            getDateWithTimeNum(day2, 21.5),
-
-            getDateWithTimeNum(day3, 9),
-            getDateWithTimeNum(day3, 9.5),
-            getDateWithTimeNum(day3, 10),
-            getDateWithTimeNum(day3, 10.5),
-            getDateWithTimeNum(day3, 11),
-            getDateWithTimeNum(day3, 11.5),
-            getDateWithTimeNum(day3, 12),
-            getDateWithTimeNum(day3, 12.5),
-            getDateWithTimeNum(day3, 17),
-            getDateWithTimeNum(day3, 17.5),
-            getDateWithTimeNum(day3, 18),
-            getDateWithTimeNum(day3, 18.5),
-            getDateWithTimeNum(day3, 19),
-            getDateWithTimeNum(day3, 19.5),
-            getDateWithTimeNum(day3, 20),
-          ],
+        client: {
+          user: { _id: "client", name: "Client" },
+          availability: expanded,
         },
       }
-
-      for (const id of Object.keys(this.responses)) {
-        const fixedAvailability = []
-        for (const date of this.responses[id].availability) {
-          fixedAvailability.push(date)
-          const dateCopy = new Date(date)
-          dateCopy.setMinutes(date.getMinutes() + 15)
-          fixedAvailability.push(dateCopy)
-        }
-        this.responses[id].availability = fixedAvailability
-      }
-    },
-    reset() {
-      this.responses = {}
-      this.calendarEventsByDay = []
-    },
-    playAnimation() {
-      this.reset()
-
-      this.$refs.scheduleOverlap.startEditing()
-      setTimeout(() => {
-        this.getCalendarEventsByDay()
-        this.getResponses()
-        setTimeout(() => {
-          this.$refs.scheduleOverlap.setAvailabilityAutomatically()
-          setTimeout(() => {
-            this.$refs.scheduleOverlap.stopEditing()
-          }, 2000)
-        }, 500)
-      }, 200)
     },
   },
 
-  mounted() {
-    this.playAnimation()
+  created() {
+    this.getCalendarEventsByDay()
+    this.getResponses()
   },
 }
 </script>

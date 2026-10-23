@@ -7,13 +7,13 @@
     <v-card-title class="tw-mb-2 tw-flex tw-gap-2 tw-px-4 sm:tw-px-8">
       <div>
         <div class="tw-mb-1">
-          {{ edit ? "Edit event" : "New event" }}
+          {{ edit ? "Edit meeting" : "Schedule a meeting" }}
         </div>
         <div
           v-if="dialog && showHelp"
-          class="tw-text-xs tw-font-normal tw-italic tw-text-dark-gray"
+          class="tw-text-xs tw-font-normal tw-text-dark-gray"
         >
-          Ideal for one-time / recurring meetings
+          One link. They tap times. No account.
         </div>
       </div>
       <v-spacer />
@@ -25,10 +25,11 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
         <HelpDialog v-model="helpDialog">
-          <template v-slot:header>Events</template>
+          <template v-slot:header>Meetings</template>
           <div class="tw-mb-4">
-            Use events to collect people's availabilities and compare them
-            across certain days.
+            Send one link. They tap the times they can make. You book the
+            overlap. Use it for an interview, a hiring-manager meeting, a
+            sales call, or any other meeting.
           </div>
         </HelpDialog>
       </template>
@@ -50,7 +51,8 @@
         <v-text-field
           ref="name-field"
           v-model="name"
-          placeholder="Name your event..."
+          label="Meeting name"
+          placeholder="Interview, sales call, or any meeting"
           hide-details="auto"
           solo
           @keyup.enter="blurNameField"
@@ -206,7 +208,7 @@
         >
           <template v-slot:label>
             <span class="tw-text-sm tw-text-very-dark-gray"
-              >Email me each time someone joins my event</span
+              >Email me when someone adds their times</span
             >
           </template>
         </v-checkbox>
@@ -219,7 +221,7 @@
         >
           <template v-slot:label>
             <span class="tw-text-sm"
-              >Email me each time someone joins my event</span
+              >Email me when someone adds their times</span
             >
           </template>
           <template v-slot:message="{ key, message }">
@@ -428,7 +430,7 @@
           @click="submit"
         >
           {{
-            specificTimesEnabled ? "Next" : edit ? "Save edits" : "Create event"
+            specificTimesEnabled ? "Next" : edit ? "Save edits" : "Create meeting"
           }}
         </v-btn>
         <div
@@ -514,6 +516,12 @@ export default {
   data: () => ({
     formValid: true,
     name: "",
+    jobReq: "",
+    candidateName: "",
+    clientName: "",
+    candidateTimezone: "",
+    logoUrl: "",
+    interviewMinutes: null,
     startTime: 9,
     endTime: 17,
     specificTimesEnabled: false,
@@ -525,8 +533,8 @@ export default {
 
     daysOnly: false,
     daysOnlyOptions: Object.freeze([
-      { text: "Dates and times", value: false },
-      { text: "Dates only", value: true },
+      { text: "Days and times", value: false },
+      { text: "Days only", value: true },
     ]),
 
     // Date options
@@ -584,7 +592,7 @@ export default {
   computed: {
     ...mapState(["authUser", "daysOnlyEnabled"]),
     nameRules() {
-      return [(v) => !!v || "Event name is required"]
+      return [(v) => !!v || "Meeting name is required"]
     },
     selectedDaysRules() {
       return [
@@ -634,8 +642,24 @@ export default {
     blurNameField() {
       this.$refs["name-field"].blur()
     },
+    recruitingPayload() {
+      return {
+        jobReq: this.jobReq,
+        candidateName: this.candidateName,
+        clientName: this.clientName,
+        candidateTimezone: this.candidateTimezone,
+        logoUrl: this.logoUrl,
+        interviewMinutes: this.interviewMinutes,
+      }
+    },
     reset() {
       this.name = ""
+      this.jobReq = ""
+      this.candidateName = ""
+      this.clientName = ""
+      this.candidateTimezone = ""
+      this.logoUrl = ""
+      this.interviewMinutes = null
       this.startTime = 9
       this.endTime = 17
       this.specificTimesEnabled = false
@@ -735,6 +759,7 @@ export default {
         startOnMonday: this.startOnMonday,
         timeIncrement: this.timeIncrement,
         creatorPosthogId: this.$posthog?.get_distinct_id(),
+        ...this.recruitingPayload(),
       }
 
       const posthogPayload = {
@@ -864,6 +889,12 @@ export default {
     updateFieldsFromEvent() {
       if (this.event) {
         this.name = this.event.name
+        this.jobReq = this.event.jobReq || ""
+        this.candidateName = this.event.candidateName || ""
+        this.clientName = this.event.clientName || ""
+        this.candidateTimezone = this.event.candidateTimezone || ""
+        this.logoUrl = this.event.logoUrl || ""
+        this.interviewMinutes = this.event.interviewMinutes || null
 
         // Set start time, accounting for the timezone
         this.startTime = Math.floor(

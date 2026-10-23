@@ -38,16 +38,6 @@
           Create an event
         </v-btn>
         <v-btn
-          v-if="showFeedbackBtn"
-          id="feedback-btn"
-          text
-          href="https://forms.gle/A96i4TTWeKgH3P1W6"
-          target="_blank"
-          @click="trackFeedbackClick"
-        >
-          Give feedback
-        </v-btn>
-        <v-btn
           v-if="$route.name === 'home' && !isPhone"
           color="primary"
           class="tw-mx-2 tw-rounded-md"
@@ -270,9 +260,6 @@ export default {
         this.$route.name !== "terms"
       )
     },
-    showFeedbackBtn() {
-      return !this.isPhone || this.$route.name === "home"
-    },
     routerViewClass() {
       let c = ""
       if (this.showHeader) {
@@ -357,12 +344,7 @@ export default {
       }
     },
     setFeatureFlags() {
-      if (!this.$posthog) return
-
       this.setFeatureFlagsLoaded(true)
-    },
-    trackFeedbackClick() {
-      this.$posthog.capture("give_feedback_button_clicked")
     },
   },
 

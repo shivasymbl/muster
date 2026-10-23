@@ -19,25 +19,6 @@
         <Dashboard v-if="!loading || eventsNotEmpty" />
       </v-fade-transition>
 
-      <div
-        class="tw-rounded-md tw-px-6 tw-py-4 sm:tw-mx-4 sm:tw-bg-[#f3f3f366]"
-        v-if="!loading || eventsNotEmpty"
-      >
-        <div
-          class="tw-mb-3 tw-text-xl tw-font-medium tw-text-dark-green sm:tw-text-2xl"
-        >
-          Tools
-        </div>
-        <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-          <div
-            @click="convertW2M"
-            class="tw-cursor-pointer tw-text-sm tw-font-normal tw-text-dark-gray tw-underline"
-          >
-            Convert When2meet
-          </div>
-        </div>
-      </div>
-
       <div v-if="!loading || eventsNotEmpty" class="tw-flex tw-justify-center">
         <img
           src="@/assets/brand/illustrations/robot-thumbs-up.png"
@@ -64,20 +45,14 @@
         <v-icon>mdi-plus</v-icon>
       </BottomFab>
 
-      <!-- When2meet Import Dialog -->
-      <When2meetImportDialog v-model="showW2MDialog" />
     </div>
   </span>
 </template>
 
 <script>
-import EventType from "@/components/EventType.vue"
 import BottomFab from "@/components/BottomFab.vue"
-import CreateSpeedDial from "@/components/CreateSpeedDial.vue"
-import When2meetImportDialog from "@/components/When2meetImportDialog.vue"
 import Dashboard from "@/components/home/Dashboard.vue"
 import { mapState, mapActions, mapMutations } from "vuex"
-import { eventTypes } from "@/constants"
 import { isPhone, get } from "@/utils"
 
 export default {
@@ -88,10 +63,7 @@ export default {
   },
 
   components: {
-    EventType,
     BottomFab,
-    CreateSpeedDial,
-    When2meetImportDialog,
     Dashboard,
   },
 
@@ -105,7 +77,6 @@ export default {
 
   data: () => ({
     loading: true,
-    showW2MDialog: false,
   }),
 
   mounted() {
@@ -136,11 +107,6 @@ export default {
     },
     _createNew() {
       this.createNew({ eventOnly: false })
-    },
-    createFolder() {},
-    convertW2M() {
-      this.showW2MDialog = true
-      this.$posthog?.capture("convert_when2meet_clicked")
     },
   },
 
