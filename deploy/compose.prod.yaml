@@ -3,6 +3,7 @@ services:
   mongo:
     image: mongo:7
     restart: unless-stopped
+    command: ["mongod", "--auth"]
     volumes: ["/mnt/muster_data/mongo:/data/db"]
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
@@ -14,7 +15,6 @@ services:
     restart: unless-stopped
     env_file: [/opt/muster/.env]
     environment:
-      MONGODB_URI: mongodb://mongo:27017
       MONGO_DB_NAME: muster
       GIN_MODE: release
       BASE_URL: https://muster.asymbl.app

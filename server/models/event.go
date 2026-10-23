@@ -42,13 +42,19 @@ type SignUpResponse struct {
 
 // Representation of an Event in the mongoDB database
 type Event struct {
-	Id          primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
-	ShortId     *string            `json:"shortId" bson:"shortId,omitempty"`
-	OwnerId     primitive.ObjectID `json:"ownerId" bson:"ownerId,omitempty"`
-	Name        string             `json:"name" bson:"name,omitempty"`
-	Description *string            `json:"description" bson:"description,omitempty"`
-	IsArchived  *bool              `json:"isArchived" bson:"isArchived,omitempty"`
-	IsDeleted   *bool              `json:"isDeleted" bson:"isDeleted,omitempty"`
+	Id                primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
+	ShortId           *string            `json:"shortId" bson:"shortId,omitempty"`
+	OwnerId           primitive.ObjectID `json:"ownerId" bson:"ownerId,omitempty"`
+	Name              string             `json:"name" bson:"name,omitempty"`
+	JobReq            string             `json:"jobReq,omitempty" bson:"jobReq,omitempty"`
+	CandidateName     string             `json:"candidateName,omitempty" bson:"candidateName,omitempty"`
+	ClientName        string             `json:"clientName,omitempty" bson:"clientName,omitempty"`
+	CandidateTimezone string             `json:"candidateTimezone,omitempty" bson:"candidateTimezone,omitempty"`
+	LogoUrl           string             `json:"logoUrl,omitempty" bson:"logoUrl,omitempty"`
+	InterviewMinutes  *int               `json:"interviewMinutes,omitempty" bson:"interviewMinutes,omitempty"`
+	Description       *string            `json:"description" bson:"description,omitempty"`
+	IsArchived        *bool              `json:"isArchived" bson:"isArchived,omitempty"`
+	IsDeleted         *bool              `json:"isDeleted" bson:"isDeleted,omitempty"`
 
 	Duration                 *float32             `json:"duration" bson:"duration,omitempty"`
 	Dates                    []primitive.DateTime `json:"dates" bson:"dates,omitempty"`

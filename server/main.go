@@ -169,8 +169,10 @@ func main() {
 	}
 	router.NoRoute(noRouteHandler())
 
-	// Init swagger documentation
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	// Init swagger documentation (dev only: it publishes the full API surface)
+	if !*release {
+		router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	}
 
 	// Run server
 	if os.Getenv("NODE_ENV") == "staging" {

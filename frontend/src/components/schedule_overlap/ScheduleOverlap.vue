@@ -2048,7 +2048,7 @@ export default {
             if (this.availabilityType === availabilityTypes.IF_NEEDED) {
               return `Tap and drag to add your "if needed" ${daysOrTimes} in yellow.`
             }
-            return `Tap and drag to add your "available" ${daysOrTimes} in green.`
+            return `Tap and drag to add your "available" ${daysOrTimes} in blue.`
           case this.states.SCHEDULE_EVENT:
             return "Tap and drag on the calendar to schedule a Google Calendar event during those times."
           default:
@@ -2064,7 +2064,7 @@ export default {
           if (this.availabilityType === availabilityTypes.IF_NEEDED) {
             return `Click and drag to add your "if needed" ${daysOrTimes} in yellow.`
           }
-          return `Click and drag to add your "available" ${daysOrTimes} in green.`
+          return `Click and drag to add your "available" ${daysOrTimes} in blue.`
         case this.states.SCHEDULE_EVENT:
           return "Click and drag on the calendar to schedule a Google Calendar event during those times."
         default:
@@ -2407,6 +2407,7 @@ export default {
     fetchResponses() {
       if (this.calendarOnly) {
         this.fetchedResponses = this.event.responses
+        this.getResponsesFormatted()
         return
       }
 

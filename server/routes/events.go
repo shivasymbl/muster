@@ -84,6 +84,12 @@ func createEvent(c *gin.Context) {
 		When2meetHref            *string  `json:"when2meetHref"`
 		CollectEmails            *bool    `json:"collectEmails"`
 		TimeIncrement            *int     `json:"timeIncrement"`
+		JobReq                   string   `json:"jobReq"`
+		CandidateName            string   `json:"candidateName"`
+		ClientName               string   `json:"clientName"`
+		CandidateTimezone        string   `json:"candidateTimezone"`
+		LogoUrl                  string   `json:"logoUrl"`
+		InterviewMinutes         *int     `json:"interviewMinutes"`
 
 		// Only for availability groups
 		Attendees []string `json:"attendees"`
@@ -118,6 +124,12 @@ func createEvent(c *gin.Context) {
 		OwnerId:                  ownerId,
 		CreatorPosthogId:         payload.CreatorPosthogId,
 		Name:                     payload.Name,
+		JobReq:                   payload.JobReq,
+		CandidateName:            payload.CandidateName,
+		ClientName:               payload.ClientName,
+		CandidateTimezone:        payload.CandidateTimezone,
+		LogoUrl:                  payload.LogoUrl,
+		InterviewMinutes:         payload.InterviewMinutes,
 		Duration:                 payload.Duration,
 		Dates:                    payload.Dates,
 		HasSpecificTimes:         payload.HasSpecificTimes,
@@ -266,6 +278,12 @@ func editEvent(c *gin.Context) {
 		Remindees                []string `json:"remindees"`
 		SendEmailAfterXResponses *int     `json:"sendEmailAfterXResponses"`
 		CollectEmails            *bool    `json:"collectEmails"`
+		JobReq                   string   `json:"jobReq"`
+		CandidateName            string   `json:"candidateName"`
+		ClientName               string   `json:"clientName"`
+		CandidateTimezone        string   `json:"candidateTimezone"`
+		LogoUrl                  string   `json:"logoUrl"`
+		InterviewMinutes         *int     `json:"interviewMinutes"`
 
 		// Only for availability groups
 		Attendees []string `json:"attendees"`
@@ -303,6 +321,12 @@ func editEvent(c *gin.Context) {
 
 	// Update event
 	event.Name = payload.Name
+	event.JobReq = payload.JobReq
+	event.CandidateName = payload.CandidateName
+	event.ClientName = payload.ClientName
+	event.CandidateTimezone = payload.CandidateTimezone
+	event.LogoUrl = payload.LogoUrl
+	event.InterviewMinutes = payload.InterviewMinutes
 	event.Description = payload.Description
 	event.Duration = payload.Duration
 	event.Dates = payload.Dates

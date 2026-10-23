@@ -9,7 +9,8 @@
       </p>
       <p>
         Muster reads free/busy and event times only to find when a hiring
-        panel overlaps. It does not sell personal data.
+        panel overlaps. An interview link can also include a candidate name,
+        a client name, and a job. It does not sell personal data.
       </p>
       <p>
         You can disconnect a calendar in Settings. You can also revoke Muster

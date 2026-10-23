@@ -121,6 +121,25 @@
       >
         <div class="tw-mx-auto tw-max-w-5xl tw-flex-1">
           <div v-if="!isSettingSpecificTimes" class="tw-mx-4">
+            <img
+              v-if="event.logoUrl && event.logoUrl.startsWith('https://')"
+              :src="event.logoUrl"
+              alt=""
+              class="tw-mb-3 tw-h-10 tw-w-auto"
+            />
+            <p
+              v-if="event.clientName || event.candidateName || event.jobReq"
+              class="tw-mb-2 tw-text-sm tw-text-dark-gray"
+            >
+              {{
+                [event.clientName, event.candidateName, event.jobReq]
+                  .filter(Boolean)
+                  .join(" · ")
+              }}
+              <span v-if="event.candidateTimezone">
+                · {{ event.candidateTimezone }}
+              </span>
+            </p>
             <!-- Title and copy link -->
             <div class="tw-flex tw-items-center tw-text-black">
               <div>
@@ -136,6 +155,12 @@
                     @click="canEdit && editEvent()"
                   >
                     {{ event.name }}
+                  </div>
+                  <div
+                    v-if="event.interviewMinutes"
+                    class="tw-text-sm tw-font-medium tw-text-green"
+                  >
+                    {{ event.interviewMinutes }} min
                   </div>
                   <v-chip
                     v-if="event.when2meetHref?.length > 0"

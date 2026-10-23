@@ -13,7 +13,7 @@ ENV VUE_APP_GOOGLE_CLIENT_ID=$VUE_APP_GOOGLE_CLIENT_ID \
 RUN npm run build
 
 # 2. Server
-FROM golang:1.25-alpine AS api
+FROM golang:1.27.3-alpine AS api
 WORKDIR /src
 RUN apk add --no-cache git
 COPY server/ .

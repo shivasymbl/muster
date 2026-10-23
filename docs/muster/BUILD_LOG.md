@@ -96,6 +96,32 @@
 - The consent logo `muster-consent-120.png` was uploaded. Google Auth Platform reports branding verified and shown to users.
 - Direct loads of `/privacy-policy` and `/terms` are branded static pages (wordmark, Inter, ink and blue) so they match the home page without requiring JavaScript.
 
+## 2026-09-30 · Recruiting landing and README
+
+- The live image is `muster:63eb1f1f` (`registry.depot.dev/96s5kdtrsn:63eb1f1f`). Health still returns `{"ok":true}`.
+- The landing hero no longer uses the decorative blobs or the robot illustration. Copy, the sample panel, and the sample calendar are hiring-panel events.
+- Privacy and terms, both the Vue pages and the static HTML, use the indigo title band. Direct loads of those URLs serve the static files.
+- GitHub's default branch is `muster/rebrand`, so the repository home shows the Muster README.
+- Join emails still do not send. Listmonk stays off. Resend is the mail provider to wire up when a key is available.
+
+## 2026-09-30 · Home create button
+
+- `+ Create new` did nothing after sign-in. PostHog is off, `$posthog` was `null`, and the click handler called `.capture()` before opening the dialog.
+- The plugin now installs a no-op client when there is no PostHog key, so create, folder, and schedule clicks still run.
+- Removed the header and account-menu “Give feedback” links, and the home “Convert When2meet” tool.
+
+## 2026-09-30 · Agency landing and interview form
+
+- The landing demo uses the next three weekdays, paints each sample interview on a full-overlap slot, and sizes those blocks to 30, 20, 45, and 60 minutes. The demo no longer enters the red edit state before the blue grid.
+- Copy speaks to a staffing agency: one link, candidate taps times, no account, agency logo on the link.
+- Buttons, the form, and the FAQ now say the same link is for any meeting: interviews, hiring-manager meetings, sales calls, and the rest.
+- The create form has interview templates and fields for job, candidate, client, candidate time zone, and a logo link. Those fields are stored on the event and shown on the interview page.
+
+## 2026-10-01 · Cleaner meeting form and grid contrast
+
+- The create form is just the meeting name, the days, and the hours. Job, candidate, client, time zone, logo, and the template chips are off the form. Older events still keep those values if they were saved.
+- The drag hint says blue, which is the available color. Calendar titles sit on a white chip with dark text so they stay readable on the pink unavailable cells and the blue available bars.
+
 
 
 
