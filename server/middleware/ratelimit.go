@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/errs"
+	"github.com/shivasymbl/muster/server/responses"
 	"golang.org/x/time/rate"
-	"schej.it/server/errs"
-	"schej.it/server/responses"
 )
 
 const (

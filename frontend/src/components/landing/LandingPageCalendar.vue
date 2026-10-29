@@ -1,7 +1,6 @@
 <template>
-  <v-card class="tw-m-4 tw-rounded-lg lg:tw-w-[34rem]">
-    <!-- Brendan W was here -->
-    <div class="-tw-ml-3 sm:tw-ml-0">
+  <v-card class="tw-m-0 tw-w-full tw-max-w-xl tw-rounded-lg">
+    <div>
       <ScheduleOverlap
         ref="scheduleOverlap"
         :event="event"
@@ -74,17 +73,17 @@ export default {
         {
           startDate: getDateWithTimeNum(day1, 9),
           endDate: getDateWithTimeNum(day1, 10),
-          summary: "Coffee with Jen",
+          summary: "Recruiter screen",
         },
         {
           startDate: getDateWithTimeNum(day2, 11),
           endDate: getDateWithTimeNum(day2, 14),
-          summary: "Karaoke with friends",
+          summary: "Hiring manager interview",
         },
         {
           startDate: getDateWithTimeNum(day3, 13),
           endDate: getDateWithTimeNum(day3, 17),
-          summary: "Study session",
+          summary: "Client interview",
         },
       ]
 
@@ -92,7 +91,7 @@ export default {
         events.push({
           startDate: getDateWithTimeNum(day3, 20.5),
           endDate: getDateWithTimeNum(day3, 22),
-          summary: "Hackathon meeting",
+          summary: "Offer call",
         })
       }
 

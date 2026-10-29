@@ -9,7 +9,11 @@ export default new Vuetify({
     themes: {
       light: {
         primary: tailwind.theme.colors.green,
-        error: tailwind.theme.colors.red,
+        secondary: "#8856FF",
+        accent: "#ED489E",
+        error: "#ED2929",
+        success: "#00CC6B",
+        warning: "#FFBB00",
       },
     },
   },

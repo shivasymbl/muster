@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/url"
 
-	"schej.it/server/errs"
-	"schej.it/server/logger"
-	"schej.it/server/models"
-	"schej.it/server/services"
-	"schej.it/server/utils"
+	"github.com/shivasymbl/muster/server/errs"
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/services"
+	"github.com/shivasymbl/muster/server/utils"
 )
 
 func SearchContacts(user *models.User, query string) ([]models.User, *errs.GoogleAPIError) {

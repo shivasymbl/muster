@@ -9,9 +9,9 @@ import (
 	"github.com/emersion/go-ical"
 	"github.com/jonyTF/go-webdav"
 	"github.com/jonyTF/go-webdav/caldav"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/models"
-	"schej.it/server/utils"
 )
 
 type AppleCalendar struct {

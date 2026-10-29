@@ -1,4 +1,4 @@
-name: Deploy Schej
+name: Deploy Muster
 
 on:
   workflow_dispatch:

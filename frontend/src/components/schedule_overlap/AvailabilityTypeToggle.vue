@@ -26,7 +26,7 @@ export default {
           text: "Available",
           activeClass: "tw-text-green tw-bg-green/5",
           borderClass: "tw-border-green",
-          borderStyle: { boxShadow: "0px 2px 8px 0px #00994C40" },
+          borderStyle: { boxShadow: "0px 2px 8px 0px #038FF840" },
           value: availabilityTypes.AVAILABLE,
         },
         {

@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"schej.it/server/logger"
-	"schej.it/server/models"
 )
 
 // Returns a user based on their _id
@@ -22,25 +22,6 @@ func GetUserById(userId string) *models.User {
 	result := UsersCollection.FindOne(context.Background(), bson.M{
 		"_id": objectId,
 	})
-	if result.Err() == mongo.ErrNoDocuments {
-		// User does not exist!
-		return nil
-	}
-
-	// Decode result
-	var user models.User
-	if err := result.Decode(&user); err != nil {
-		logger.StdErr.Panicln(err)
-	}
-
-	return &user
-}
-
-func GetUserByStripeCustomerId(stripeCustomerId string) *models.User {
-	result := UsersCollection.FindOne(context.Background(), bson.M{
-		"stripeCustomerId": stripeCustomerId,
-	})
-
 	if result.Err() == mongo.ErrNoDocuments {
 		// User does not exist!
 		return nil

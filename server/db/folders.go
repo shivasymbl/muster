@@ -3,11 +3,11 @@ package db
 import (
 	"context"
 
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"schej.it/server/logger"
-	"schej.it/server/models"
 )
 
 func CreateFolder(folder *models.Folder) (primitive.ObjectID, error) {

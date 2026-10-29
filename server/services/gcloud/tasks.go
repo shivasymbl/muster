@@ -11,12 +11,12 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2beta3"
 	"cloud.google.com/go/cloudtasks/apiv2beta3/cloudtaskspb"
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/services/listmonk"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"schej.it/server/logger"
-	"schej.it/server/services/listmonk"
-	"schej.it/server/utils"
 )
 
 var TasksClient *cloudtasks.Client
@@ -46,6 +46,11 @@ func InitTasks() func() {
 func CreateEmailTask(email string, ownerName string, eventName string, eventId string, replyTo string) []string {
 	if TasksClient == nil {
 		logger.StdErr.Println("WARNING: Cloud Tasks is disabled, skipping CreateEmailTask")
+		return []string{}
+	}
+
+	if os.Getenv("LISTMONK_URL") == "" || os.Getenv("GCLOUD_TASKS_QUEUE") == "" {
+		logger.StdErr.Println("WARNING: Listmonk or GCLOUD_TASKS_QUEUE is unset, skipping CreateEmailTask")
 		return []string{}
 	}
 
@@ -104,7 +109,7 @@ func CreateEmailTask(email string, ownerName string, eventName string, eventId s
 
 		// Create task
 		task, err := TasksClient.CreateTask(context.Background(), &cloudtaskspb.CreateTaskRequest{
-			Parent: "projects/schej-it/locations/us-central1/queues/SendReminderEmail",
+			Parent: os.Getenv("GCLOUD_TASKS_QUEUE"),
 			Task: &cloudtaskspb.Task{
 				ScheduleTime: scheduleTime,
 				PayloadType: &cloudtaskspb.Task_HttpRequest{

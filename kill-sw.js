@@ -1,4 +1,4 @@
-// /schej.it/kill-sw.js
+// Unregisters a leftover service worker from the previous host.
 self.addEventListener("install", function (e) {
   self.skipWaiting();
 });

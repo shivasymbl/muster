@@ -18,9 +18,9 @@ import (
 
 	"github.com/brianvoe/sjwt"
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/logger"
-	"schej.it/server/models"
 )
 
 // Returns whether running on production server
@@ -116,11 +116,9 @@ func PrintHttpResponse(resp *http.Response) {
 
 // Returns the correct base url, based on whether we're on dev or prod
 func GetBaseUrl() string {
-	var baseUrl string
-	if IsRelease() {
-		baseUrl = "https://timeful.app"
-	} else {
-		baseUrl = "http://localhost:8080"
+	baseUrl := os.Getenv("BASE_URL")
+	if baseUrl == "" {
+		baseUrl = "https://muster.asymbl.app"
 	}
 	return baseUrl
 }

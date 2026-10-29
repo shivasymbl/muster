@@ -51,13 +51,6 @@ export const calendarTypes = Object.freeze({
   ICS: "ics"
 })
 
-export const upgradeDialogTypes = Object.freeze({
-  CREATE_EVENT: "create-event",
-  SCHEDULE_EVENT: "schedule-event",
-  UPGRADE_MANUALLY: "upgrade-manually",
-  REMOVE_ADS: "remove-ads",
-})
-
 export const timeslotDurations = Object.freeze({
   FIFTEEN_MINUTES: 15,
   THIRTY_MINUTES: 30,
@@ -91,7 +84,7 @@ export const folderColors = Object.freeze([
   "#FFB3B3", // Pastel Red
   "#FFCCB3", // Pastel Orange
   "#FFFFB3", // Pastel Yellow
-  "#CDEBDC", // Pastel Green
+  "#D1EAFF", // Pastel Green
   "#B3B3FF", // Pastel Blue
   "#D1B3FF", // Pastel Purple
   "#D3D3D3", // Pastel Gray
@@ -181,6 +174,5 @@ export const allTimezones = Object.freeze({
 
 export const guestUserId = "000000000000000000000000"
 
-export const numFreeEvents = 3
 
 export const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/

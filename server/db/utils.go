@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"schej.it/server/logger"
-	"schej.it/server/models"
-	"schej.it/server/utils"
 )
 
 func GetFriendRequestById(friendRequestId string) *models.FriendRequest {

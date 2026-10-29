@@ -7,11 +7,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/shivasymbl/muster/server/errs"
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/errs"
-	"schej.it/server/logger"
-	"schej.it/server/models"
-	"schej.it/server/utils"
 )
 
 type GoogleCalendar struct {

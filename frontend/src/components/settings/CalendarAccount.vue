@@ -71,7 +71,7 @@
     <!-- Sub-calendar accounts -->
 
     <v-expand-transition>
-      <div v-if="hasSubCalendars && showSubCalendars" class="tw-space-y-2 tw-bg-[#EBF7EF] tw-py-2">
+      <div v-if="hasSubCalendars && showSubCalendars" class="tw-space-y-2 tw-bg-[#EEF7FF] tw-py-2">
         <div
           v-for="(subCalendar, id) in account.subCalendars"
           :key="id"

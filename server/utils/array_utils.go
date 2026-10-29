@@ -3,7 +3,7 @@ package utils
 import (
 	"errors"
 
-	"schej.it/server/models"
+	"github.com/shivasymbl/muster/server/models"
 )
 
 // Inserts the given value at the specified index in the slice. Returns the updated slice

@@ -63,12 +63,9 @@
         <div
           class="tw-text-gray-600 tw-mt-4 tw-pl-0 tw-text-sm tw-leading-relaxed md:tw-mt-0 md:tw-pl-8"
         >
-          <p><strong>Services used:</strong> Google AdSense</p>
           <p>
-            These cookies are used to make advertising messages more relevant to
-            you. They may be set by our advertising partners through our site to
-            build a profile of your interests and show you relevant ads on other
-            sites.
+            These cookies remember choices that are not required for Muster to
+            work.
           </p>
         </div>
       </div>

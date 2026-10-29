@@ -3,8 +3,8 @@ package calendar
 import (
 	"time"
 
-	"schej.it/server/models"
-	"schej.it/server/services/auth"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/services/auth"
 )
 
 type GetCalendarListData struct {

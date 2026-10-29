@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"schej.it/server/logger"
-	"schej.it/server/models"
 )
 
 // Returns an event based on its _id

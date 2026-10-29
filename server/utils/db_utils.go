@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"schej.it/server/models"
 )
 
 func UpdateEventResponseAggregation(userIdString string, response models.Response) bson.M {

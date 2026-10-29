@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/shivasymbl/muster/server/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"schej.it/server/db"
 )
 
 func main() {

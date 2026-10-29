@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"schej.it/server/db"
-	"schej.it/server/models"
-	"schej.it/server/slackbot"
-	"schej.it/server/utils"
 )
 
 // BasicAuth middleware for analytics routes
@@ -37,11 +36,8 @@ func InitAnalytics(router *gin.RouterGroup) {
 	analyticsRouter := router.Group("/analytics")
 
 	analyticsRouter.POST("/scanned-poster", scannedPoster)
-	analyticsRouter.POST("/upgrade-dialog-viewed", upgradeDialogViewed)
 	analyticsRouter.GET("/monthly-active-event-creators", AnalyticsBasicAuth(), getMonthlyActiveEventCreators)
 	analyticsRouter.GET("/monthly-active-event-creators-with-more-than-x-events", AnalyticsBasicAuth(), getMonthlyActiveEventCreatorsWithMoreThanXEvents)
-	analyticsRouter.POST("/upgrade-user", AnalyticsBasicAuth(), upgradeUser)
-	analyticsRouter.POST("/downgrade-user", AnalyticsBasicAuth(), downgradeUser)
 	analyticsRouter.POST("/change-email", AnalyticsBasicAuth(), changeUserEmail)
 	analyticsRouter.GET("/user/:email", AnalyticsBasicAuth(), getUserByEmail)
 }
@@ -61,54 +57,6 @@ func scannedPoster(c *gin.Context) {
 	if err := c.BindJSON(&payload); err != nil {
 		return
 	}
-
-	if payload.Location != nil {
-		slackbot.SendTextMessage(
-			fmt.Sprintf(":face_with_monocle: Poster was scanned :face_with_monocle:\n*Location:* %s, %s, %s\n*URL:* %s",
-				payload.Location.City,
-				payload.Location.State,
-				payload.Location.CountryCode,
-				payload.Url,
-			),
-		)
-	} else {
-		slackbot.SendTextMessage(
-			fmt.Sprintf(":face_with_monocle: Poster was scanned :face_with_monocle:\n*URL:* %s", payload.Url),
-		)
-	}
-
-	c.JSON(http.StatusOK, gin.H{})
-}
-
-// @Summary Notifies us when user has viewed the upgrade dialog
-// @Tags analytics
-// @Accept json
-// @Produce json
-// @Param payload body object{userId=string} true "Object containing the user id"
-// @Success 200
-// @Router /analytics/upgrade-dialog-viewed [post]
-func upgradeDialogViewed(c *gin.Context) {
-	payload := struct {
-		UserId string `json:"userId" binding:"required"`
-		Price  string `json:"price" binding:"required"`
-		Type   string `json:"type" binding:"required"`
-	}{}
-	if err := c.BindJSON(&payload); err != nil {
-		return
-	}
-
-	var message string
-	user := db.GetUserById(payload.UserId)
-	if user == nil {
-		message = fmt.Sprintf(":eyes: %s viewed the upgrade dialog (%s), type: %s", payload.UserId, payload.Price, payload.Type)
-	} else {
-		message = fmt.Sprintf(":eyes: %s %s (%s) viewed the upgrade dialog (%s), type: %s", user.FirstName, user.LastName, user.Email, payload.Price, payload.Type)
-	}
-
-	slackbot.SendTextMessageWithType(
-		message,
-		slackbot.MONETIZATION,
-	)
 
 	c.JSON(http.StatusOK, gin.H{})
 }
@@ -260,60 +208,6 @@ func getMonthlyActiveEventCreatorsWithMoreThanXEvents(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, results)
-}
-
-// @Summary Upgrades the specified user to Schej Premium
-// @Tags analytics
-// @Accept json
-// @Produce json
-// @Param payload body object{email=string} true "Object containing the user email"
-// @Success 200
-// @Router /analytics/upgrade-user [post]
-func upgradeUser(c *gin.Context) {
-	payload := struct {
-		Email string `json:"email" binding:"required"`
-	}{}
-	if err := c.BindJSON(&payload); err != nil {
-		return
-	}
-
-	user := db.GetUserByEmail(payload.Email)
-	if user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	stripeCustomerId := "premium"
-	user.StripeCustomerId = &stripeCustomerId
-	db.UsersCollection.UpdateOne(context.Background(), bson.M{"_id": user.Id}, bson.M{"$set": user})
-
-	c.JSON(http.StatusOK, gin.H{})
-}
-
-// @Summary Downgrades the specified user to Schej Free
-// @Tags analytics
-// @Accept json
-// @Produce json
-// @Param payload body object{email=string} true "Object containing the user email"
-// @Success 200
-// @Router /analytics/downgrade-user [post]
-func downgradeUser(c *gin.Context) {
-	payload := struct {
-		Email string `json:"email" binding:"required"`
-	}{}
-	if err := c.BindJSON(&payload); err != nil {
-		return
-	}
-
-	user := db.GetUserByEmail(payload.Email)
-	if user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	db.UsersCollection.UpdateOne(context.Background(), bson.M{"_id": user.Id}, bson.M{"$unset": bson.M{"stripeCustomerId": ""}})
-
-	c.JSON(http.StatusOK, gin.H{})
 }
 
 // @Summary Changes the email address of the specified user

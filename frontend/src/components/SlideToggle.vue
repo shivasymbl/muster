@@ -52,7 +52,7 @@ export default {
 
       defaultActiveClass: "tw-text-green tw-bg-green/5",
       defaultBorderClass: "tw-border-green",
-      defaultBorderStyle: { boxShadow: "0px 2px 8px 0px #00994C40" },
+      defaultBorderStyle: { boxShadow: "0px 2px 8px 0px #038FF840" },
       inactiveClass: "tw-text-dark-gray tw-bg-off-white",
     }
   },

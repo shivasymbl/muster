@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/services/auth"
 	"go.mongodb.org/mongo-driver/bson"
-	"schej.it/server/logger"
-	"schej.it/server/models"
-	"schej.it/server/services/auth"
 )
 
 // Calls the given url with the given method using the user's OAuth 2 access token.

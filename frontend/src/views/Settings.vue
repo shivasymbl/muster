@@ -43,23 +43,6 @@
         </div>
       </div>
 
-      <!-- Billing Section -->
-      <div
-        v-if="authUser.stripeCustomerId"
-        class="tw-flex tw-flex-col tw-gap-5"
-      >
-        <div
-          class="tw-text-xl tw-font-medium tw-text-dark-green sm:tw-text-2xl"
-        >
-          Billing
-        </div>
-        <div class="tw-flex tw-flex-col tw-gap-5 sm:tw-flex-row sm:tw-gap-28">
-          <div class="tw-text-black">
-            <v-btn @click="openBillingPortal">Manage billing</v-btn>
-          </div>
-        </div>
-      </div>
-
       <!-- Calendar Access Section -->
       <div class="tw-flex tw-flex-col tw-gap-5">
         <div
@@ -134,9 +117,9 @@
           <div class="tw-text-black">
             Email us at
             <a
-              href="mailto:contact@timeful.app"
+              href="mailto:muster@asymbl.com"
               class="tw-text-black tw-underline"
-              >contact@timeful.app</a
+              >muster@asymbl.com</a
             >
             with any questions!
           </div>
@@ -197,7 +180,7 @@ export default {
   name: "Settings",
 
   metaInfo: {
-    title: "Settings - Timeful",
+    title: "Settings - Asymbl Muster",
   },
 
   components: { CalendarAccounts },
@@ -243,21 +226,6 @@ export default {
 
   methods: {
     ...mapActions(["showError"]),
-    openBillingPortal() {
-      get(
-        `/stripe/billing-portal?customerId=${encodeURIComponent(
-          this.authUser.stripeCustomerId
-        )}&returnUrl=${encodeURIComponent(window.location.href)}`
-      )
-        .then((res) => {
-          window.location.href = res.url
-        })
-        .catch((err) => {
-          this.showError(
-            "There was a problem opening the billing portal! Please try again later."
-          )
-        })
-    },
     deleteAccount() {
       _delete(`/user`)
         .then(() => {

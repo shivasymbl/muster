@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/middleware"
+	"github.com/shivasymbl/muster/server/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/db"
-	"schej.it/server/middleware"
-	"schej.it/server/models"
 )
 
 func InitFolders(router *gin.RouterGroup) {

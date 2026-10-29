@@ -1,5 +1,5 @@
 # routes
-This package contains all the routes for the schej.it API
+This package contains all the routes for the Asymbl Muster API
 
 To view the docs, visit http://localhost:3002/swagger/index.html
 

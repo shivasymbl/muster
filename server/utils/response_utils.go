@@ -126,4 +126,3 @@ func PrivatizeEventResponse(event interface{}, omitFields []string, partialOmiss
 	privatized := PrivatizeResponse(eventMap, omitFields, partialOmissions)
 	return privatized, nil
 }
-

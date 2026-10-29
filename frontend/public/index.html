@@ -1,74 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Google Tag Manager -->
-    <script>
-      ;(function (w, d, s, l, i) {
-        w[l] = w[l] || []
-        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" })
-        var f = d.getElementsByTagName(s)[0],
-          j = d.createElement(s),
-          dl = l != "dataLayer" ? "&l=" + l : ""
-        j.async = true
-        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl
-        f.parentNode.insertBefore(j, f)
-      })(window, document, "script", "dataLayer", "GTM-M677X6V")
-    </script>
-    <!-- End Google Tag Manager -->
-    <script async src="https://cdn.fuseplatform.net/publift/tags/2/4241/fuse.js"></script>
-
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
-    <!-- Chrome, Firefox OS and Opera -->
-    <meta name="theme-color" content="#FFFFFF" />
-    <!-- Windows Phone -->
-    <meta name="msapplication-navbutton-color" content="#FFFFFF" />
-    <!-- iOS Safari -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="#FFFFFF" />
+    <link rel="apple-touch-icon" href="<%= BASE_URL %>apple-touch-icon.png" />
+    <link rel="manifest" href="<%= BASE_URL %>site.webmanifest" />
+    <meta name="theme-color" content="#191D47" />
+    <meta name="msapplication-navbutton-color" content="#191D47" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="#191D47" />
     <div style="display:none">
-    {{ $defaultTitle := "Timeful (formerly Schej) - Find a time to meet" }}
-    {{ $defaultDescription := "Timeful helps you find the best time for a group to meet. It is a free availability poll that is easy to use and integrates with your calendar." }}
-    {{ $defaultOgImage := "/img/ogImage.png" }}
+    {{ $defaultTitle := "Asymbl Muster: find a time that works for everyone" }}
+    {{ $defaultDescription := "Asymbl Muster helps a group find a time that works for everyone. Send one link, connect calendars, and see the overlap." }}
+    {{ $defaultOgImage := "/og-muster.png" }}
     </div>
-    <!-- <title>Timeful - Find a time to meet</title>
-    <meta name="description" content="Timeful helps you find the best time for a group to meet. It is a free availability poll that is easy to use and integrates with your calendar." />
-    <meta property="og:title" content="Timeful - Find a time to meet" />
-    <meta property="og:description" content="Timeful helps you find the best time for a group to meet. It is a free availability poll that is easy to use and integrates with your calendar." />
-    <meta property="og:image" content="/img/ogImage.png" />
-    <meta property="og:image:secure_url" content="/img/ogImage.png" /> -->
     <title>{{ or .title $defaultTitle }}</title>
-    <meta 
-      name="description" 
-      content="{{or .description $defaultDescription }}" 
+    <meta
+      name="description"
+      content="{{or .description $defaultDescription }}"
     />
     <meta property="og:title" content="{{or .ogTitle $defaultTitle}}" />
     <meta property="og:description" content="{{or .ogDescription $defaultDescription }}" />
     <meta property="og:image" content="{{or .ogImage $defaultOgImage }}" />
     <meta property="og:image:secure_url" content="{{or .ogImage $defaultOgImage }}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{or .ogTitle $defaultTitle}}" />
+    <meta name="twitter:description" content="{{or .ogDescription $defaultDescription }}" />
+    <meta name="twitter:image" content="{{or .ogImage $defaultOgImage }}" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript
-      ><iframe
-        src="https://www.googletagmanager.com/ns.html?id=GTM-M677X6V"
-        height="0"
-        width="0"
-        style="display: none; visibility: hidden"
-      ></iframe
-    ></noscript>
-    <!-- End Google Tag Manager (noscript) -->
     <noscript>
       <strong
         >We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work

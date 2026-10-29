@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/shivasymbl/muster/server/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"schej.it/server/logger"
 )
 
 var Client *mongo.Client
@@ -39,7 +39,11 @@ func Init() func() {
 	}
 
 	// Define mongodb database + collections
-	Db = Client.Database("schej-it")
+	dbName := os.Getenv("MONGO_DB_NAME")
+	if dbName == "" {
+		dbName = "muster"
+	}
+	Db = Client.Database(dbName)
 	EventsCollection = Db.Collection("events")
 	UsersCollection = Db.Collection("users")
 	DailyUserLogCollection = Db.Collection("dailyuserlogs")
@@ -66,7 +70,7 @@ func Init() func() {
 // MongoDB backup / restore commands
 
 // Backup
-// mongodump --uri="mongodb://localhost:27017" --db=schej-it
+// mongodump --uri="mongodb://localhost:27017" --db=muster
 
 // Restore
-// mongorestore --uri="mongodb://localhost:27017" --drop --db=schej-it ./dump
+// mongorestore --uri="mongodb://localhost:27017" --drop --db=muster ./dump

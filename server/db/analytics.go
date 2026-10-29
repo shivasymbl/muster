@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/shivasymbl/muster/server/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"schej.it/server/logger"
 )
 
 func CountDistinctMonthlyActiveEventCreators(date time.Time) (int64, error) {

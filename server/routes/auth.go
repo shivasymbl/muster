@@ -14,20 +14,20 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/errs"
+	"github.com/shivasymbl/muster/server/logger"
+	"github.com/shivasymbl/muster/server/middleware"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/responses"
+	"github.com/shivasymbl/muster/server/services/auth"
+	"github.com/shivasymbl/muster/server/services/calendar"
+	"github.com/shivasymbl/muster/server/services/listmonk"
+	"github.com/shivasymbl/muster/server/services/microsoftgraph"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"schej.it/server/db"
-	"schej.it/server/errs"
-	"schej.it/server/logger"
-	"schej.it/server/middleware"
-	"schej.it/server/models"
-	"schej.it/server/responses"
-	"schej.it/server/services/auth"
-	"schej.it/server/services/calendar"
-	"schej.it/server/services/listmonk"
-	"schej.it/server/services/microsoftgraph"
-	"schej.it/server/utils"
 )
 
 func InitAuth(router *gin.RouterGroup) {
@@ -219,7 +219,6 @@ func signInHelper(c *gin.Context, token auth.TokenResponse, tokenOrigin models.T
 
 		userId = res.InsertedID.(primitive.ObjectID)
 
-		// slackbot.SendTextMessage(fmt.Sprintf(":wave: %s %s (%s) has joined schej.it!", firstName, lastName, email))
 	} else {
 		user := existing
 		userId = user.Id
@@ -390,7 +389,7 @@ func sendOtp(c *gin.Context) {
 
 	listmonk.SendEmailAddSubscriberIfNotExist(email, otpTemplateId, bson.M{
 		"code": code,
-	}, false, listmonk.EmailOptions{FromEmail: "Timeful <noreply@timeful.app>"})
+	}, false, listmonk.EmailOptions{FromEmail: "Asymbl Muster <noreply@muster.asymbl.app>"})
 
 	c.JSON(http.StatusOK, gin.H{})
 }

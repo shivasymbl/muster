@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/emersion/go-ical"
+	"github.com/shivasymbl/muster/server/models"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"schej.it/server/models"
-	"schej.it/server/utils"
 )
 
 type ICSCalendar struct {

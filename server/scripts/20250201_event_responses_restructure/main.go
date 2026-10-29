@@ -11,8 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"schej.it/server/db"
-	"schej.it/server/models"
+	"github.com/shivasymbl/muster/server/db"
+	"github.com/shivasymbl/muster/server/models"
 )
 
 // OldEvent represents the event structure before the migration

@@ -20,8 +20,8 @@ func main() {
 	defer client.Disconnect(context.Background())
 
 	// Get collections
-	eventsCollection := client.Database("schej-it").Collection("events")
-	// eventResponsesCollection := client.Database("schej-it").Collection("eventResponses")
+	eventsCollection := client.Database("muster").Collection("events")
+	// eventResponsesCollection := client.Database("muster").Collection("eventResponses")
 
 	// Get all events
 	latestID, err := primitive.ObjectIDFromHex("6804a0d136c40b06cf27aca9")

@@ -1,57 +1,41 @@
 <template>
-  <v-img
+  <img
     :alt="alt"
-    class="shrink tw-cursor-pointer"
-    contain
+    class="tw-h-auto tw-shrink-0 tw-cursor-pointer"
     :src="src"
-    transition="fade-transition"
-    :width="width"
+    :style="{ width: widthCss }"
   />
 </template>
 
 <script>
-import { isPhone } from "@/utils"
-
 export default {
   name: "Logo",
+  inheritAttrs: false,
 
   props: {
-    type: {
-      type: "timeful" | "betterwhen2meet" | "aprilfools",
-      default: "timeful",
+    color: {
+      type: String,
+      default: "navy",
+      validator: (value) => value === "navy" || value === "white",
+    },
+    width: {
+      type: [Number, String],
+      default: 120,
     },
   },
 
   computed: {
-    isPhone() {
-      return isPhone(this.$vuetify)
-    },
     alt() {
-      if (this.type === "betterwhen2meet") {
-        return "Betterwhen2meet Logo"
-      }
-
-      return "Timeful Logo"
+      return "Asymbl Muster"
     },
     src() {
-      switch (this.type) {
-        case "timeful":
-          return require("@/assets/timeful_logo_with_text.png")
-        case "betterwhen2meet":
-          return require("@/assets/april_fools_logo.png")
-        case "aprilfools":
-          return require("@/assets/april_fools_logo.png")
+      if (this.color === "white") {
+        return require("@/assets/brand/muster-wordmark-white.png")
       }
+      return require("@/assets/brand/muster-wordmark-navy.png")
     },
-    width() {
-      switch (this.type) {
-        case "timeful":
-          return this.isPhone ? 90 : 110
-        case "betterwhen2meet":
-          return this.isPhone ? 200 : 300
-        case "aprilfools":
-          return this.isPhone ? 200 : 300
-      }
+    widthCss() {
+      return typeof this.width === "number" ? `${this.width}px` : this.width
     },
   },
 }

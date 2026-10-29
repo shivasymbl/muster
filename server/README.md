@@ -1,4 +1,4 @@
-# Schej.it API
+# Asymbl Muster API
 
 API docs (available when the server is running): http://localhost:3002/swagger/index.html
 
@@ -11,5 +11,5 @@ API docs (available when the server is running): http://localhost:3002/swagger/i
 
 ## Make a backup of the mongodb database
 
-- Run `mongodump --host="localhost:27017" --db=schej-it` to make a backup
+- Run `mongodump --host="localhost:27017" --db=muster` to make a backup
 - Run `mongorestore --uri mongodb://localhost:27017 ./dump --drop` to restore
