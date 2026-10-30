@@ -96,6 +96,15 @@ func main() {
 		)
 	}))
 	router.Use(gin.Recovery())
+	// Caddy reaches this process through Docker, so the TCP peer is a private
+	// bridge address, not 127.0.0.1. Trust loopback and private ranges so
+	// X-Forwarded-For is the client. Public peers still cannot spoof it.
+	if err := router.SetTrustedProxies([]string{
+		"127.0.0.1", "::1",
+		"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+	}); err != nil {
+		logger.StdErr.Panicln(err)
+	}
 
 	// Cors
 	corsOrigins := os.Getenv("CORS_ORIGINS")
@@ -129,7 +138,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
 	routes.InitAuth(apiRouter)
-	routes.InitUser(apiRouter)
+	routes.InitUser(apiRouter, db.NewMongoTokenStore())
 	routes.InitUsers(apiRouter)
 	routes.InitEvents(apiRouter)
 	routes.InitAnalytics(apiRouter)
@@ -167,6 +176,7 @@ func main() {
 	} else {
 		logger.StdErr.Printf("Warning: index.html not found at %s", indexPath)
 	}
+	routes.InitMcp(router, os.Getenv("MCP_ENABLED") == "true", db.NewMcpDeps())
 	router.NoRoute(noRouteHandler())
 
 	// Init swagger documentation

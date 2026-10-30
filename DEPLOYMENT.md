@@ -41,6 +41,8 @@ DNS: an `A` record `muster` pointing at the droplet, TTL 300. If the zone is on 
 - `CORS_ORIGINS=https://muster.asymbl.app`
 - `MUSTER_IMAGE` set by the deploy script
 
+`MCP_ENABLED` stays unset until the assistant route should answer. Unset means `POST /mcp` returns 404. Setting it to `true` takes effect on restart. Before that, create the indexes in `server/scripts/20261029_mcp_indexes` on the production database. The app container sees Caddy through the Docker bridge, so trusted proxies include private ranges as well as loopback. Tokens are created in Settings. They are random, they are not a server secret, and they are not written into this file.
+
 Listmonk and Gmail stay off unless their variables are set. There is no Stripe, ad, Discord, or Slack configuration.
 
 ## Backup and restore

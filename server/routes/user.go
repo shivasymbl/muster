@@ -18,6 +18,7 @@ import (
 	"github.com/shivasymbl/muster/server/services/auth"
 	"github.com/shivasymbl/muster/server/services/calendar"
 	"github.com/shivasymbl/muster/server/services/contacts"
+	"github.com/shivasymbl/muster/server/services/mcp"
 	"github.com/shivasymbl/muster/server/services/microsoftgraph"
 	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,7 +26,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func InitUser(router *gin.RouterGroup) {
+func InitUser(router *gin.RouterGroup, tokens mcp.TokenStore) {
+	mcpTokenStore = tokens
 	userRouter := router.Group("/user")
 	userRouter.Use(middleware.AuthRequired())
 
@@ -44,6 +46,9 @@ func InitUser(router *gin.RouterGroup) {
 	userRouter.POST("/toggle-sub-calendar", toggleSubCalendar)
 	userRouter.GET("/searchContacts", searchContacts)
 	userRouter.DELETE("", deleteUser)
+	userRouter.POST("/mcp-tokens", createMcpToken)
+	userRouter.GET("/mcp-tokens", listMcpTokens)
+	userRouter.DELETE("/mcp-tokens/:tokenId", revokeMcpToken)
 }
 
 // @Summary Gets the user's profile

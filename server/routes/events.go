@@ -21,6 +21,7 @@ import (
 	"github.com/shivasymbl/muster/server/models"
 	"github.com/shivasymbl/muster/server/responses"
 	"github.com/shivasymbl/muster/server/services/calendar"
+	eventlogic "github.com/shivasymbl/muster/server/services/events"
 	"github.com/shivasymbl/muster/server/services/gcloud"
 	"github.com/shivasymbl/muster/server/services/listmonk"
 	"github.com/shivasymbl/muster/server/utils"
@@ -497,7 +498,7 @@ func getEvent(c *gin.Context) {
 	utils.ConvertEventToOldFormat(event, eventResponses)
 
 	// Convert responses to map format for JSON response
-	responsesMap := getResponsesMap(eventResponses)
+	responsesMap := eventlogic.ResponsesMap(eventResponses)
 
 	// Populate user fields
 	for userId, response := range responsesMap {
@@ -565,23 +566,34 @@ func getEvent(c *gin.Context) {
 	guestName := c.Query("guestName")
 	isOwner := userSesh != "" && ownerSesh == userSesh
 
-	// Strip sensitive user info from all responses
+	viewerEmail := ""
+	if userSesh != "" {
+		if u := db.GetUserById(userSesh); u != nil {
+			viewerEmail = strings.ToLower(strings.TrimSpace(u.Email))
+		}
+	}
+	var groupAttendees []models.Attendee
+	if event.Attendees != nil {
+		groupAttendees = *event.Attendees
+	}
+	keepGroupEmail := eventlogic.KeepGroupEmail(event.Type, viewerEmail, isOwner, groupAttendees)
+
 	showEmails := isOwner && utils.Coalesce(event.CollectEmails)
 	for userId, response := range responsesMap {
-		stripSensitiveUserFields(response.User)
+		eventlogic.StripSensitiveUserFields(response.User)
 		if !showEmails {
 			response.Email = ""
-			if response.User != nil && !shouldKeepGroupResponseUserEmails(event, userSesh, isOwner) {
+			if response.User != nil && !keepGroupEmail {
 				response.User.Email = ""
 			}
 		}
 		responsesMap[userId] = response
 	}
 	for userId, response := range event.SignUpResponses {
-		stripSensitiveUserFields(response.User)
+		eventlogic.StripSensitiveUserFields(response.User)
 		if !showEmails {
 			response.Email = ""
-			if response.User != nil && !shouldKeepGroupResponseUserEmails(event, userSesh, isOwner) {
+			if response.User != nil && !keepGroupEmail {
 				response.User.Email = ""
 			}
 		}
@@ -678,98 +690,26 @@ func getResponses(c *gin.Context) {
 		return
 	}
 
-	// Convert to map format and filter availability
 	eventResponses := db.GetEventResponses(event.Id.Hex())
-	responsesMap := getResponsesMap(eventResponses)
-
-	// Filter availability slice based on timeMin and timeMax
-	for userId, response := range responsesMap {
-		subsetAvailability := make([]primitive.DateTime, 0)
-		for _, timestamp := range response.Availability {
-			if timestamp.Time().Compare(payload.TimeMin) >= 0 && timestamp.Time().Compare(payload.TimeMax) <= 0 {
-				subsetAvailability = append(subsetAvailability, timestamp)
-			}
-		}
-		response.Availability = subsetAvailability
-
-		subsetIfNeeded := make([]primitive.DateTime, 0)
-		for _, timestamp := range response.IfNeeded {
-			if timestamp.Time().Compare(payload.TimeMin) >= 0 && timestamp.Time().Compare(payload.TimeMax) <= 0 {
-				subsetIfNeeded = append(subsetIfNeeded, timestamp)
-			}
-		}
-		response.IfNeeded = subsetIfNeeded
-
-		subsetManualAvailability := make(map[primitive.DateTime][]primitive.DateTime)
-		for timestamp := range utils.Coalesce(response.ManualAvailability) {
-			if timestamp.Time().Compare(payload.TimeMin) >= 0 && timestamp.Time().Compare(payload.TimeMax) <= 0 {
-				subsetManualAvailability[timestamp] = (*response.ManualAvailability)[timestamp]
-			}
-		}
-		response.ManualAvailability = &subsetManualAvailability
-		responsesMap[userId] = response
-	}
-
-	// Determine if the requester is the event owner
-	ownerSesh := event.OwnerId.Hex()
 	session := sessions.Default(c)
 	userIdInterface := session.Get("userId")
-	var userSesh string
+	viewer := eventlogic.Viewer{GuestName: c.Query("guestName")}
 	if userIdInterface != nil {
-		userSesh = userIdInterface.(string)
-	}
-	guestName := c.Query("guestName")
-	isOwner := userSesh != "" && ownerSesh == userSesh
-
-	// Strip sensitive user info from all responses
-	showEmails := isOwner && utils.Coalesce(event.CollectEmails)
-	for userId, response := range responsesMap {
-		stripSensitiveUserFields(response.User)
-		if !showEmails {
-			response.Email = ""
-			if response.User != nil && !shouldKeepGroupResponseUserEmails(event, userSesh, isOwner) {
-				response.User.Email = ""
-			}
+		viewer.UserID = userIdInterface.(string)
+		viewer.GuestName = ""
+		if u := db.GetUserById(viewer.UserID); u != nil {
+			viewer.Email = strings.ToLower(strings.TrimSpace(u.Email))
 		}
-		responsesMap[userId] = response
 	}
-
-	// Apply privacy logic based on blindAvailabilityEnabled
-	if !utils.Coalesce(event.BlindAvailabilityEnabled) {
-		// Blind availability is NOT enabled - return response as-is
-		c.JSON(http.StatusOK, responsesMap)
-		return
-	}
-
-	// Blind availability IS enabled - apply privacy filtering
-	if userSesh != "" {
-		// User session exists (user is logged in)
-		if ownerSesh == userSesh {
-			// User is the owner - return response as-is
-			c.JSON(http.StatusOK, responsesMap)
-			return
+	var attendees []models.Attendee
+	if event.Type == models.GROUP {
+		if event.Attendees != nil {
+			attendees = *event.Attendees
 		} else {
-			// User is NOT the owner - return only their own response
-			filteredMap := make(map[string]*models.Response)
-			if userResponse, exists := responsesMap[userSesh]; exists {
-				filteredMap[userSesh] = userResponse
-			}
-			c.JSON(http.StatusOK, filteredMap)
-			return
+			attendees = db.GetAttendees(event.Id.Hex())
 		}
-	} else if guestName != "" {
-		// Guest name query parameter exists - return only that guest's response
-		filteredMap := make(map[string]*models.Response)
-		if guestResponse, exists := responsesMap[guestName]; exists {
-			filteredMap[guestName] = guestResponse
-		}
-		c.JSON(http.StatusOK, filteredMap)
-		return
-	} else {
-		// No session, no guest name - return empty map
-		c.JSON(http.StatusOK, make(map[string]*models.Response))
-		return
 	}
+	c.JSON(http.StatusOK, eventlogic.FilterResponses(event, viewer, eventResponses, attendees, payload.TimeMin, payload.TimeMax))
 }
 
 // @Summary Updates the current user's availability
@@ -1851,57 +1791,4 @@ func findResponse(responses []models.EventResponse, userId string) (int, *models
 		}
 	}
 	return -1, nil
-}
-
-// shouldKeepGroupResponseUserEmails is true for signed-in group owners and invitees
-// so clients can match pending attendees to respondents when collectEmails is off.
-func shouldKeepGroupResponseUserEmails(event *models.Event, userSesh string, isOwner bool) bool {
-	if event.Type != models.GROUP || userSesh == "" {
-		return false
-	}
-	if isOwner {
-		return true
-	}
-	user := db.GetUserById(userSesh)
-	if user == nil {
-		return false
-	}
-	viewerEmail := strings.ToLower(strings.TrimSpace(user.Email))
-	if viewerEmail == "" {
-		return false
-	}
-	var attendees []models.Attendee
-	if event.Attendees != nil {
-		attendees = *event.Attendees
-	} else {
-		attendees = db.GetAttendees(event.Id.Hex())
-	}
-	for _, a := range attendees {
-		if strings.ToLower(strings.TrimSpace(a.Email)) == viewerEmail {
-			return true
-		}
-	}
-	return false
-}
-
-// stripSensitiveUserFields removes fields from a User that should never be
-// exposed in the event page API response (calendar accounts, billing info, etc.).
-// Email is NOT stripped here as callers handle email visibility separately based
-// on the collectEmails setting and owner status.
-func stripSensitiveUserFields(user *models.User) {
-	if user == nil {
-		return
-	}
-	user.CalendarAccounts = nil
-	user.CalendarOptions = nil
-	user.PrimaryAccountKey = nil
-}
-
-// Helper function to get all responses as a map (for backward compatibility)
-func getResponsesMap(responses []models.EventResponse) map[string]*models.Response {
-	result := make(map[string]*models.Response)
-	for _, resp := range responses {
-		result[resp.UserId] = resp.Response
-	}
-	return result
 }

@@ -231,6 +231,19 @@ definitions:
       state:
         type: string
     type: object
+  models.McpTokenPublic:
+    properties:
+      createdAt:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        type: string
+      label:
+        type: string
+      revokedAt:
+        type: string
+    type: object
   models.OAuth2CalendarAuth:
     type: object
   models.Remindee:
@@ -1581,6 +1594,74 @@ paths:
       summary: Update a folder's name or color
       tags:
       - folders
+  /user/mcp-tokens:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.McpTokenPublic'
+            type: array
+      summary: List assistant tokens
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: label
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create an assistant token
+      tags:
+      - user
+  /user/mcp-tokens/{tokenId}:
+    delete:
+      parameters:
+      - description: Token id
+        in: path
+        name: tokenId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Revoke an assistant token
+      tags:
+      - user
   /user/name:
     patch:
       consumes:

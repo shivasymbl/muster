@@ -106,6 +106,8 @@
         </div>
       </div>
 
+      <McpTokens />
+
       <!-- Question Section -->
       <div class="tw-flex tw-flex-col tw-gap-5">
         <div
@@ -175,6 +177,7 @@
 import { mapState, mapActions } from "vuex"
 import { _delete, patch, isPhone, get } from "@/utils"
 import CalendarAccounts from "@/components/settings/CalendarAccounts.vue"
+import McpTokens from "@/components/settings/McpTokens.vue"
 
 export default {
   name: "Settings",
@@ -183,7 +186,7 @@ export default {
     title: "Settings - Asymbl Muster",
   },
 
-  components: { CalendarAccounts },
+  components: { CalendarAccounts, McpTokens },
 
   data: () => ({
     dialog: false,
