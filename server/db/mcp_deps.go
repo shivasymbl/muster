@@ -28,6 +28,18 @@ func (mongoEvents) ResponseFlags(userHex string, ids []primitive.ObjectID) map[s
 	return ResponseFlags(userHex, ids)
 }
 
+func (mongoEvents) ReplaceAvailability(user *models.User, eventID primitive.ObjectID, availability, ifNeeded []primitive.DateTime) error {
+	return ReplaceAvailability(user, eventID, availability, ifNeeded)
+}
+
+func (mongoEvents) Decline(user *models.User, eventID primitive.ObjectID) error {
+	return DeclineInvite(user, eventID)
+}
+
+func (mongoEvents) AddAttendees(eventID primitive.ObjectID, emails []string) ([]string, error) {
+	return AddAttendeeEmails(eventID, emails)
+}
+
 type mongoUsers struct{}
 
 func (mongoUsers) GetByID(id string) *models.User {

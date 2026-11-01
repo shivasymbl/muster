@@ -267,6 +267,8 @@ func outcomeFor(code string) string {
 		return "window"
 	case "SIGN_UP_FORM":
 		return "sign_up"
+	case "NOT_OWNER", "NOT_AN_INVITEE", "OVERLAP_HIDDEN":
+		return "bad_arguments"
 	case "INTERNAL":
 		return "internal"
 	default:
@@ -291,6 +293,37 @@ func toolDefs() []gin.H {
 			"required":   []string{"event_id"},
 		}},
 		{"name": "muster_get_responses", "description": "Availability the caller is allowed to see, merged into ranges.", "inputSchema": gin.H{
+			"type": "object",
+			"properties": gin.H{
+				"event_id": gin.H{"type": "string"},
+				"start":    gin.H{"type": "string"},
+				"end":      gin.H{"type": "string"},
+			},
+			"required": []string{"event_id", "start", "end"},
+		}},
+		{"name": "muster_set_availability", "description": "Replace the caller's availability. This does not merge with the previous answer.", "inputSchema": gin.H{
+			"type": "object",
+			"properties": gin.H{
+				"event_id":     gin.H{"type": "string"},
+				"availability": gin.H{"type": "array", "items": gin.H{"type": "string"}},
+				"if_needed":    gin.H{"type": "array", "items": gin.H{"type": "string"}},
+			},
+			"required": []string{"event_id"},
+		}},
+		{"name": "muster_decline", "description": "Decline a group muster the caller was invited to.", "inputSchema": gin.H{
+			"type":       "object",
+			"properties": gin.H{"event_id": gin.H{"type": "string"}},
+			"required":   []string{"event_id"},
+		}},
+		{"name": "muster_add_attendees", "description": "Owner only. Add email addresses to a group muster. Does not remove anyone.", "inputSchema": gin.H{
+			"type": "object",
+			"properties": gin.H{
+				"event_id": gin.H{"type": "string"},
+				"emails":   gin.H{"type": "array", "items": gin.H{"type": "string"}},
+			},
+			"required": []string{"event_id", "emails"},
+		}},
+		{"name": "muster_summarize_overlap", "description": "Times every respondent can make. Refuses when availability is hidden and the caller is not the owner.", "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id": gin.H{"type": "string"},

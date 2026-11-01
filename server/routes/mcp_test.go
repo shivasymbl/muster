@@ -3,6 +3,7 @@ package routes
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +18,7 @@ import (
 	"github.com/shivasymbl/muster/server/middleware"
 	"github.com/shivasymbl/muster/server/models"
 	"github.com/shivasymbl/muster/server/services/mcp"
+	"github.com/shivasymbl/muster/server/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -76,6 +78,9 @@ type fakeEvents struct {
 	lastLimit    int
 	lastName     string
 	panicOnGet   bool
+	replaced     []primitive.DateTime
+	declined     bool
+	added        []string
 }
 
 func (f *fakeEvents) GetByEitherID(id string) *models.Event {
@@ -114,6 +119,31 @@ func (f *fakeEvents) ListForUser(user *models.User, name string, limit int, curs
 	}
 	return out, "", nil
 }
+func (f *fakeEvents) ReplaceAvailability(user *models.User, eventID primitive.ObjectID, availability, ifNeeded []primitive.DateTime) error {
+	f.replaced = availability
+	f.responses[eventID.Hex()] = []models.EventResponse{{
+		UserId: user.Id.Hex(),
+		Response: &models.Response{
+			UserId:       user.Id,
+			Name:         user.FirstName,
+			Availability: availability,
+			IfNeeded:     ifNeeded,
+		},
+	}}
+	return nil
+}
+
+func (f *fakeEvents) Decline(user *models.User, eventID primitive.ObjectID) error {
+	f.declined = true
+	f.lastUser = user.Id
+	return nil
+}
+
+func (f *fakeEvents) AddAttendees(eventID primitive.ObjectID, emails []string) ([]string, error) {
+	f.added = emails
+	return emails, nil
+}
+
 func (f *fakeEvents) ResponseFlags(userHex string, ids []primitive.ObjectID) map[string]mcp.ResponseFlags {
 	out := map[string]mcp.ResponseFlags{}
 	for _, id := range ids {
@@ -503,4 +533,124 @@ func TestMcpPanicIsInternal(t *testing.T) {
 	if result["isError"] != true || structured["code"] != "INTERNAL" || structured["retryable"] != true {
 		t.Fatal(rec.Body.String())
 	}
+}
+
+func TestMcpWrites(t *testing.T) {
+	middleware.ResetMCPLimits()
+	ownerID := primitive.NewObjectID()
+	guestID := primitive.NewObjectID()
+	strangerID := primitive.NewObjectID()
+	eventID := primitive.NewObjectID()
+	blind := utils.TruePtr()
+	event := &models.Event{Id: eventID, OwnerId: ownerID, Name: "Panel", Type: models.GROUP, BlindAvailabilityEnabled: blind}
+	owner := &models.User{Id: ownerID, Email: "owner@x.com", FirstName: "Ada"}
+	guest := &models.User{Id: guestID, Email: "guest@x.com", FirstName: "Bea"}
+	stranger := &models.User{Id: strangerID, Email: "stranger@x.com", FirstName: "Cara"}
+	hiddenWhen := primitive.NewDateTimeFromTime(time.Date(2033, 11, 22, 15, 0, 0, 0, time.UTC))
+	events := &fakeEvents{
+		byHex: map[string]*models.Event{eventID.Hex(): event},
+		attendees: map[string][]models.Attendee{
+			eventID.Hex(): {{Email: "guest@x.com", EventId: eventID}},
+		},
+		responses: map[string][]models.EventResponse{
+			eventID.Hex(): {
+				{UserId: ownerID.Hex(), Response: &models.Response{UserId: ownerID, Name: "Ada", Availability: []primitive.DateTime{hiddenWhen}}},
+				{UserId: guestID.Hex(), Response: &models.Response{UserId: guestID, Name: "Bea", Availability: []primitive.DateTime{hiddenWhen}}},
+			},
+		},
+	}
+	tokens := &fakeTokens{active: map[string]*models.McpToken{
+		"muster_owner":    {UserID: ownerID},
+		"muster_guest":    {UserID: guestID},
+		"muster_stranger": {UserID: strangerID},
+	}}
+	users := &fakeUsers{byID: map[string]*models.User{
+		ownerID.Hex(): owner, guestID.Hex(): guest, strangerID.Hex(): stranger,
+	}}
+	r := engine(mcp.Deps{Tokens: tokens, Users: users, Events: events}, true)
+	tool := func(token, name, args string) (map[string]any, map[string]any) {
+		t.Helper()
+		rec := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"`+name+`","arguments":`+args+`}}`, token, "", "", "")
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s status %d %s", name, rec.Code, rec.Body.String())
+		}
+		body := decode(t, rec)
+		result := body["result"].(map[string]any)
+		return result, result["structuredContent"].(map[string]any)
+	}
+
+	t.Run("stranger cannot write", func(t *testing.T) {
+		result, structured := tool("muster_stranger", "muster_set_availability", `{"event_id":"`+eventID.Hex()+`","availability":["2033-11-22T15:00:00Z"]}`)
+		if result["isError"] != true || structured["code"] != "EVENT_NOT_FOUND_OR_NO_ACCESS" || events.replaced != nil {
+			t.Fatal(structured)
+		}
+	})
+
+	t.Run("set replaces and does not keep the old mark", func(t *testing.T) {
+		_, first := tool("muster_owner", "muster_set_availability", `{"event_id":"`+eventID.Hex()+`","availability":["2033-11-22T15:00:00Z","2033-11-22T15:15:00Z"]}`)
+		if first["replaced"] != true || first["availability"] != float64(2) {
+			t.Fatal(first)
+		}
+		_, second := tool("muster_owner", "muster_set_availability", `{"event_id":"`+eventID.Hex()+`","availability":["2033-11-22T16:00:00Z"]}`)
+		if second["availability"] != float64(1) || len(events.replaced) != 1 || events.replaced[0].Time().UTC().Format(time.RFC3339) != "2033-11-22T16:00:00Z" {
+			t.Fatalf("stored %#v body %#v", events.replaced, second)
+		}
+	})
+
+	t.Run("guest cannot invite and owner can", func(t *testing.T) {
+		result, structured := tool("muster_guest", "muster_add_attendees", `{"event_id":"`+eventID.Hex()+`","emails":["new@x.com"]}`)
+		if result["isError"] != true || structured["code"] != "NOT_OWNER" || events.added != nil {
+			t.Fatal(structured)
+		}
+		_, added := tool("muster_owner", "muster_add_attendees", `{"event_id":"`+eventID.Hex()+`","emails":["new@x.com","owner@x.com"]}`)
+		if added["email_sent"] != false {
+			t.Fatal(added)
+		}
+		list, _ := added["added"].([]any)
+		if len(list) != 1 || list[0] != "new@x.com" {
+			t.Fatal(added)
+		}
+		events.attendees[eventID.Hex()] = append(events.attendees[eventID.Hex()], models.Attendee{Email: "new@x.com", EventId: eventID})
+		_, again := tool("muster_owner", "muster_add_attendees", `{"event_id":"`+eventID.Hex()+`","emails":["Bob <New@X.com>","guest@x.com"]}`)
+		againList, _ := again["added"].([]any)
+		if len(againList) != 0 {
+			t.Fatal(again)
+		}
+	})
+
+	t.Run("only an invitee can decline", func(t *testing.T) {
+		result, structured := tool("muster_owner", "muster_decline", `{"event_id":"`+eventID.Hex()+`"}`)
+		if result["isError"] != true || structured["code"] != "NOT_AN_INVITEE" || events.declined {
+			t.Fatal(structured)
+		}
+		_, ok := tool("muster_guest", "muster_decline", `{"event_id":"`+eventID.Hex()+`"}`)
+		if ok["declined"] != true || !events.declined {
+			t.Fatal(ok)
+		}
+	})
+
+	t.Run("blind non-owner summary has no name time or count", func(t *testing.T) {
+		rec := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"muster_summarize_overlap","arguments":{"event_id":"`+eventID.Hex()+`","start":"2033-11-22T00:00:00Z","end":"2033-11-23T00:00:00Z"}}}`, "muster_guest", "", "", "")
+		raw := rec.Body.String()
+		if strings.Contains(raw, "Ada") || strings.Contains(raw, "Bea") || strings.Contains(raw, "2033-11-22T15:00:00Z") || strings.Contains(raw, "count") {
+			t.Fatal(raw)
+		}
+		body := decode(t, rec)
+		structured := body["result"].(map[string]any)["structuredContent"].(map[string]any)
+		if structured["code"] != "OVERLAP_HIDDEN" {
+			t.Fatal(raw)
+		}
+	})
+
+	t.Run("owner summary names both people", func(t *testing.T) {
+		events.responses[eventID.Hex()] = []models.EventResponse{
+			{UserId: ownerID.Hex(), Response: &models.Response{UserId: ownerID, Name: "Ada", Availability: []primitive.DateTime{hiddenWhen}}},
+			{UserId: guestID.Hex(), Response: &models.Response{UserId: guestID, Name: "Bea", Availability: []primitive.DateTime{hiddenWhen}}},
+		}
+		_, structured := tool("muster_owner", "muster_summarize_overlap", `{"event_id":"`+eventID.Hex()+`","start":"2033-11-22T00:00:00Z","end":"2033-11-23T00:00:00Z"}`)
+		raw := fmt.Sprint(structured)
+		if !strings.Contains(raw, "Ada") || !strings.Contains(raw, "Bea") {
+			t.Fatal(structured)
+		}
+	})
 }

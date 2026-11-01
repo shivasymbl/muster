@@ -28,13 +28,16 @@ type ListedEvent struct {
 	NonEmpty    bool
 }
 
-// EventStore reads musters. It does not use the website handlers.
+// EventStore reads and updates musters. It does not use the website handlers.
 type EventStore interface {
 	GetByEitherID(id string) *models.Event
 	Responses(id primitive.ObjectID) []models.EventResponse
 	Attendees(id primitive.ObjectID) []models.Attendee
 	ListForUser(user *models.User, name string, limit int, cursor string) ([]ListedEvent, string, error)
 	ResponseFlags(userHex string, ids []primitive.ObjectID) map[string]ResponseFlags
+	ReplaceAvailability(user *models.User, eventID primitive.ObjectID, availability, ifNeeded []primitive.DateTime) error
+	Decline(user *models.User, eventID primitive.ObjectID) error
+	AddAttendees(eventID primitive.ObjectID, emails []string) ([]string, error)
 }
 
 // UserStore loads the account that owns a token.

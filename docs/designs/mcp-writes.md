@@ -1,0 +1,21 @@
+# MCP writes
+
+The website stays public by link. These tools use the same signed-in bearer as the read tools. They do not call the website handlers, because those handlers accept a guest and a session cookie.
+
+## Tools
+
+`muster_set_availability` replaces the caller's `availability` and `if_needed`. Omit a list to clear it. It does not merge with the previous answer. Calendar settings already stored on the answer are left in place. A new answer clears a previous decline. Sign-up forms are refused.
+
+`muster_decline` sets declined on a group muster. The caller must be on the invite list. The owner is not an invitee unless their email is on that list.
+
+`muster_add_attendees` is owner only. It adds addresses and does not remove anyone. An address is stored as the bare mailbox, lowercased, so `Bob <bob@x.com>` and `BOB@x.com` are the same person. The owner's own address is skipped. An address already on the invite list is skipped, including a different capitalisation. Invite mail is sent only when Listmonk is configured. The tool result says `email_sent: false` when it is not. Production does not have Listmonk on, so people are added and no mail goes out.
+
+`muster_summarize_overlap` returns times that every person who answered in the window can make. Someone with no marks in the window is left out. People are kept apart by user id, so two respondents with the same display name do not collapse into one. When blind availability is on and the caller is not the owner, the tool returns `OVERLAP_HIDDEN` and no names, counts, or times. A two-person muster would reveal the other person if it returned a shorter list than the caller's own free times.
+
+A stranger gets the same not-found error as a missing muster. A member who is not the owner gets `NOT_OWNER` on an invite. A member who is not invited gets `NOT_AN_INVITEE` on decline.
+
+Edit and duplicate stay on the website. OAuth discovery stays off until a named client cannot paste a bearer.
+
+## Upstream
+
+Timeful (https://github.com/schej-it/timeful.app) has no GitHub releases. The three newest commits are a per-date daylight-saving fix, a mobile keyboard fix, and `America/Vancouver`. The Vancouver zone is in the timezone list. The other two commits are large frontend changes on a fork that has already diverged (rebrand, billing removal, MCP). They are not in this release.
