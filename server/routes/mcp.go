@@ -92,19 +92,7 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 		wrote = true
 		c.Status(http.StatusAccepted)
 		return
-	case "initialize":
-		wrote = true
-		c.JSON(http.StatusOK, gin.H{
-			"jsonrpc": "2.0",
-			"id":      rpcID(req.ID),
-			"result": gin.H{
-				"protocolVersion": "2025-03-26",
-				"capabilities":    gin.H{"tools": gin.H{"listChanged": false}},
-				"serverInfo":      gin.H{"name": "muster", "version": "1"},
-			},
-		})
-		return
-	case "tools/list", "tools/call", "ping":
+	case "initialize", "tools/list", "tools/call", "ping":
 	default:
 		outcome = "bad_arguments"
 		wrote = true
@@ -153,6 +141,17 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 	}
 
 	switch req.Method {
+	case "initialize":
+		wrote = true
+		c.JSON(http.StatusOK, gin.H{
+			"jsonrpc": "2.0",
+			"id":      rpcID(req.ID),
+			"result": gin.H{
+				"protocolVersion": "2025-03-26",
+				"capabilities":    gin.H{"tools": gin.H{"listChanged": false}},
+				"serverInfo":      gin.H{"name": "muster", "version": "1"},
+			},
+		})
 	case "ping":
 		wrote = true
 		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{}})

@@ -251,15 +251,15 @@ func TestMcpProtocol(t *testing.T) {
 		}
 	})
 
-	t.Run("initialize ignores a bad bearer", func(t *testing.T) {
-		rec := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"initialize"}`, "muster_nope", "", "", "")
-		body := decode(t, rec)
-		if rec.Code != http.StatusOK {
-			t.Fatal(rec.Body.String())
+	t.Run("initialize without a token is the sign-in challenge", func(t *testing.T) {
+		rec := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"initialize"}`, "", "", "", "")
+		if rec.Code != http.StatusUnauthorized || !strings.Contains(rec.Header().Get("WWW-Authenticate"), "resource_metadata=") {
+			t.Fatalf("status %d header %q body %s", rec.Code, rec.Header().Get("WWW-Authenticate"), rec.Body.String())
 		}
-		result := body["result"].(map[string]any)
-		if result["protocolVersion"] != "2025-03-26" {
-			t.Fatal(result)
+		signed := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"initialize"}`, "muster_live", "", "", "")
+		body := decode(t, signed)
+		if signed.Code != http.StatusOK || body["result"].(map[string]any)["protocolVersion"] != "2025-03-26" {
+			t.Fatal(signed.Body.String())
 		}
 	})
 

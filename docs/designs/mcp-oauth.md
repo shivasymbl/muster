@@ -1,6 +1,6 @@
 # MCP sign-in for Claude
 
-Claude's connector cannot use the website cookie. `POST /mcp` without a bearer still returns 401. The `WWW-Authenticate` header points Claude at the discovery documents.
+Claude's connector cannot use the website cookie. `POST /mcp` without a bearer returns 401, including `initialize`. A successful `initialize` made Claude treat the server as open. The `WWW-Authenticate` header points Claude at the discovery documents.
 
 Claude registers itself at `POST /oauth/register`. The only accepted return addresses are `https://claude.ai/api/mcp/auth_callback` and `http://localhost` or `http://127.0.0.1` on any port, path `/callback`. Anything else is rejected.
 
