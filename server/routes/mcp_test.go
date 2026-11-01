@@ -242,12 +242,12 @@ func TestMcpProtocol(t *testing.T) {
 		}
 	})
 
-	t.Run("get is 405", func(t *testing.T) {
+	t.Run("get asks for sign-in", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/mcp", nil)
 		rec := httptest.NewRecorder()
 		r.ServeHTTP(rec, req)
-		if rec.Code != http.StatusMethodNotAllowed || rec.Body.Len() != 0 {
-			t.Fatalf("status %d body %q", rec.Code, rec.Body.String())
+		if rec.Code != http.StatusUnauthorized || !strings.Contains(rec.Header().Get("WWW-Authenticate"), "resource_metadata=") {
+			t.Fatalf("status %d header %q body %q", rec.Code, rec.Header().Get("WWW-Authenticate"), rec.Body.String())
 		}
 	})
 

@@ -27,7 +27,14 @@ type rpcRequest struct {
 // so the website fallback cannot answer it with HTML.
 func InitMcp(router *gin.Engine, enabled bool, deps mcp.Deps) {
 	router.GET("/mcp", func(c *gin.Context) {
-		c.Status(http.StatusMethodNotAllowed)
+		if !enabled {
+			c.Status(http.StatusMethodNotAllowed)
+			return
+		}
+		c.Header("WWW-Authenticate", oauthChallenge())
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"code": "NOT_SIGNED_IN", "message": "Sign in by creating a token in Muster Settings.",
+		})
 	})
 	router.POST("/mcp", func(c *gin.Context) {
 		handleMcp(c, enabled, deps)
@@ -126,6 +133,7 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 		middleware.NoteAuthFail(c, now)
 		outcome = "not_signed_in"
 		wrote = true
+		c.Header("WWW-Authenticate", oauthChallenge())
 		writeRPCError(c, req.ID, http.StatusUnauthorized, -32001, "Sign in by creating a token in Muster Settings.", gin.H{
 			"code":            "NOT_SIGNED_IN",
 			"message":         "Sign in by creating a token in Muster Settings.",

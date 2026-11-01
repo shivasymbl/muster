@@ -57,6 +57,18 @@ export default {
         })
       }
 
+      if (!state?.type) {
+        try {
+          const back = await get("/oauth/return")
+          if (back && back.redirect) {
+            window.location.assign(back.redirect)
+            return
+          }
+        } catch (e) {
+          // No connector sign-in is waiting.
+        }
+      }
+
       // Redirect to the correct place based on "state", otherwise, just redirect to home
       if (state) {
         let authUser

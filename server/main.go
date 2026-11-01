@@ -176,7 +176,9 @@ func main() {
 	} else {
 		logger.StdErr.Printf("Warning: index.html not found at %s", indexPath)
 	}
-	routes.InitMcp(router, os.Getenv("MCP_ENABLED") == "true", db.NewMcpDeps())
+	mcpOn := os.Getenv("MCP_ENABLED") == "true"
+	routes.InitMcp(router, mcpOn, db.NewMcpDeps())
+	routes.InitOAuth(router, apiRouter, mcpOn, db.NewMcpDeps(), db.NewOAuthStore())
 	router.NoRoute(noRouteHandler())
 
 	// Init swagger documentation
