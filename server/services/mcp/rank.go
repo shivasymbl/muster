@@ -17,9 +17,6 @@ type bestSlot struct {
 
 func rankSlots(event *models.Event, responses []models.EventResponse, start, end time.Time, duration time.Duration) []bestSlot {
 	inc := increment(event)
-	if duration < inc {
-		duration = inc
-	}
 	type person struct {
 		name     string
 		free     map[int64]bool

@@ -49,6 +49,23 @@ func TestReviewRegressionGETCannotBypassExistingAuthBlock(t *testing.T) {
 	}
 }
 
+func TestReviewRegressionGETFailedAuthJoinsTheBlock(t *testing.T) {
+	middleware.ResetMCPLimits()
+	tokens := &fakeTokens{}
+	r := engine(mcp.Deps{Tokens: tokens}, true)
+	var last *httptest.ResponseRecorder
+	for i := 0; i < 31; i++ {
+		req := httptest.NewRequest(http.MethodGet, "/mcp", nil)
+		req.RemoteAddr = "203.0.113.11:1234"
+		req.Header.Set("Authorization", "Bearer muster_invalid")
+		last = httptest.NewRecorder()
+		r.ServeHTTP(last, req)
+	}
+	if last.Code != http.StatusTooManyRequests || tokens.lookups != 30 {
+		t.Fatalf("GET failures did not spend the auth budget: status=%d lookups=%d", last.Code, tokens.lookups)
+	}
+}
+
 func TestReviewRegressionPanicPreservesRequestID(t *testing.T) {
 	middleware.ResetMCPLimits()
 	id := primitive.NewObjectID()

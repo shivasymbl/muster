@@ -48,6 +48,7 @@ func InitMcp(router *gin.Engine, enabled bool, deps mcp.Deps) {
 			})
 			return
 		}
+		middleware.NoteAuthFail(c, now)
 		c.Header("WWW-Authenticate", oauthChallenge())
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"code": "NOT_SIGNED_IN", "message": "Sign in by creating a token in Muster Settings.",
@@ -404,7 +405,7 @@ func toolDefs() []gin.H {
 		{"name": "muster_list_attendees", "description": "Who was invited and who answered. status is invited, responded, declined, or cleared. Email is included for the owner only. A hidden muster shows a non-owner only their own row.", "annotations": read, "inputSchema": gin.H{
 			"type": "object", "properties": gin.H{"event_id": id}, "required": []string{"event_id"},
 		}},
-		{"name": "muster_find_best_times", "description": "Rank slot starts by how many respondents can make a meeting of duration_minutes. A duration shorter than slot_minutes is raised to one slot. A duration that is not a multiple of slot_minutes is not returned. A stored answer with no free time in the window is missing, not dropped. A time marked only if-needed is included. Defaults the window to the muster's dates, capped at 7 days. Does not change the unanimous muster_summarize_overlap result. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
+		{"name": "muster_find_best_times", "description": "Rank slot starts by how many respondents can make a meeting of duration_minutes. duration_minutes must be a positive multiple of slot_minutes. A shorter or off-grid length is rejected, not rounded. A stored answer with no free time in the window is missing, not dropped. A time marked only if-needed is included. Defaults the window to the muster's dates, capped at 7 days. Does not change the unanimous muster_summarize_overlap result. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id":         id,

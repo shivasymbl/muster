@@ -2,7 +2,7 @@ package routes
 
 import "github.com/gin-gonic/gin"
 
-const mcpInstructions = "Muster is a group availability poll, not a calendar. Before a multi-step task, read one of muster://skills/pick-a-time, muster://skills/answer, or muster://skills/run-a-group. Weekly dates are the stored reference week 2018-06-17 through 2018-06-24. There is no timezone. muster_set_availability replaces the whole answer: an empty list clears that list, and omitting both lists is rejected so the stored answer stays unchanged. muster_summarize_overlap is only the times every stored answer in the window can make. People who have not answered are left out. An answer with no free time in the window blocks it. Use muster_find_best_times for a ranked partial fit. A duration shorter than one slot is raised to one slot. muster_finalize stores the chosen time and closes the muster. It does not create a calendar event and it sends no mail. muster_remind sends no mail. A hidden muster shows a non-owner nothing about other people."
+const mcpInstructions = "Muster is a group availability poll, not a calendar. Before a multi-step task, read one of muster://skills/pick-a-time, muster://skills/answer, or muster://skills/run-a-group. Weekly dates are the stored reference week 2018-06-17 through 2018-06-24. There is no timezone. muster_set_availability replaces the whole answer: an empty list clears that list, and omitting both lists is rejected so the stored answer stays unchanged. muster_summarize_overlap is only the times every stored answer in the window can make. People who have not answered are left out. An answer with no free time in the window blocks it. Use muster_find_best_times for a ranked partial fit. A duration that is not a positive multiple of slot_minutes is rejected. muster_finalize stores the chosen time and closes the muster. It does not create a calendar event and it sends no mail. muster_remind sends no mail. A hidden muster shows a non-owner nothing about other people."
 
 func skillResources() []gin.H {
 	out := make([]gin.H, 0, len(skillBodies))
@@ -41,7 +41,7 @@ Use this when someone asks which time works.
 
 1. Call muster_get_event. Use its dates, duration_hours, and slot_minutes. A weekly muster stores dates on 2018-06-17 through 2018-06-24. Do not move those dates onto a later week. Muster has no timezone.
 2. Call muster_list_attendees when you need to know who was invited. Email is visible to the owner only.
-3. Call muster_find_best_times to rank slot starts. It includes people who are if-needed or missing. The window defaults to the muster dates and is at most 7 days. A duration shorter than slot_minutes is raised to one slot. A duration that is not a multiple of slot_minutes is not returned.
+3. Call muster_find_best_times to rank slot starts. It includes people who are if-needed or missing. The window defaults to the muster dates and is at most 7 days. duration_minutes must be a positive multiple of slot_minutes. A shorter or off-grid length is rejected, not rounded.
 4. Call muster_summarize_overlap only for times every stored answer in the window can make. People who have not answered are left out, so an overlap is not "everyone invited." An answer with no free time in the window blocks the result. Say that plainly.
 5. A hidden muster returns OVERLAP_HIDDEN to a non-owner. Stop. Ask the owner.
 6. Call muster_finalize only after the user picks a start and end that sit on the grid. It stores that time and closes the muster. It does not create a calendar event and it sends no mail. Say both of those.

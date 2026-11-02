@@ -214,6 +214,9 @@ func findBestTimes(deps Deps, user *models.User, args map[string]any) (any, *Too
 		}
 		minutes = n
 	}
+	if time.Duration(minutes)*time.Minute%increment(event) != 0 {
+		return nil, toolErr("BAD_ARGUMENTS", "duration_minutes must be a positive multiple of slot_minutes.", "Read slot_minutes from muster_get_event.")
+	}
 	responses := deps.Events.Responses(event.Id)
 	for i := range responses {
 		if responses[i].Response == nil {

@@ -121,4 +121,11 @@ func TestMcpOrganizer(t *testing.T) {
 			t.Fatal(ranked)
 		}
 	})
+
+	t.Run("off-grid duration is rejected", func(t *testing.T) {
+		result, bad := tool("muster_owner", "muster_find_best_times", `{"event_id":"`+eventID.Hex()+`","duration_minutes":20}`)
+		if result["isError"] != true || bad["code"] != "BAD_ARGUMENTS" {
+			t.Fatal(bad)
+		}
+	})
 }
