@@ -713,13 +713,15 @@ func TestMcpWrites(t *testing.T) {
 			t.Fatal(added)
 		}
 		list, _ := added["added"].([]any)
-		if len(list) != 1 || list[0] != "new@x.com" {
+		skipped, _ := added["skipped"].([]any)
+		if len(list) != 1 || list[0] != "new@x.com" || len(skipped) != 1 || skipped[0] != "owner@x.com" {
 			t.Fatal(added)
 		}
 		events.attendees[eventID.Hex()] = append(events.attendees[eventID.Hex()], models.Attendee{Email: "new@x.com", EventId: eventID})
 		_, again := tool("muster_owner", "muster_add_attendees", `{"event_id":"`+eventID.Hex()+`","emails":["Bob <New@X.com>","guest@x.com"]}`)
 		againList, _ := again["added"].([]any)
-		if len(againList) != 0 {
+		againSkipped, _ := again["skipped"].([]any)
+		if len(againList) != 0 || len(againSkipped) != 2 || againSkipped[0] != "new@x.com" || againSkipped[1] != "guest@x.com" {
 			t.Fatal(again)
 		}
 	})

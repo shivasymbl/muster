@@ -113,7 +113,9 @@ func addAttendees(deps Deps, user *models.User, args map[string]any) (any, *Tool
 		return nil, toolErr("BAD_ARGUMENTS", "At most 20 emails per call.", "Split the list and call again.")
 	}
 	emails := make([]string, 0, len(list))
+	skipped := make([]string, 0)
 	seen := map[string]bool{}
+	skippedSeen := map[string]bool{}
 	for _, item := range list {
 		address, ok := item.(string)
 		address = strings.TrimSpace(address)
@@ -125,6 +127,10 @@ func addAttendees(deps Deps, user *models.User, args map[string]any) (any, *Tool
 			return nil, toolErr("BAD_ARGUMENTS", "One address is not an email.", "Fix the address and call again.")
 		}
 		if seen[address] || address == canonicalOrLower(user.Email) || alreadyInvited(deps, event.Id, address) {
+			if !skippedSeen[address] {
+				skippedSeen[address] = true
+				skipped = append(skipped, address)
+			}
 			continue
 		}
 		seen[address] = true
@@ -151,6 +157,7 @@ func addAttendees(deps Deps, user *models.User, args map[string]any) (any, *Tool
 	return map[string]any{
 		"event_id":   event.Id.Hex(),
 		"added":      added,
+		"skipped":    skipped,
 		"email_sent": emailSent && len(added) > 0,
 	}, nil
 }

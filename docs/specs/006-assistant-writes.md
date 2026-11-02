@@ -8,7 +8,7 @@ Three write tools use the same token as the reads. They do not call the website 
 
 `muster_decline` sets declined on a group muster. The caller must be on the invite list.
 
-`muster_add_attendees` is owner only. It adds addresses and does not remove anyone. An address is stored as the bare mailbox, lowercased. An address already on the list is skipped. Invite mail goes out only when Listmonk is configured. Production does not have Listmonk on, so the row is added and no mail is sent.
+`muster_add_attendees` is owner only. It adds addresses and does not remove anyone. An address is stored as the bare mailbox, lowercased. `added` lists who was newly invited. `skipped` lists the owner, duplicates, and anyone already on the list. Invite mail goes out only when Listmonk is configured. Production does not have Listmonk on, so the row is added and no mail is sent.
 
 A stranger gets the same not-found error as a missing muster.
 

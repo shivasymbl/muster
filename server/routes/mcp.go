@@ -364,7 +364,7 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},
-		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability or if_needed. An empty list clears that list. Omitting both, or passing null, leaves the answer unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability or if_needed. An empty list clears that list. Omitting both, or passing null, is rejected and the stored answer stays unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id":     id,
@@ -378,7 +378,7 @@ func toolDefs() []gin.H {
 			"properties": gin.H{"event_id": id},
 			"required":   []string{"event_id"},
 		}},
-		{"name": "muster_add_attendees", "description": "Owner only. Add email addresses to a group muster (is_group true). Does not remove anyone. An address already invited is skipped. Invite mail is sent only when Listmonk is configured. email_sent is false when it is not. Returns the addresses actually added.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": true}, "inputSchema": gin.H{
+		{"name": "muster_add_attendees", "description": "Owner only. Add email addresses to a group muster (is_group true). Does not remove anyone. added is who was newly invited. skipped names the owner, duplicates, and anyone already invited, including different capitalisation. An empty added list means nobody new was invited. Invite mail is sent only when Listmonk is configured. email_sent is false when it is not.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": true}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id": id,
@@ -404,7 +404,7 @@ func toolDefs() []gin.H {
 		{"name": "muster_list_attendees", "description": "Who was invited and who answered. status is invited, responded, declined, or cleared. Email is included for the owner only. A hidden muster shows a non-owner only their own row.", "annotations": read, "inputSchema": gin.H{
 			"type": "object", "properties": gin.H{"event_id": id}, "required": []string{"event_id"},
 		}},
-		{"name": "muster_find_best_times", "description": "Rank slot starts by how many respondents can make a meeting of duration_minutes. A returned interval fits the current grid and that duration. A stored answer with no free time in the window is missing, not dropped. A time marked only if-needed is included. Defaults the window to the muster's dates, capped at 7 days. Does not change the unanimous muster_summarize_overlap result. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
+		{"name": "muster_find_best_times", "description": "Rank slot starts by how many respondents can make a meeting of duration_minutes. A duration shorter than slot_minutes is raised to one slot. A duration that is not a multiple of slot_minutes is not returned. A stored answer with no free time in the window is missing, not dropped. A time marked only if-needed is included. Defaults the window to the muster's dates, capped at 7 days. Does not change the unanimous muster_summarize_overlap result. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id":         id,
