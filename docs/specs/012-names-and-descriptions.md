@@ -1,6 +1,6 @@
 # 12. Name the people and describe the tools
 
-Status: In progress.
+Status: Done.
 
 When the caller is allowed to see a person, an empty name is filled from that person's account. An email the privacy filter removed is not put back.
 

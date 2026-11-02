@@ -1,6 +1,6 @@
 # 10. Show the muster grid
 
-Status: In progress.
+Status: Done.
 
 `muster_get_event` and `muster_list_my_events` return the stored grid: `dates` as UTC instants, `duration_hours`, `slot_minutes`, `days_only`, `start_on_monday`, and `is_group`. A weekly muster also returns `weekdays`. Muster does not store a timezone, so none is invented.
 

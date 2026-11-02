@@ -1,6 +1,6 @@
 # 11. Reject availability the muster cannot hold
 
-Status: In progress.
+Status: Done.
 
 When a muster has stored dates, `muster_set_availability` rejects a time outside those windows and a time inside a window but off `slot_minutes`. A weekly muster uses the same rule on its June 2018 reference instants. A later calendar week is outside, and a window that runs past midnight still accepts the slots on the next reference day. A time in both lists is rejected. Duplicate times are stored once and counted as `duplicates_ignored`.
 
