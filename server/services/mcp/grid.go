@@ -54,7 +54,7 @@ func slotProblem(event *models.Event, t time.Time) string {
 	off := false
 	for _, d := range event.Dates {
 		start := d.Time().UTC()
-		delta, inside := slotDelta(event, start, t)
+		delta, inside := slotDelta(start, t)
 		if !inside {
 			continue
 		}
@@ -84,27 +84,12 @@ func slotSpan(event *models.Event, inc time.Duration) time.Duration {
 	return time.Duration(mins) * time.Minute
 }
 
-func slotDelta(event *models.Event, start, t time.Time) (time.Duration, bool) {
-	if event.Type == models.DOW {
-		if t.Weekday() != start.Weekday() {
-			return 0, false
-		}
-		delta := clockOf(t) - clockOf(start)
-		if delta < 0 {
-			return 0, false
-		}
-		return delta, true
-	}
+// slotDelta measures a mark from a stored start instant. Weekly musters store
+// that instant on the June 2018 reference week, so a later Monday is outside.
+// The same comparison keeps a window that runs past midnight.
+func slotDelta(start, t time.Time) (time.Duration, bool) {
 	if t.Before(start) {
 		return 0, false
 	}
 	return t.Sub(start), true
-}
-
-func clockOf(t time.Time) time.Duration {
-	t = t.UTC()
-	return time.Duration(t.Hour())*time.Hour +
-		time.Duration(t.Minute())*time.Minute +
-		time.Duration(t.Second())*time.Second +
-		time.Duration(t.Nanosecond())
 }

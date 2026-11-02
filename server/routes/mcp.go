@@ -285,7 +285,7 @@ func outcomeFor(code string) string {
 
 func toolDefs() []gin.H {
 	id := gin.H{"type": "string", "description": "24-character event_id or the short id, for example QTTyVU."}
-	window := "RFC3339 timestamp. start and end must be at most 7 days apart. For a weekly muster, match the stored UTC weekday and UTC clock from weekdays and dates."
+	window := "RFC3339 timestamp. start and end must be at most 7 days apart. A weekly muster stores its times on the reference week 2018-06-17 through 2018-06-24. Use the dates from muster_get_event, not a later calendar week."
 	read := gin.H{"readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false}
 	return []gin.H{
 		{"name": "muster_whoami", "description": "Who the token belongs to. Returns user_id, email, and name.", "annotations": read, "inputSchema": gin.H{"type": "object", "properties": gin.H{}}},
@@ -297,7 +297,7 @@ func toolDefs() []gin.H {
 				"cursor": gin.H{"type": "string", "description": "24-character hex next_cursor from the previous page."},
 			},
 		}},
-		{"name": "muster_get_event", "description": "One muster the caller is a member of. Returns the grid: dates as UTC instants, duration_hours, slot_minutes, days_only, start_on_monday, and is_group. A weekly muster also returns weekdays. Muster does not store a timezone. A group muster is the only kind with an invite list.", "annotations": read, "inputSchema": gin.H{
+		{"name": "muster_get_event", "description": "One muster the caller is a member of. Returns the grid: dates as UTC instants, duration_hours, slot_minutes, days_only, start_on_monday, and is_group. A weekly muster also returns weekdays, and its dates are on the reference week 2018-06-17 through 2018-06-24. Muster does not store a timezone. A group muster is the only kind with an invite list.", "annotations": read, "inputSchema": gin.H{
 			"type":       "object",
 			"properties": gin.H{"event_id": id},
 			"required":   []string{"event_id"},

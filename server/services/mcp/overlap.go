@@ -47,7 +47,7 @@ func overlapSlots(event *models.Event, responses []models.EventResponse, start, 
 		if !ok {
 			name := personName(row.Response)
 			if name == "" {
-				name = key
+				name = "Unnamed"
 			}
 			person = &respondent{name: name}
 			byKey[key] = person

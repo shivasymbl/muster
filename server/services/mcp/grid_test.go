@@ -39,24 +39,42 @@ func TestSlotProblemSpecificDates(t *testing.T) {
 }
 
 func TestSlotProblemWeeklyAndUndated(t *testing.T) {
-	ref := time.Date(2018, 6, 4, 16, 0, 0, 0, time.UTC) // Monday
+	// Monday of the reference week the website actually stores.
+	ref := time.Date(2018, 6, 18, 16, 0, 0, 0, time.UTC)
 	hours := float32(1)
+	inc := 15
 	event := &models.Event{
-		Type:     models.DOW,
-		Duration: &hours,
-		Dates:    []primitive.DateTime{primitive.NewDateTimeFromTime(ref)},
+		Type:          models.DOW,
+		Duration:      &hours,
+		TimeIncrement: &inc,
+		Dates:         []primitive.DateTime{primitive.NewDateTimeFromTime(ref)},
 	}
-	monday := time.Date(2026, 11, 2, 16, 15, 0, 0, time.UTC)
-	if monday.Weekday() != time.Monday {
-		t.Fatal(monday.Weekday())
+	if slotProblem(event, ref.Add(15*time.Minute)) != "" {
+		t.Fatal("reference week")
 	}
-	if slotProblem(event, monday) != "" {
-		t.Fatal("matching weekday")
+	later := time.Date(2026, 11, 2, 16, 15, 0, 0, time.UTC)
+	if slotProblem(event, later) != "outside" {
+		t.Fatal("later week is not stored")
 	}
-	tuesday := time.Date(2026, 11, 3, 16, 15, 0, 0, time.UTC)
-	if slotProblem(event, tuesday) != "outside" {
-		t.Fatal("other weekday")
+	other := time.Date(2018, 6, 19, 16, 15, 0, 0, time.UTC)
+	if slotProblem(event, other) != "outside" {
+		t.Fatal("other reference day")
 	}
+
+	nightHours := float32(2)
+	night := time.Date(2018, 6, 18, 23, 0, 0, 0, time.UTC)
+	event.Duration = &nightHours
+	event.Dates = []primitive.DateTime{primitive.NewDateTimeFromTime(night)}
+	if slotProblem(event, time.Date(2018, 6, 19, 0, 0, 0, 0, time.UTC)) != "" {
+		t.Fatal("midnight crossing")
+	}
+	if slotProblem(event, time.Date(2018, 6, 19, 0, 45, 0, 0, time.UTC)) != "" {
+		t.Fatal("after midnight")
+	}
+	if slotProblem(event, time.Date(2018, 6, 19, 1, 0, 0, 0, time.UTC)) != "outside" {
+		t.Fatal("end is exclusive")
+	}
+
 	open := &models.Event{Type: models.GROUP}
 	if slotProblem(open, time.Date(2030, 1, 1, 4, 30, 0, 0, time.UTC)) != "" {
 		t.Fatal("undated group stays open")
