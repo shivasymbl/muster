@@ -1,0 +1,112 @@
+spec_version: 1
+baseline:
+  repository: shivasymbl/muster
+  branch: room/latest-work-completed-s5jq
+  commit: 59b1a48b21060946c6ee11092f6a7d27b113bef7
+  final_review_tip: cd089433aa25eea7231047774e6235da3348c44d
+status: proposed_not_implemented
+amendment:
+  scope: full_T0_T7_plus_T1_5_F7_and_efficiency
+  field_evidence: user_reported_live_2026_11_02_33_of_34_not_independently_replayed
+  owner_decisions: pending_D1_through_D6
+components:
+  claude_host:
+    responsibility: auth_connection_tool_permissions_ui_resource_fetch_and_bridge
+  mcp_app:
+    path: mcp-app/
+    responsibility: authorized_snapshot_render_local_drafts_and_explicit_review
+  go_mcp_route:
+    path: server/routes/mcp.go
+    responsibility: authenticated_json_rpc_core_versions_tools_resources_and_result_envelopes
+  ui_resources:
+    path: server/routes/mcp_apps.go
+    responsibility: allowlisted_immutable_html_resource_and_csp
+  view_service:
+    paths: [server/services/mcp/app.go, server/services/mcp/app_dto.go]
+    responsibility: typed_redacted_snapshot_and_complete_own_answer
+  conversational_tools:
+    paths: [server/routes/mcp.go, server/services/mcp/server.go, server/services/mcp/writes.go, server/services/mcp/organizer.go]
+    responsibility: sixteen_legacy_tools_with_additive_truthful_receipts_ranges_filters_errors_and_labels
+  shared_availability_engine:
+    paths: [server/services/mcp/availability_changes.go, server/services/mcp/weekly_slots.go]
+    responsibility: pure_half_open_range_assignment_weekly_normalization_and_shared_bounds
+  shared_event_builder:
+    paths: [server/services/mcp/dto.go, server/services/mcp/server.go]
+    responsibility: preserved_legacy_fields_plus_scheduled_closed_timezone_and_authorized_counts
+  owner_policy:
+    responsibility: one_approved_participation_and_actionable_followup_rule_across_text_and_app
+  action_service:
+    path: server/services/mcp/app_actions.go
+    responsibility: closed_prepare_commit_receipt_protocol
+  store_adapters:
+    paths: [server/db/mcp_apps.go, server/db/mcp_app_actions.go]
+    responsibility: exact_own_read_conditional_target_writes_action_records
+  existing_website:
+    path: frontend/
+    responsibility: unchanged_cookie_based_web_product_and_competing_writers
+  mongo:
+    responsibility: events_responses_attendees_action_records
+boundaries:
+  - from: claude_host
+    to: go_mcp_route
+    contract: authenticated_mcp_http_json_no_sse
+  - from: claude_host
+    to: ui_resources
+    contract: resources_read_ui_uri_html_profile_mcp_app
+  - from: mcp_app
+    to: claude_host
+    contract: apps_2026_01_26_sdk_bridge_no_bearer_token_in_browser
+  - from: go_mcp_route
+    to: view_service
+    contract: actor_from_auth_not_tool_arguments
+  - from: view_service
+    to: mcp_app
+    contract: meta_muster_schema_version_1_authorized_sections
+  - from: action_service
+    to: store_adapters
+    contract: actor_bound_plan_atomic_claim_target_cas_explicit_uncertainty
+  - from: conversational_tools
+    to: shared_availability_engine
+    contract: new_ranges_replace_or_merge_same_F3_limits_with_approved_legacy_exception
+  - from: action_service
+    to: shared_availability_engine
+    contract: complete_answer_changes_no_duplicate_validator
+  - from: conversational_tools
+    to: store_adapters
+    contract: new_range_target_CAS_and_authoritative_echo_no_UI_renderer_dependency
+  - from: conversational_tools
+    to: shared_event_builder
+    contract: additive_legacy_shapes_unchanged_existing_field_meanings
+  - from: view_service
+    to: shared_event_builder
+    contract: same_scheduled_timezone_counts_truth_with_permission_safe_app_projection
+  - from: conversational_tools
+    to: owner_policy
+    contract: pending_and_counts_follow_approved_population_semantics
+  - from: existing_website
+    to: mongo
+    contract: existing_writers_compete_with_ui_and_may_not_maintain_new_versions
+impact:
+  required:
+    - raw_mcp_route_and_resource_resolution
+    - server_asset_configuration
+    - new_ui_build_pipeline_and_runtime_assets
+    - targeted_database_reads_and_guarded_writes
+    - protocol_unit_browser_and_host_acceptance_tests
+    - optional_skill_visual_opener_instruction
+    - F7_text_clients_Claude_Code_API_and_denied_unverified_renderers
+    - additive_event_display_timezone_storage_and_projection
+    - text_range_weekly_defaultwindow_error_and_receipt_contracts
+    - catalog_call_count_response_size_and_owner_decision_gates
+  preserved:
+    - legacy_conversational_workflows
+    - website_auth_and_spa
+    - get_405_and_false_list_changed
+    - issue_11_and_issue_26_open
+  excluded:
+    - notification_streams
+    - production_metrics_platform
+    - calendar_creation
+    - email_delivery_reliability_project
+    - mongo_replica_set_migration
+    - deployment_without_approval

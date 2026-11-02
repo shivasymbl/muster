@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed muster_ui_prepare_action input",
+  "description": "Closed eight-operation proposed App action protocol. The server must authenticate, authorize, bind canonical state, enforce canonical tool arguments <=12288 UTF-8 bytes and independently limit the raw full JSON-RPC body to <=16384 bytes, then produce an immutable preview. A fingerprint is not an authorization token.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "operation": {
+      "type": "string",
+      "enum": [
+        "edit_own_answer",
+        "clear_own_answer",
+        "decline_own_invitation",
+        "finalize_time",
+        "create_group",
+        "update_group",
+        "add_attendees",
+        "remove_attendee"
+      ]
+    },
+    "event_id": {"$ref": "#/$defs/nonemptyString"},
+    "expected_state_fingerprint": {
+      "$ref": "#/$defs/nonemptyString",
+      "description": "Opaque server-computed comparison value from the complete authorized target state. Required for existing-event operations; prohibited for create_group."
+    },
+    "payload": {}
+  },
+  "required": ["operation", "payload"],
+  "oneOf": [
+    {
+      "properties": {
+        "operation": {"const": "edit_own_answer"},
+        "payload": {"$ref": "#/$defs/editOwnAnswer"}
+      },
+      "required": ["event_id", "expected_state_fingerprint"]
+    },
+    {
+      "properties": {
+        "operation": {"const": "clear_own_answer"},
+        "payload": {"$ref": "#/$defs/emptyPayload"}
+      },
+      "required": ["event_id", "expected_state_fingerprint"]
+    },
+    {
+      "properties": {
+        "operation": {"const": "decline_own_invitation"},
+        "payload": {"$ref": "#/$defs/emptyPayload"}
+      },
+      "required": ["event_id", "expected_state_fingerprint"]
+    },
+    {
+      "properties": {
+        "operation": {"const": "finalize_time"},
+        "payload": {"$ref": "#/$defs/finalizeTime"}
+      },
+      "required": ["event_id", "expected_state_fingerprint"]
+    },
+    {
+      "properties": {
+        "operation": {"const": "create_group"},
+        "event_id": false,
+        "expected_state_fingerprint": false,
+        "payload": {"$ref": "#/$defs/createGroup"}
+      }
+    },
+    {
+      "properties": {
+        "operation": {"const": "update_group"},
+        "payload": {"$ref": "#/$defs/updateGroup"}
+      },
+      "required": ["event_id", "expected_state_fingerprint"]
+    },
+    {
+      "properties": {
+        "operation": {"const": "add_attendees"},
+        "payload": {"$ref": "#/$defs/addAttendees"}
+      },
+      "required": ["event_id", "expected_state_fingerprint"]
+    },
+    {
+      "properties": {
+        "operation": {"const": "remove_attendee"},
+        "payload": {"$ref": "#/$defs/removeAttendee"}
+      },
+      "required": ["event_id", "expected_state_fingerprint"]
+    }
+  ],
+  "$defs": {
+    "nonemptyString": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "instant": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Parse as RFC3339 with an explicit offset; server canonicalizes to UTC and validates against actual event/grid semantics."
+    },
+    "name": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S"},
+    "durationHours": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 24,
+      "description": "Existing organizer meaning: length of each day/window, not meeting length."
+    },
+    "emailInput": {
+      "$ref": "#/$defs/nonemptyString",
+      "description": "Server must use the existing canonical email parser, trim and lowercase the parsed address, and validate it. JSON Schema string validation is not an email or identity check."
+    },
+    "emptyPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "editOwnAnswer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "changes": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "start": {"$ref": "#/$defs/instant"},
+              "end": {"$ref": "#/$defs/instant"},
+              "state": {
+                "type": "string",
+                "enum": ["available", "if_needed", "unavailable"]
+              }
+            },
+            "required": ["start", "end", "state"]
+          },
+          "description": "Empty array is a no-op, never clear. Server expands validated grid-aligned half-open intervals against the complete own-answer base; preserve every untouched mark and noneditable layer."
+        }
+      },
+      "required": ["changes"]
+    },
+    "finalizeTime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {"$ref": "#/$defs/instant"},
+        "end": {"$ref": "#/$defs/instant"}
+      },
+      "required": ["start", "end"]
+    },
+    "createGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {"$ref": "#/$defs/name"},
+        "duration_hours": {"$ref": "#/$defs/durationHours"},
+        "slot_minutes": {"type": "integer", "enum": [15, 30, 60]},
+        "dates": {
+          "type": "array",
+          "maxItems": 31,
+          "items": {"$ref": "#/$defs/instant"}
+        },
+        "emails": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {"$ref": "#/$defs/emailInput"}
+        },
+        "blind": {"type": "boolean"},
+        "days_only": {"type": "boolean"},
+        "start_on_monday": {"type": "boolean"},
+        "display_timezone": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "F7 additive presentation-only IANA timezone, validated by the server. Omission/null means unspecified on create; never reinterpret UTC or reference-week instants."
+        }
+      },
+      "required": ["name", "duration_hours"],
+      "description": "Adapter fixes event type to group; no client-supplied type/owner. Dates may be omitted or empty under existing GROUP semantics. Omitted slot_minutes follows existing default 15. Optional flags and emails are canonicalized into the immutable review before confirmation."
+    },
+    "updateGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "name": {"$ref": "#/$defs/name"},
+        "dates": {
+          "type": "array",
+          "maxItems": 2000,
+          "items": {"$ref": "#/$defs/instant"}
+        },
+        "duration_hours": {"$ref": "#/$defs/durationHours"},
+        "archive": {"type": "boolean"},
+        "display_timezone": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "F7 additive presentation-only IANA timezone. Omission preserves; null clears; a nonempty string must resolve in the server IANA database."
+        }
+      },
+      "description": "Narrow proposed subset of existing updateEvent parameters plus F7 display_timezone. Actual input name is archive, not is_archived; map to stored isArchived internally. Empty dates is an explicit replacement and must appear in review. No owner/type/slot/flag mutation through this branch."
+    },
+    "addAttendees": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "emails": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {"$ref": "#/$defs/emailInput"}
+        }
+      },
+      "required": ["emails"]
+    },
+    "removeAttendee": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"email": {"$ref": "#/$defs/emailInput"}},
+      "required": ["email"]
+    }
+  }
+}

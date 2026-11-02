@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed extended muster_list_my_events input",
+  "description": "Event listing, not MCP tools/list discovery. Preserves legacy nullable filters and limit-clamping compatibility; proposed status/projection defaults are metadata pending owner approval, not enforcement decisions.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": ["string", "null"],
+      "maxLength": 80,
+      "description": "Case-insensitive name substring. Missing or null means no name filter; an empty string retains its existing unfiltered meaning."
+    },
+    "limit": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "default": 20,
+      "description": "Existing default 20 when missing/null. Integers above 50 remain structurally valid because the existing server clamps them to 50; do not add a schema maximum that breaks that compatibility."
+    },
+    "cursor": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-fA-F]{24}$",
+      "description": "Existing 24-character hexadecimal next_cursor, or null/missing for first page. Empty string is invalid. Server checks pagination against the applied filters."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "archived", "all"],
+      "default": "all",
+      "description": "Proposed status filter. Recommended all preserves legacy visibility; exact open/archived lifecycle interpretation and approved default belong to the owner decision."
+    },
+    "needs_my_answer": {
+      "type": "boolean",
+      "description": "Proposed own-answer filter. Server applies the approved status and owner-participation semantics before pagination; this flag does not grant access to anyone else's answer."
+    },
+    "projection": {
+      "type": "string",
+      "enum": ["full", "compact"],
+      "default": "full",
+      "description": "Recommended full preserves legacy event/grid fields. Compact is explicit; its output contract must identify the projection rather than silently omit required full fields."
+    }
+  },
+  "examples": [
+    {},
+    {"name": null, "limit": 1000, "cursor": null},
+    {"status": "open", "needs_my_answer": true, "projection": "compact", "limit": 20}
+  ]
+}

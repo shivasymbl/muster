@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Additive add-attendees receipt preserving current skipped strings",
+  "description": "Proposed successful receipt extension over cd089433. Invalid batches remain errors with diagnostics and no partial writes; this schema alone cannot prove persisted outcomes or input attribution.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["event_id", "added", "skipped", "email_sent", "skipped_details"],
+  "properties": {
+    "event_id": {"type": "string", "minLength": 1},
+    "added": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Preserved addresses actually added. A repeated input address can also occur in skipped; do not treat these arrays as disjoint sets."
+    },
+    "skipped": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Preserve the existing canonical address-string array and its semantics; never replace these values with detail objects."
+    },
+    "email_sent": {
+      "type": "boolean",
+      "description": "Preserved server-reported flag, not proof of delivery."
+    },
+    "skipped_details": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {"$ref": "#/$defs/skippedDetail"},
+      "description": "Additive per-input explanation. Invalid input details belong to an atomic error response, not a partially successful invalid batch."
+    }
+  },
+  "$defs": {
+    "skippedDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["email", "reason", "input_index", "basis"],
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Canonical address when valid, or bounded sanitized caller-provided value in invalid-input error diagnostics."
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["already_invited", "owner", "invalid"]
+        },
+        "input_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 19,
+          "description": "Zero-based original raw email-list occurrence, before normalization or deduplication."
+        },
+        "basis": {
+          "type": "string",
+          "enum": ["existing_attendee", "earlier_input", "owner_identity", "invalid_input"],
+          "description": "Distinguishes an earlier duplicate occurrence from an address present before the call; unknown storage races must not be mislabeled as known complete outcomes."
+        }
+      }
+    }
+  }
+}

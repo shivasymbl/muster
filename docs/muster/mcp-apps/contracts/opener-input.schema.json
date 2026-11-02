@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed muster_open_view input",
+  "description": "Proposed read-only App opener input, not an existing endpoint contract. Window ordering, seven-day bound, scope, cursor authenticity and authorization require server checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workflow": {
+      "type": "string",
+      "enum": ["pick-a-time", "answer", "run-a-group"]
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "Canonical or short ID. Omission is permitted only for run-a-group creation-draft mode; explicit null is invalid for every workflow. Opening the draft persists no event."
+    },
+    "window": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {"type": "string", "format": "date-time"},
+            "end": {"type": "string", "format": "date-time"}
+          },
+          "required": ["start", "end"]
+        }
+      ],
+      "description": "Null or omission asks the server to choose a valid bounded display window or report an undated state. Server must require start < end and elapsed span <= seven days; schema alone cannot enforce the relationship."
+    },
+    "duration_minutes": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Null or omission uses the documented event/grid-derived default. Server validates grid multiple and supported range without rounding."
+    },
+    "people_cursor": {
+      "type": ["string", "null"],
+      "description": "Opaque actor/event/window-bound cursor. Missing, null or empty means no cursor; invalid, stale or cross-scope cursors must be rejected server-side."
+    }
+  },
+  "required": ["workflow"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {"workflow": {"enum": ["pick-a-time", "answer"]}},
+        "required": ["workflow"]
+      },
+      "then": {
+        "properties": {"event_id": {"type": "string"}},
+        "required": ["event_id"]
+      }
+    }
+  ]
+}

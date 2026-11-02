@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed muster_ui_commit_action input",
+  "description": "Commit accepts only the opaque ID of an immutable prepared action. It is not an authorization token; the server must reauthorize and atomically claim the execution attempt, then return a truthful receipt.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "action_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  },
+  "required": ["action_id"]
+}

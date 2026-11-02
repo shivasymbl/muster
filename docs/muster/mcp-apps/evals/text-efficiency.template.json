@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "status": "not_run",
+  "generated_by": "TestMCPTextEfficiency",
+  "run_id": null,
+  "release_stage": null,
+  "project_commit": null,
+  "measured_at": null,
+  "observation_mode": null,
+  "fixture_id": null,
+  "runtime_version": null,
+  "catalog": {"request_raw": null, "response_raw": null},
+  "approved_baseline": {
+    "status": "measured_not_launch_approved",
+    "project_commit": null,
+    "measured_at": null,
+    "observation_mode": null,
+    "approved_by": null,
+    "approved_at": null,
+    "approval_reference": null,
+    "transition": {
+      "status": "pending",
+      "from_commit": "cd089433aa25eea7231047774e6235da3348c44d",
+      "from_utf8_bytes": 12666,
+      "to_commit": null,
+      "to_utf8_bytes": null,
+      "approved_by": null,
+      "approved_at": null,
+      "reason": null,
+      "approval_reference": null
+    },
+    "catalog": {"request_raw": null, "response_raw": null}
+  },
+  "reported_measurements": {"catalog_utf8_bytes": null, "model_mcp_calls": null, "app_bridge_calls": null},
+  "setup_records": [],
+  "setup_shared_amortized": null,
+  "helper_validation": {"mode": null, "records": []},
+  "cases": [
+    {"id": "availability_known", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "availability_unknown", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "rank", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "status", "actor_role": "owner", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "create", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "finalize_confirm", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "rename", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "archive", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "large_response", "status": "not_run", "observed_outcome": null, "records": []},
+    {"id": "paginated_response", "status": "not_run", "observed_outcome": null, "pagination": {"request_cursor_pointer": null, "response_cursor_pointer": null}, "records": []}
+  ]
+}

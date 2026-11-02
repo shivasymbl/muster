@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "pending",
+  "notice": "Proposed defaults are not approval. Only the actual human owner may confirm a resolution and its approval reference.",
+  "decisions": {
+    "owner_as_invitee": {"status": "pending", "proposed_default": "Owner participates but is never a follow-up recipient.", "selected_option": null, "allowed_options": ["participant_no_followup", "preserve_owner_pending"], "resolution": null, "confirmed_by": null, "confirmed_at": null, "confirmation_source": null, "approval_reference": null},
+    "omitted_lists": {"status": "pending", "proposed_default": "Both availability lists absent/null succeed as a no-op without changing the answer; this does not reinterpret a supplied legacy replacement list.", "selected_option": null, "allowed_options": ["success_noop", "validation_error"], "resolution": null, "confirmed_by": null, "confirmed_at": null, "confirmation_source": null, "approval_reference": null},
+    "list_status_default": {"status": "pending", "proposed_default": "Default list status is all.", "selected_option": null, "allowed_options": ["all", "open"], "resolution": null, "confirmed_by": null, "confirmed_at": null, "confirmation_source": null, "approval_reference": null},
+    "text_write_concurrency": {"status": "pending", "proposed_default": "New range writes use read-plus-target-CAS even without a caller fingerprint; honor an explicit fingerprint. Legacy arrays retain unconditional compatibility only if owner confirms that risk.", "selected_option": null, "allowed_options": ["ranges_cas_legacy_replace", "cas_all_text_writes"], "resolution": null, "confirmed_by": null, "confirmed_at": null, "confirmation_source": null, "approval_reference": null},
+    "write_lifecycle": {"status": "pending", "proposed_default": "Explicitly decide whether to preserve existing archived/finalized write behavior or lock writes; no unapproved change.", "selected_option": null, "allowed_options": ["preserve_current_editability", "lock_archived_and_finalized"], "policy_details": {}, "resolution": null, "confirmed_by": null, "confirmed_at": null, "confirmation_source": null, "approval_reference": null},
+    "weekly_shorthand_clock": {"status": "pending", "proposed_default": "Weekly shorthand uses reference UTC; timezone is display-only.", "selected_option": null, "allowed_options": ["reference_utc", "named_local_clock"], "policy_details": {}, "resolution": null, "confirmed_by": null, "confirmed_at": null, "confirmation_source": null, "approval_reference": null}
+  }
+}

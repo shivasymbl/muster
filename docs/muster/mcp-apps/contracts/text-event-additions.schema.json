@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed additive text event output fields",
+  "description": "OUTPUT ONLY. Validates proposed additions on an upgraded event response while allowing all existing event fields. It is not a write schema and does not authorize field visibility or approve lifecycle/counting policy.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "scheduled": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {"type": "string", "format": "date-time"},
+            "end": {"type": "string", "format": "date-time"}
+          },
+          "required": ["start", "end"]
+        }
+      ],
+      "description": "Stored selected interval, or null when no interval exists. Server checks ordering and canonical UTC serialization; this is not an external calendar-event identifier."
+    },
+    "closed": {
+      "type": "boolean",
+      "description": "Derived from presence of a stored selected interval under the proposed read contract, separately from existing is_archived. The schema alone does not approve closed-event mutation or reopening policy."
+    },
+    "display_timezone": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "\\S",
+      "description": "Presentation-only validated IANA zone or null when unspecified; null is not an alias for UTC. The server validates the identifier and does not derive it from a numeric user offset."
+    },
+    "response_totals": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "responded": {"$ref": "#/$defs/count"},
+            "invited": {"$ref": "#/$defs/count"},
+            "declined": {"$ref": "#/$defs/count"},
+            "cleared": {"$ref": "#/$defs/count"},
+            "pending_count": {"$ref": "#/$defs/count"},
+            "response_population": {"$ref": "#/$defs/populationLabel"},
+            "invitation_population": {"$ref": "#/$defs/populationLabel"},
+            "pending_population": {"$ref": "#/$defs/populationLabel"},
+            "owner_participates": {
+              "type": "boolean",
+              "description": "Whether the owner participates as an attendee/respondent. This does not itself choose whether follow-up counts include the owner; pending_population must state the approved rule."
+            }
+          },
+          "required": [
+            "responded", "invited", "declined", "cleared", "pending_count",
+            "response_population", "invitation_population", "pending_population", "owner_participates"
+          ]
+        }
+      ],
+      "description": "Owner-authorized counts with explicit population definitions. Nonowner or otherwise hidden totals are null, never fabricated zeros. Categories are not automatically disjoint or additive; owner counting rules remain subject to approval."
+    },
+    "schema_version": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "Optional explicit output-contract version."
+    }
+  },
+  "required": ["scheduled", "closed", "display_timezone", "response_totals"],
+  "$defs": {
+    "count": {"type": "integer", "minimum": 0},
+    "populationLabel": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "\\S",
+      "description": "Explicit population definition, including owner inclusion/exclusion where relevant; not inferred from the count."
+    }
+  },
+  "examples": [
+    {"event_id": "QTTyVU", "is_archived": false, "scheduled": null, "closed": false, "display_timezone": null, "response_totals": null}
+  ]
+}

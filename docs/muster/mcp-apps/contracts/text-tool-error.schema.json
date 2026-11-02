@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed extended text tool execution error",
+  "description": "Structured tool-error payload, not the JSON-RPC envelope. Existing flat fields remain; data adds canonical repair details. Tool results retain isError:true. This schema cannot parse or enforce equivalence of the JSON serialized in a text content block.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "code": {
+      "$ref": "#/$defs/code",
+      "description": "Existing flat compatibility code, retained even if the new canonical data.code uses a different alias."
+    },
+    "message": {"$ref": "#/$defs/message"},
+    "what_to_do_next": {"$ref": "#/$defs/message"},
+    "retryable": {
+      "type": "boolean",
+      "description": "Retained compatibility hint. It is not permission to replay an uncertain mutation or proof that no partial effect occurred."
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/code",
+          "description": "Canonical code, such as SLOT_OUTSIDE, SLOT_OFF_GRID, SLOT_IN_BOTH, WINDOW_TOO_LONG, BAD_ARGUMENTS, NOT_FOUND, NOT_GROUP, NOT_OWNER, OWNER_NOT_REMOVABLE or OVERLAP_HIDDEN. Future codes remain allowed."
+        },
+        "message": {"$ref": "#/$defs/message"},
+        "offending": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "description": "Sanitized input-field path. It must not contain credentials or private event content."
+                },
+                "index": {
+                  "type": ["integer", "null"],
+                  "minimum": 0,
+                  "description": "Zero-based input-array index where applicable, otherwise null."
+                },
+                "value": {
+                  "$ref": "#/$defs/sanitizedScalar",
+                  "description": "Sanitized bounded scalar, or null when unsafe to echo. Objects, arrays and credentials must never be copied here."
+                }
+              },
+              "required": ["path", "index", "value"]
+            }
+          ]
+        },
+        "valid": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "window": {
+                  "oneOf": [
+                    {"type": "null"},
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "start": {"type": "string", "format": "date-time"},
+                        "end": {"type": "string", "format": "date-time"}
+                      },
+                      "required": ["start", "end"]
+                    }
+                  ]
+                },
+                "slot_minutes": {"type": "integer", "minimum": 1},
+                "duration_hours": {"type": "number", "exclusiveMinimum": 0},
+                "dates": {
+                  "type": "array",
+                  "maxItems": 2000,
+                  "items": {"type": "string", "format": "date-time"}
+                },
+                "date_mode": {
+                  "type": "string",
+                  "enum": ["actual", "reference_week", "undated", "ambiguous"]
+                },
+                "allowed_values": {
+                  "type": "array",
+                  "maxItems": 100,
+                  "items": {"$ref": "#/$defs/sanitizedScalar"}
+                }
+              },
+              "description": "Only bounds the caller is authorized to see. This is not a complete snapshot; omit irrelevant fields and return null for nondisclosing failures."
+            }
+          ]
+        },
+        "what_to_do_next": {"$ref": "#/$defs/message"}
+      },
+      "required": ["code", "message", "offending", "valid", "what_to_do_next"]
+    }
+  },
+  "required": ["code", "message", "what_to_do_next", "retryable", "data"],
+  "$defs": {
+    "code": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S"},
+    "message": {"type": "string", "minLength": 1, "maxLength": 2048, "pattern": "\\S"},
+    "sanitizedScalar": {
+      "oneOf": [
+        {"type": "string", "maxLength": 256},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"type": "null"}
+      ]
+    }
+  },
+  "examples": [
+    {
+      "code": "BAD_ARGUMENTS",
+      "message": "start is required.",
+      "what_to_do_next": "Pass start and end together, or omit both where supported.",
+      "retryable": false,
+      "data": {
+        "code": "BAD_ARGUMENTS",
+        "message": "start is required.",
+        "offending": {"path": "start", "index": null, "value": null},
+        "valid": null,
+        "what_to_do_next": "Pass start and end together, or omit both where supported."
+      }
+    }
+  ]
+}

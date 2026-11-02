@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "not_run",
+  "project_commit": "",
+  "ui_build_id": "",
+  "human_review": {
+    "reviewed": false,
+    "reviewer": "",
+    "reviewed_at": "",
+    "method": "not_run",
+    "acknowledgement": ""
+  },
+  "hosts": {
+    "claude_web": {"status": "not_run", "client_version": "", "os_or_browser_version": "", "reviewer": "", "tested_at": "", "screenshots": [], "notes": ""},
+    "claude_desktop": {"status": "not_run", "client_version": "", "os_or_browser_version": "", "reviewer": "", "tested_at": "", "screenshots": [], "notes": ""},
+    "claude_ios": {"status": "not_run", "client_version": "", "os_or_browser_version": "", "reviewer": "", "tested_at": "", "screenshots": [], "notes": ""},
+    "claude_android": {"status": "not_run", "client_version": "", "os_or_browser_version": "", "reviewer": "", "tested_at": "", "screenshots": [], "notes": ""},
+    "claude_cowork": {"status": "not_run", "client_version": "", "os_or_browser_version": "", "reviewer": "", "tested_at": "", "screenshots": [], "notes": ""},
+    "claude_code_text": {"status": "not_run", "client_version": "", "os_or_browser_version": "", "reviewer": "", "tested_at": "", "screenshots": [], "notes": ""},
+    "messages_api_text": {"status": "not_run", "client_version": "", "os_or_browser_version": "", "reviewer": "", "tested_at": "", "screenshots": [], "notes": ""}
+  },
+  "scenarios": {
+    "A12": {"status": "not_run", "reviewer": "", "reviewed_at": "", "hosts": [], "observed_outcome": ""},
+    "S1": {"status": "not_run", "reviewer": "", "reviewed_at": "", "hosts": [], "observed_outcome": ""},
+    "S2": {"status": "not_run", "reviewer": "", "reviewed_at": "", "hosts": [], "observed_outcome": ""},
+    "S3": {"status": "not_run", "reviewer": "", "reviewed_at": "", "hosts": [], "observed_outcome": ""},
+    "S4": {"status": "not_run", "reviewer": "", "reviewed_at": "", "hosts": [], "observed_outcome": ""},
+    "S5": {"status": "not_run", "reviewer": "", "reviewed_at": "", "hosts": [], "observed_outcome": ""},
+    "S6": {"status": "not_run", "reviewer": "", "reviewed_at": "", "hosts": [], "observed_outcome": ""}
+  }
+}

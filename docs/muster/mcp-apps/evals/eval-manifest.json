@@ -1,0 +1,919 @@
+{
+  "schema_version": 1,
+  "status": "planned_implementation_dependent",
+  "tests_executed": false,
+  "scope": "Verification contract only; no application implementation, deployment, or simulated passing tests.",
+  "task_verifications": [
+    {
+      "id": "T0",
+      "script": "tasks/T0.sh"
+    },
+    {
+      "id": "T1",
+      "script": "tasks/T1.sh"
+    },
+    {
+      "id": "T1.5",
+      "script": "tasks/T1.5.sh"
+    },
+    {
+      "id": "T2",
+      "script": "tasks/T2.sh"
+    },
+    {
+      "id": "T3",
+      "script": "tasks/T3.sh"
+    },
+    {
+      "id": "T4",
+      "script": "tasks/T4.sh"
+    },
+    {
+      "id": "T5",
+      "script": "tasks/T5.sh"
+    },
+    {
+      "id": "T6",
+      "script": "tasks/T6.sh"
+    },
+    {
+      "id": "T7",
+      "script": "tasks/T7.sh"
+    }
+  ],
+  "acceptance_tests": [
+    {
+      "id": "A1",
+      "script": "acceptance/F1.sh"
+    },
+    {
+      "id": "A2",
+      "script": "acceptance/F1.sh"
+    },
+    {
+      "id": "A3",
+      "script": "acceptance/F2.sh"
+    },
+    {
+      "id": "A4",
+      "script": "acceptance/F2.sh"
+    },
+    {
+      "id": "A5",
+      "script": "acceptance/F3.sh"
+    },
+    {
+      "id": "A6",
+      "script": "acceptance/F3.sh"
+    },
+    {
+      "id": "A7",
+      "script": "acceptance/F4.sh"
+    },
+    {
+      "id": "A8",
+      "script": "acceptance/F4.sh"
+    },
+    {
+      "id": "A9",
+      "script": "acceptance/F5.sh"
+    },
+    {
+      "id": "A10",
+      "script": "acceptance/F5.sh"
+    },
+    {
+      "id": "A11",
+      "script": "acceptance/F6.sh"
+    },
+    {
+      "id": "A12",
+      "script": "acceptance/F6.sh"
+    },
+    {
+      "id": "A13",
+      "requirement": "REQ-TXT-001",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A14",
+      "requirement": "REQ-TXT-002",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A15",
+      "requirement": "REQ-TXT-003",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A16",
+      "requirement": "REQ-TXT-004",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A17",
+      "requirement": "REQ-TXT-005",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A18",
+      "requirement": "REQ-TXT-006",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A19",
+      "requirement": "REQ-TXT-007",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A20",
+      "requirement": "REQ-TXT-008",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A21",
+      "requirement": "REQ-TXT-009",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A22",
+      "requirement": "REQ-TXT-010",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A23",
+      "requirement": "REQ-TXT-011",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A24",
+      "requirement": "REQ-TXT-012",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A25",
+      "requirement": "REQ-TXT-013",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A26",
+      "requirement": "REQ-TXT-014",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A27",
+      "requirement": "REQ-TXT-015",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A28",
+      "requirement": "REQ-TXT-016",
+      "script": "acceptance/F7.sh"
+    },
+    {
+      "id": "A29",
+      "requirement": "REQ-TXT-017",
+      "script": "acceptance/F7.sh"
+    }
+  ],
+  "holdout_evals": [
+    {
+      "id": "S1",
+      "script": "holdout/S1.sh"
+    },
+    {
+      "id": "S2",
+      "script": "holdout/S2.sh"
+    },
+    {
+      "id": "S3",
+      "script": "holdout/S3.sh"
+    },
+    {
+      "id": "S4",
+      "script": "holdout/S4.sh"
+    },
+    {
+      "id": "S5",
+      "script": "holdout/S5.sh"
+    },
+    {
+      "id": "S6",
+      "script": "holdout/S6.sh"
+    }
+  ],
+  "tasks": {
+    "T0": {
+      "title": "Focused current Go baseline and isolated token test",
+      "checks": [
+        "go:baseline",
+        "go:TestMcpTokenHashCapAndExpiry"
+      ],
+      "acceptance": []
+    },
+    "T1": {
+      "title": "MCP Apps protocol",
+      "checks": [
+        "go:TestMCPAppsProtocol"
+      ],
+      "acceptance": [
+        "A1",
+        "A2"
+      ],
+      "must_assert": [
+        "MCP Apps resource and tool metadata without breaking existing Markdown resources.",
+        "Useful text-only responses for Claude Code and the Messages API contract; API has no renderer and a real API account is not a release prerequisite."
+      ]
+    },
+    "T1.5": {
+      "title": "Text parity, field findings, policy decisions and measured efficiency",
+      "checks": [
+        "go:TestMCPFieldFindings",
+        "go:TestMCPTextParity",
+        "go:TestMCPTextEfficiency",
+        "owner:decisions",
+        "field:regression",
+        "text:efficiency"
+      ],
+      "acceptance": [
+        "A13",
+        "A14",
+        "A15",
+        "A16",
+        "A17",
+        "A18",
+        "A19",
+        "A20",
+        "A21",
+        "A22",
+        "A23",
+        "A24",
+        "A25",
+        "A26",
+        "A27",
+        "A28",
+        "A29"
+      ],
+      "must_assert": [
+        "Every FE1..FE13 and W1..W8 direct subtest executes; missing or skipped descendants block even if its parent passes. Every REQ_TXT_001..REQ_TXT_017 direct parity subtest executes without skips.",
+        "Use newly observed same-test baseline red/candidate green evidence for changed FE1..FE10, FE12 and FE13, and preservation evidence for W1..W8. FE9 requires baseline red only after owner selects success_noop; retaining validation_error requires baseline/candidate green preservation. FE11 stays policy-dependent; FE5 tests lost error detail in the text branch, preserving existing flat structured fields while adding canonical data metadata.",
+        "Current-tip FE8 preserves existing skipped:string[] and tests absent additive skipped_details reasons/input indexes, not an invented absence of skipped data. Current omitted-both-list validation behavior and descriptions agree; FE9 remains an unapproved policy change. FE10 still tests strict duration rejection rather than claiming current rounding descriptions are inaccurate.",
+        "Six owner decisions remain pending until explicitly confirmed; proposed defaults are not approvals. Unresolved affected policy tests and full release remain blocked while unrelated gates may execute.",
+        "Measure raw current-run MCP traces, including failed/retried calls and hidden model reads. Separate only initial setup and App bridge counts; finalize-confirm receipt is authoritative without an extra read.",
+        "Compact-reference response and structured-summary budgets do not delete legacy full fields or impose a 2000-character limit on every lossless snapshot. Large/paginated responses remain bounded and new metadata must satisfy the same privacy rules.",
+        "The observed legacy catalog baseline is measured_not_launch_approved. First amended-release growth requires an explicit reviewer-approved measured baseline transition, never automatic rebaselining.",
+        "REQ_EFF_006 follows MUSTER_EVAL_STAGE: text-only proves absent helpers are non-callable or tests present helpers' metadata and guarded commits; full-build requires all 20 named tools, actual valid actor-bound prepared-action commit success, and missing/invalid/wrong-actor commit rejection. A dispatcher that rejects every call does not satisfy the positive full-build case.",
+        "Actual isolated Mongo integration evidence is mandatory before enabling new range-write CAS and shipping TXT-003, under either D4 choice; fake stores, schema checks or parent-only passes are insufficient. Reuse the F3 conditional-write and uniqueness proof without implying cross-document atomicity."
+      ]
+    },
+    "T2": {
+      "title": "Authorized snapshot",
+      "checks": [
+        "go:TestMCPAppsSnapshot"
+      ],
+      "acceptance": [
+        "A3",
+        "A4"
+      ]
+    },
+    "T3": {
+      "title": "Read-only UX",
+      "checks": [
+        "npm:test:unit",
+        "npm:build"
+      ],
+      "acceptance": [
+        "A3",
+        "A4",
+        "A11",
+        "A12"
+      ]
+    },
+    "T4": {
+      "title": "Complete-answer guarded saves",
+      "checks": [
+        "go:TestMCPAppsAnswer"
+      ],
+      "acceptance": [
+        "A5",
+        "A6"
+      ],
+      "must_assert": [
+        "Bounded interval change-set preparation binds the complete own-answer fingerprint, actor, event, canonical payload/hash, expiry and immutable confirmation summary.",
+        "Server applies changes to the complete answer, preserving off-window marks and noneditable manual/calendar layers; omitted/null or empty changes never mean clear.",
+        "Distinct clear operation and cancel semantics; single execution-attempt claim, conditional response write, stale target conflict, duplicate receipt and expired plan.",
+        "Ambiguous duplicate records disable edits; target-update timeout and partial effects stay pending/partial/unknown until reconciled without automatic uncertain retry.",
+        "Response-document CAS does not claim atomic authorization/grid invariants across collections; related policy is rechecked and cross-document races remain explicit.",
+        "Before enabling writes or approving release, provide actual isolated Mongo integration evidence for conditional writes, MatchedCount, concurrent attempts, uniqueness/duplicate handling and crash/timeout reconciliation. Fake-only suites or skipped integration tests cannot satisfy T4/F3 or the write-release gate. INCLUDE_DB_TESTS controls optional package discovery, not whether this evidence is required; provision no production database and obtain human review of real integration results."
+      ]
+    },
+    "T5": {
+      "title": "Owner-only finalization with target CAS",
+      "checks": [
+        "go:TestMCPAppsFinalize"
+      ],
+      "acceptance": [
+        "A7",
+        "A8"
+      ],
+      "must_assert": [
+        "Review and receipt show exact interval and the explicit no-calendar-event/no-email effects.",
+        "Owner-only prepare and direct commit authorization; compare actual event fields including owner, dates, increment/duration, archive and scheduled state in target UpdateOne predicate.",
+        "Check MatchedCount and reject stale state; do not depend on an app-only revision untouched by website writers.",
+        "Candidate or relevant-data change invalidates confirmation; refresh old cards before prepare, distinguish archive-without-time and show stored interval."
+      ]
+    },
+    "T6": {
+      "title": "Group operations with truthful partial outcomes",
+      "checks": [
+        "go:TestMCPAppsGroup"
+      ],
+      "acceptance": [
+        "A9",
+        "A10"
+      ],
+      "must_assert": [
+        "Create reserves stable event identity in its prepared action; same-action replay does not create another event and changed payload requires new preparation.",
+        "Canonical recipients, duplicate/case variants, stable per-target keys and explicit step/result records agree with review.",
+        "Fault injection between attendee/event writes and deletion steps returns completed, partial or unknown with reconciliation detail; owner removal is refused.",
+        "At-most-once execution attempt is not exactly-once atomic completion; uncertain mail is never automatically retried and delivery claims remain unverified.",
+        "Unique-index rollout requires duplicate audit and approved migration; no destructive cleanup or transaction-topology assumption; unsafe operations remain disabled."
+      ]
+    },
+    "T7": {
+      "title": "Performance and compatibility",
+      "checks": [
+        "npm:test:perf",
+        "npm:test:e2e"
+      ],
+      "acceptance": [
+        "A11",
+        "A12"
+      ]
+    }
+  },
+  "features": {
+    "F1": {
+      "title": "Protocol",
+      "requires": [
+        "T1",
+        "S6"
+      ],
+      "acceptance": [
+        "A1",
+        "A2"
+      ]
+    },
+    "F2": {
+      "title": "Snapshot and read-only UX",
+      "requires": [
+        "T2",
+        "T3",
+        "S1"
+      ],
+      "acceptance": [
+        "A3",
+        "A4"
+      ]
+    },
+    "F3": {
+      "title": "Answer",
+      "requires": [
+        "T4",
+        "S2",
+        "S3"
+      ],
+      "acceptance": [
+        "A5",
+        "A6"
+      ]
+    },
+    "F4": {
+      "title": "Finalize",
+      "requires": [
+        "T5",
+        "S2"
+      ],
+      "acceptance": [
+        "A7",
+        "A8"
+      ]
+    },
+    "F5": {
+      "title": "Group",
+      "requires": [
+        "T6",
+        "S4"
+      ],
+      "acceptance": [
+        "A9",
+        "A10"
+      ]
+    },
+    "F6": {
+      "title": "Performance and release review",
+      "requires": [
+        "T7",
+        "S5",
+        "S6"
+      ],
+      "checks": [
+        "host:manual"
+      ],
+      "acceptance": [
+        "A11",
+        "A12"
+      ]
+    },
+    "F7": {
+      "title": "Text parity and field-observed behavior with measured efficiency",
+      "requires": [
+        "T1.5"
+      ],
+      "acceptance": [
+        "A13",
+        "A14",
+        "A15",
+        "A16",
+        "A17",
+        "A18",
+        "A19",
+        "A20",
+        "A21",
+        "A22",
+        "A23",
+        "A24",
+        "A25",
+        "A26",
+        "A27",
+        "A28",
+        "A29"
+      ]
+    }
+  },
+  "acceptance_scenarios": {
+    "A1": "GIVEN a signed-in supported host, WHEN it lists tools and reads the linked URI, THEN it receives the correct MIME, self-contained HTML, and consistent metadata; existing Markdown resources still resolve.",
+    "A2": "GIVEN a legacy/non-rendering client or denied App consent, WHEN it invokes the opener, THEN the text response remains useful; unsupported or missing assets do not produce a blank “successful” widget or silently mutate state.",
+    "A3": "GIVEN owner/member/blind-member/stranger identities, WHEN each opens and refreshes a workflow, THEN each view reveals exactly its allowed fields; malicious row labels render as text, and hidden totals cannot be inferred from another section.",
+    "A4": "GIVEN an own answer spanning outside the visible window, WHEN the App loads an editable view, THEN the complete base remains intact; an incomplete, oversized, or ambiguous record is explicitly noneditable rather than an empty draft.",
+    "A5": "GIVEN complete marks across two windows, WHEN the user edits one window and explicitly saves, THEN only the intended editable marks change while hidden-window and manual/calendar fields survive; cancel sends no mutation.",
+    "A6": "GIVEN a changed answer, duplicate submit, expired plan, or timeout after target update, WHEN the user commits or checks the action, THEN the result is a conflict, same receipt, or explicit uncertain outcome; it never silently overwrites changed target values or re-executes.",
+    "A7": "GIVEN an owner and valid ranked time, WHEN the owner explicitly confirms the prepared action, THEN exactly that interval is recorded; the receipt and refreshed view agree and claim neither calendar creation nor mail.",
+    "A8": "GIVEN an old card or concurrently changed event, WHEN its prepared action is committed, THEN stale expected event state is rejected rather than replaced; non-owner invocation fails even if the tool is called directly.",
+    "A9": "GIVEN a prepared group with duplicate/case-variant emails, WHEN creation is confirmed and the same action is replayed, THEN review and persisted targets agree and no second event is created; a changed payload requires a new preparation.",
+    "A10": "GIVEN a failure between attendee and event writes or between deletion steps, WHEN the action result is inspected, THEN the UI reports partial/unknown state with available reconciliation detail, not “all done”; removing the owner is refused.",
+    "A11": "GIVEN narrow/wide containers, both themes, keyboard and touch input, WHEN users inspect and operate the workflow, THEN controls remain usable without clipping; performance tests report fixture/device and stay within budgets or block with measured evidence.",
+    "A12": "GIVEN denied rendering, unsupported expansion, malformed/oversized data, restored old cards, or an expired token, WHEN the workflow is opened or resumed, THEN the user gets useful text or an explicit recoverable state and no hidden mutation.",
+    "A13": "GIVEN a successful availability write, WHEN its receipt is read, THEN counts and authoritative affected-window stored ranges/status agree without another tool call; uncertain readback is explicit.",
+    "A14": "GIVEN a rename or archive request, WHEN update completes, THEN its event echo matches get_event's additive contract and preserves all legacy receipt fields.",
+    "A15": "GIVEN aligned ranges and a current base, WHEN replace or merge runs, THEN half-open state assignment is deterministic, conflicting overlaps fail, shared limits apply, merge preserves untouched values, and a stale target CAS never overwrites changed values.",
+    "A16": "GIVEN a dated accessible event, WHEN responses or overlap is called with only event_id, THEN the bounded chosen window is returned and explicit legacy windows still work.",
+    "A17": "GIVEN a repairable invalid slot/window/range, WHEN a text-only client sees the error, THEN it can parse canonical code, offending index/value, allowed bounds, and repair guidance in one retry without a discovery read; strangers learn no event bounds.",
+    "A18": "GIVEN the complete base and App-helper catalogs, WHEN schemas/annotations and repeated-call effects are checked, THEN every parameter is documented, annotations are accurate, true idempotent claims have evidence, and catalog bytes are recorded.",
+    "A19": "GIVEN manual archive versus finalization, WHEN event/finalize output is read, THEN scheduled and closed distinguish them while unchanged legacy fields retain their meaning.",
+    "A20": "GIVEN existing, owner, duplicate, invalid, and new addresses, WHEN add-attendees executes, THEN it preserves skipped address strings, adds per-occurrence reason details, and never partially applies an invalid legacy batch.",
+    "A21": "GIVEN both availability lists absent/null, WHEN the tool is called, THEN approved D2 behavior occurs without changing the answer and matches initialization instructions and the answer skill.",
+    "A22": "GIVEN 20 minutes on a 30-minute grid and a conditional-only respondent, WHEN ranking is called, THEN the duration is rejected and valid-duration output separately names conditional and unavailable people without redefining missing.",
+    "A23": "GIVEN mixed open/archived/finalized events and response states, WHEN list filters and compact projection are requested, THEN filtering precedes pagination, the approved default stays compatible, and needs-my-answer returns a short correctly scoped page.",
+    "A24": "GIVEN owner and blind/nonowner callers, WHEN get_event runs, THEN owner counts and population labels match the approved owner rule while unauthorized totals remain null and no extra read is required.",
+    "A25": "GIVEN a weekly shorthand on an eligible reference-week muster, WHEN create/set executes, THEN shorthand and canonical 2018 forms agree under the approved clock and actual dated/undated events are not silently remapped.",
+    "A26": "GIVEN a valid/invalid/omitted/null IANA display timezone, WHEN create/update/read/App rendering runs, THEN label storage and null semantics are correct and all original UTC instants remain unchanged.",
+    "A27": "GIVEN an unanswered owner and nonowner invitees, WHEN attendee totals, remind, get_event counts, and App follow-up render, THEN all follow the recorded D1 rule with explicit populations.",
+    "A28": "GIVEN every model-visible tool description, WHEN provider-name and behavior checks run, THEN no third-party mail vendor is named and mail/delivery limits remain truthful.",
+    "A29": "GIVEN nonowners, archived/finalized events, unarchive requests, and blind events, WHEN every affected text tool is tested, THEN the approved policy produces an explicit allowed result or defined error without unauthorized data or side effects."
+  },
+  "holdouts": {
+    "S1": {
+      "title": "Hidden guest",
+      "checks": [
+        "go:TestMCPAppsHoldoutHiddenGuest"
+      ],
+      "review": "A hidden or unauthorized participant exists. Inspect UI, structured payload and text fallback; verify hidden identities and private availability are never exposed.",
+      "acceptance": [
+        "A3"
+      ]
+    },
+    "S2": {
+      "title": "Stale state and two cards",
+      "checks": [
+        "go:TestMCPAppsHoldoutStaleTwoCards"
+      ],
+      "review": "Open two snapshots, change the stored answer or event through another writer, then act from the older or restored card. Exercise answer prepared-action claim/CAS, duplicate/expired commit, and finalization target-field CAS; reject stale writes rather than overwriting. Never infer freshness from client mount order.",
+      "acceptance": [
+        "A6",
+        "A8",
+        "A12"
+      ]
+    },
+    "S3": {
+      "title": "Whole-answer preservation",
+      "checks": [
+        "go:TestMCPAppsHoldoutWholeAnswerPreservation"
+      ],
+      "review": "Prepare a bounded change-set against a complete own-answer fingerprint spanning two windows and manual/calendar layers. Verify only intended editable marks change; missing/incomplete/ambiguous base is noneditable, cancel sends nothing, and null/empty changes do not clear.",
+      "acceptance": [
+        "A4",
+        "A5"
+      ]
+    },
+    "S4": {
+      "title": "Timeout after create",
+      "checks": [
+        "go:TestMCPAppsHoldoutTimeoutCreate"
+      ],
+      "review": "Create reserves a stable event identity, then crash/lose response between group-write steps. Replay the same prepared action without generating another event, expose partial/unknown outcomes, and never retry uncertain mail. Do not assert exactly-once multi-record completion; inspect per-target reconciliation details and owner-removal refusal.",
+      "acceptance": [
+        "A9",
+        "A10"
+      ]
+    },
+    "S5": {
+      "title": "Weekly and mobile",
+      "checks": [
+        "go:TestMCPAppsHoldoutWeeklyMobile",
+        "host:manual"
+      ],
+      "review": "Use a weekly fixture spanning timezone/date/DST boundaries on actual iOS and Android; verify list alternative, safe areas, touch scrolling, long participant names and read-only behavior.",
+      "acceptance": [
+        "A11",
+        "A12"
+      ]
+    },
+    "S6": {
+      "title": "Fallback and version",
+      "checks": [
+        "go:TestMCPAppsHoldoutFallbackVersion"
+      ],
+      "review": "Use text-only host, missing Apps capability, malformed structured result and stale UI schema version. Preserve useful output and prevent incompatible writes.",
+      "acceptance": [
+        "A2",
+        "A12"
+      ]
+    }
+  },
+  "required_subtests": {
+    "TestMCPFieldFindings": [
+      "FE1",
+      "FE2",
+      "FE3",
+      "FE4",
+      "FE5",
+      "FE6",
+      "FE7",
+      "FE8",
+      "FE9",
+      "FE10",
+      "FE11",
+      "FE12",
+      "FE13",
+      "W1",
+      "W2",
+      "W3",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W8"
+    ],
+    "TestMCPTextParity": [
+      "REQ_TXT_001",
+      "REQ_TXT_002",
+      "REQ_TXT_003",
+      "REQ_TXT_004",
+      "REQ_TXT_005",
+      "REQ_TXT_006",
+      "REQ_TXT_007",
+      "REQ_TXT_008",
+      "REQ_TXT_009",
+      "REQ_TXT_010",
+      "REQ_TXT_011",
+      "REQ_TXT_012",
+      "REQ_TXT_013",
+      "REQ_TXT_014",
+      "REQ_TXT_015",
+      "REQ_TXT_016",
+      "REQ_TXT_017"
+    ],
+    "TestMCPTextEfficiency": [
+      "REQ_EFF_001",
+      "REQ_EFF_002",
+      "REQ_EFF_003",
+      "REQ_EFF_004",
+      "REQ_EFF_005",
+      "REQ_EFF_006"
+    ]
+  },
+  "efficiency_requirements": [
+    {
+      "id": "REQ-EFF-001",
+      "suite": "TestMCPTextEfficiency",
+      "subtest": "REQ_EFF_001",
+      "check": "text:efficiency",
+      "script": "acceptance/F7.sh",
+      "requirement_text": "Text reference tasks MUST obey the call ceilings in the amendment efficiency table, counting failed calls and retries; initial connection/discovery is recorded separately and excluded only when shared and amortized."
+    },
+    {
+      "id": "REQ-EFF-002",
+      "suite": "TestMCPTextEfficiency",
+      "subtest": "REQ_EFF_002",
+      "check": "text:efficiency",
+      "script": "acceptance/F7.sh",
+      "requirement_text": "Each release MUST record the exact serialized `tools/list` UTF-8 byte size, tool count, and comparison with a reviewed baseline. Proposed soft target is 24 KiB, hard ceiling 32 KiB, and growth over 10% raises a blocking review alarm unless the exact measured transition is approved. The final-tip 12,666-byte, 16-tool baseline (historically 12,472 bytes at 59b1a48b) is measured, not an approval of future growth."
+    },
+    {
+      "id": "REQ-EFF-003",
+      "suite": "TestMCPTextEfficiency",
+      "subtest": "REQ_EFF_003",
+      "check": "text:efficiency",
+      "script": "acceptance/F7.sh",
+      "requirement_text": "Designated typical reference-task/compact responses and model-safe summaries MUST be at most 2,000 Unicode code points each; a full legacy diagnostic result that cannot meet this without information loss MUST use an explicitly requested compact projection or pagination, not silent field removal. Every large-fixture text page MUST be at most 20,000 code points with valid pagination where needed."
+    },
+    {
+      "id": "REQ-EFF-004",
+      "suite": "TestMCPTextEfficiency",
+      "subtest": "REQ_EFF_004",
+      "check": "text:efficiency",
+      "script": "acceptance/F7.sh",
+      "requirement_text": "The App's 50,000/120,000-character and asset/render budgets remain unchanged and separate. Efficiency evidence MUST distinguish model-visible content, structured summaries, total wire bytes, and App bridge calls; moving required truth into `_meta` is not a text-path efficiency fix."
+    },
+    {
+      "id": "REQ-EFF-005",
+      "suite": "TestMCPTextEfficiency",
+      "subtest": "REQ_EFF_005",
+      "check": "text:efficiency",
+      "script": "acceptance/F7.sh",
+      "requirement_text": "Reference tasks MUST remain well below the existing 60-calls/minute bucket and MUST NOT evade throttling or retry hidden calls. Missing/stale/number-only measurement evidence blocks the efficiency gate."
+    },
+    {
+      "id": "REQ-EFF-006",
+      "suite": "TestMCPTextEfficiency",
+      "subtest": "REQ_EFF_006",
+      "check": "text:efficiency",
+      "script": "acceptance/F7.sh",
+      "requirement_text": "Short App-helper descriptions MUST explicitly say “App only”; commits without a valid actor-bound prepared action ID MUST fail server-side even if a host ignores visibility. The full-build gate measures all 20 tools, not only the model-filtered catalog; the earlier text-only gate measures its actual enabled 16/17/20-tool surface without requiring later App helpers to exist. Stage is selected by the runner, never self-declared to evade the full gate."
+    }
+  ],
+  "field_regression": {
+    "baseline_commit": "cd089433aa25eea7231047774e6235da3348c44d",
+    "historical_baseline_commits": [
+      {
+        "project_commit": "59b1a48b21060946c6ee11092f6a7d27b113bef7",
+        "status": "superseded_source_baseline_retained_for_history"
+      }
+    ],
+    "red": [
+      "FE1",
+      "FE2",
+      "FE3",
+      "FE4",
+      "FE5",
+      "FE6",
+      "FE7",
+      "FE8",
+      "FE9",
+      "FE10",
+      "FE12",
+      "FE13"
+    ],
+    "policy_dependent": [
+      "FE11"
+    ],
+    "preserved": [
+      "W1",
+      "W2",
+      "W3",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W8"
+    ],
+    "alias_convention": "Source findings FE-1..FE-13 map to exact Go direct subtests FE1..FE13; W1..W8 must also be direct children, not narrative-only coverage.",
+    "claims": "Newly observed same-test baseline/candidate comparisons required. Historical overlay observations are baseline evidence, not candidate implementation or live-connector success."
+  },
+  "owner_decisions": {
+    "owner_as_invitee": {
+      "allowed_choices": [
+        "participant_no_followup",
+        "preserve_owner_pending"
+      ],
+      "affected_operations": [
+        "owner_participation",
+        "followup_recipients"
+      ]
+    },
+    "omitted_lists": {
+      "affected_operations": [
+        "omitted_response_lists"
+      ],
+      "allowed_choices": [
+        "success_noop",
+        "validation_error"
+      ]
+    },
+    "list_status_default": {
+      "allowed_choices": [
+        "all",
+        "open"
+      ],
+      "affected_operations": [
+        "event_list_default_status"
+      ]
+    },
+    "text_write_concurrency": {
+      "allowed_choices": [
+        "ranges_cas_legacy_replace",
+        "cas_all_text_writes"
+      ],
+      "affected_operations": [
+        "text_range_writes",
+        "legacy_array_preconditions"
+      ]
+    },
+    "write_lifecycle": {
+      "allowed_choices": [
+        "preserve_current_editability",
+        "lock_archived_and_finalized"
+      ],
+      "required_details_by_choice": {
+        "lock_archived_and_finalized": [
+          "reopen_rule",
+          "affected_operations"
+        ]
+      },
+      "affected_operations": [
+        "writes_to_archived_or_finalized_events"
+      ]
+    },
+    "weekly_shorthand_clock": {
+      "allowed_choices": [
+        "reference_utc",
+        "named_local_clock"
+      ],
+      "required_details_by_choice": {
+        "named_local_clock": [
+          "iana_zone_rule",
+          "reference_date_conversion",
+          "dst_gap_and_ambiguity_behavior"
+        ]
+      },
+      "affected_operations": [
+        "weekly_shorthand_normalization",
+        "timezone_display"
+      ]
+    }
+  },
+  "text_efficiency": {
+    "status": "proposed_budgets_not_measured_candidate_results",
+    "catalog_soft_bytes": 24576,
+    "catalog_hard_bytes": 32768,
+    "catalog_regression_fraction": 0.1,
+    "structured_summary_chars": 2000,
+    "expected_complete_tool_count": 20,
+    "catalog_stages": {
+      "text-only": {
+        "allowed_tool_counts": [
+          16,
+          17,
+          20
+        ],
+        "helper_gate": "Absent helpers must be non-callable; present helpers require App-only descriptions and guarded commit probes."
+      },
+      "full-build": {
+        "allowed_tool_counts": [
+          20
+        ],
+        "helper_gate": "All three helpers enabled and actual missing/invalid/wrong-actor prepared-action commit probes rejected."
+      }
+    },
+    "base_tool_names": [
+      "muster_whoami",
+      "muster_list_my_events",
+      "muster_get_event",
+      "muster_get_responses",
+      "muster_set_availability",
+      "muster_decline",
+      "muster_add_attendees",
+      "muster_create_event",
+      "muster_list_attendees",
+      "muster_find_best_times",
+      "muster_finalize",
+      "muster_update_event",
+      "muster_remind",
+      "muster_remove_attendee",
+      "muster_list_changes",
+      "muster_summarize_overlap"
+    ],
+    "opener_tool": "muster_open_view",
+    "app_only_helpers": [
+      "muster_ui_prepare_action",
+      "muster_ui_commit_action",
+      "muster_ui_get_action"
+    ],
+    "character_unit": "Unicode code points, not UTF-16 code units or bytes",
+    "observed_legacy_catalog": {
+      "baseline_status": "measured_not_launch_approved",
+      "project_commit": "cd089433aa25eea7231047774e6235da3348c44d",
+      "measured_on": "2026-11-02",
+      "utf8_bytes": 12666,
+      "tool_count": 16,
+      "envelope": "compact complete JSON-RPC tools/list response with numeric id 1",
+      "measurement_source": "Code-review agent's verified current-tip local catalog measurement after source drift through cfaffa10 to cd089433; compact complete JSON-RPC response id 1. This is not a live connected-host capture or launch approval.",
+      "human_approval": null,
+      "candidate_utf8_bytes": null,
+      "transition_policy": "Growth above 10 percent needs an explicitly reviewer-approved measured baseline transition from the current 12666-byte measured catalog; never auto-rebaseline the first amended catalog or treat this observation as launch approval."
+    },
+    "historical_catalog_measurements": [
+      {
+        "baseline_status": "historical_measured_not_launch_approved",
+        "project_commit": "59b1a48b21060946c6ee11092f6a7d27b113bef7",
+        "measured_on": "2026-11-02",
+        "utf8_bytes": 12472,
+        "tool_count": 16,
+        "envelope": "compact complete JSON-RPC tools/list response with numeric id 1",
+        "measurement_source": "Original code-review agent local Go overlay measurement; superseded by verified cd089433 source tip with a 194-byte larger catalog.",
+        "human_approval": null
+      }
+    ],
+    "cases": {
+      "availability_known": {
+        "model_calls": 1,
+        "response_chars": 2000,
+        "response_class": "compact"
+      },
+      "availability_unknown": {
+        "model_calls": 2,
+        "response_chars": 2000,
+        "response_class": "compact"
+      },
+      "rank": {
+        "model_calls": 1,
+        "response_chars": 2000,
+        "response_class": "compact"
+      },
+      "status": {
+        "model_calls": 1,
+        "response_chars": 2000,
+        "response_class": "compact",
+        "required_actor_role": "owner"
+      },
+      "create": {
+        "model_calls": 1,
+        "response_chars": 2000,
+        "response_class": "compact"
+      },
+      "finalize_confirm": {
+        "model_calls": 1,
+        "response_chars": 2000,
+        "response_class": "compact"
+      },
+      "rename": {
+        "model_calls": 1,
+        "response_chars": 2000,
+        "response_class": "compact"
+      },
+      "archive": {
+        "model_calls": 1,
+        "response_chars": 2000,
+        "response_class": "compact"
+      },
+      "large_response": {
+        "model_calls": null,
+        "response_chars": 20000,
+        "response_class": "large"
+      },
+      "paginated_response": {
+        "model_calls": null,
+        "response_chars": 20000,
+        "response_class": "page",
+        "min_records": 2
+      }
+    }
+  },
+  "go_packages": [
+    "./services/mcp",
+    "./services/events",
+    "./services/oauth",
+    "./routes"
+  ],
+  "required_hosts": [
+    "claude_web",
+    "claude_desktop",
+    "claude_ios",
+    "claude_android",
+    "claude_code_text"
+  ],
+  "optional_hosts": [
+    "claude_cowork",
+    "messages_api_text"
+  ],
+  "required_manual_scenarios": [
+    "A12",
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6"
+  ]
+}

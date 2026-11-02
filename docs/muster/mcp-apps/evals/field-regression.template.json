@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "not_run",
+  "generated_by": "TestMCPFieldFindings",
+  "run_id": null,
+  "release_stage": null,
+  "project_commit": null,
+  "baseline_commit": null,
+  "measured_at": null,
+  "observation_mode": null,
+  "fixture_id": null,
+  "runtime_version": null,
+  "test_source_sha256": null,
+  "baseline_test_source_sha256": null,
+  "baseline_observation_mode": null,
+  "candidate_observation_mode": null,
+  "baseline_measured_at": null,
+  "candidate_measured_at": null,
+  "baseline_events": [],
+  "candidate_events": []
+}
