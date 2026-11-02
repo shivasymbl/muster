@@ -20,9 +20,9 @@ type span struct {
 	names []string
 }
 
-// overlapSlots returns times every respondent in the window can make.
-// People with no availability in the window are left out. Names are included
-// because the caller is the owner or blind availability is off.
+// overlapSlots returns times every stored answer in the window can make.
+// An answer with no free time in the window blocks the result. People who
+// have not answered are absent from responses and stay left out.
 type respondent struct {
 	name  string
 	marks []time.Time
@@ -55,7 +55,7 @@ func overlapSlots(event *models.Event, responses []models.EventResponse, start, 
 		}
 		for _, mark := range row.Response.Availability {
 			t := mark.Time()
-			if !t.Before(start) && !t.After(end) {
+			if !t.Before(start) && t.Before(end) {
 				person.marks = append(person.marks, t)
 			}
 		}
@@ -66,7 +66,7 @@ func overlapSlots(event *models.Event, responses []models.EventResponse, start, 
 	for _, key := range order {
 		parsed := marksToSpans(mergeMarks(byKey[key].marks, inc))
 		if len(parsed) == 0 {
-			continue
+			return []slot{}
 		}
 		if !started {
 			sets = parsed

@@ -86,6 +86,14 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 		return
 	}
 	toolName = req.Method
+	if req.Method == "tools/call" {
+		var called struct {
+			Name string `json:"name"`
+		}
+		if json.Unmarshal(req.Params, &called) == nil && called.Name != "" {
+			toolName = called.Name
+		}
+	}
 
 	switch req.Method {
 	case "notifications/initialized":
@@ -311,7 +319,7 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},
-		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Omit a list or pass an empty list to clear it. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability or if_needed. An empty list clears that list. Omitting both leaves the answer unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id":     id,
@@ -395,7 +403,7 @@ func toolDefs() []gin.H {
 			"properties": gin.H{"event_id": id, "since": gin.H{"type": "string", "description": "RFC3339 timestamp."}},
 			"required":   []string{"event_id", "since"},
 		}},
-		{"name": "muster_summarize_overlap", "description": "Times every respondent in the window can make. Returns those slots with display names, not user ids. It returns nothing when no slot suits every respondent. Refuses when availability is hidden and the caller is not the owner. Unanswered people are left out.", "annotations": read, "inputSchema": gin.H{
+		{"name": "muster_summarize_overlap", "description": "Times every stored answer in the window can make. Returns those slots with display names, not user ids. An answer with no free time in the window blocks the result. People who have not answered are left out. It returns nothing when no slot suits every stored answer. A mark exactly at the window end is outside. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id": id,

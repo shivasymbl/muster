@@ -28,6 +28,11 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	if utils.Coalesce(event.IsSignUpForm) {
 		return nil, toolErr("SIGN_UP_FORM", "This muster is a sign-up form.", utils.GetBaseUrl()+"/e/"+event.GetId())
 	}
+	_, hasAvailability := args["availability"]
+	_, hasIfNeeded := args["if_needed"]
+	if !hasAvailability && !hasIfNeeded {
+		return nil, toolErr("BAD_ARGUMENTS", "Pass availability or if_needed.", "An empty list clears that list. Omitting both leaves the answer unchanged.")
+	}
 	availability, bad := timeList(args, "availability")
 	if bad != nil {
 		return nil, bad

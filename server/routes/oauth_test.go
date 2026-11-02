@@ -26,6 +26,20 @@ type memOAuth struct {
 	refresh map[string]oauth.Refresh
 }
 
+func consentValue(page string) string {
+	const marker = `name="consent" value="`
+	start := strings.Index(page, marker)
+	if start < 0 {
+		return ""
+	}
+	rest := page[start+len(marker):]
+	end := strings.Index(rest, `"`)
+	if end < 0 {
+		return ""
+	}
+	return rest[:end]
+}
+
 func (m *memOAuth) SaveClient(client oauth.Client) error {
 	if m.clients == nil {
 		m.clients = map[string]oauth.Client{}
@@ -181,9 +195,17 @@ func TestOAuthSignIn(t *testing.T) {
 		t.Fatal(page)
 	}
 
+	if cookies := consent.Result().Cookies(); len(cookies) > 0 {
+		sessionCookie = cookies[0]
+	}
+	consentField := consentValue(page)
+	if consentField == "" {
+		t.Fatal(page)
+	}
 	form := url.Values{
 		"response_type": {"code"}, "client_id": {clientID}, "redirect_uri": {oauth.ClaudeCallback},
 		"code_challenge": {challenge}, "code_challenge_method": {"S256"}, "state": {"xyz"}, "decision": {"approve"},
+		"consent": {consentField},
 	}
 	approved := httptest.NewRecorder()
 	areq := httptest.NewRequest(http.MethodPost, "/oauth/authorize", strings.NewReader(form.Encode()))

@@ -131,7 +131,16 @@ func authorize(c *gin.Context, enabled bool, deps mcp.Deps, store oauth.Store) {
 		c.Redirect(http.StatusFound, "/sign-in")
 		return
 	}
-	renderConsent(c, client, user, redirect, challenge, state)
+	if !resourceOK(c) || !scopeOK(first(c, "scope")) {
+		c.String(http.StatusBadRequest, "This sign-in request is not valid.")
+		return
+	}
+	nonce, ok := saveConsent(c, client.ID, redirect, challenge, state)
+	if !ok {
+		c.String(http.StatusInternalServerError, "Try again.")
+		return
+	}
+	renderConsent(c, client, user, redirect, challenge, state, nonce)
 }
 
 func approve(c *gin.Context, enabled bool, deps mcp.Deps, store oauth.Store) {
@@ -147,6 +156,10 @@ func approve(c *gin.Context, enabled bool, deps mcp.Deps, store oauth.Store) {
 	if user == nil {
 		rememberAuthorize(c)
 		c.Redirect(http.StatusFound, "/sign-in")
+		return
+	}
+	if !resourceOK(c) || !scopeOK(first(c, "scope")) || !takeConsent(c, client.ID, redirect, challenge, state, c.PostForm("consent")) {
+		c.String(http.StatusBadRequest, "This sign-in request is not valid.")
 		return
 	}
 	if c.PostForm("decision") != "approve" {
@@ -223,6 +236,11 @@ func exchangeCode(c *gin.Context, deps mcp.Deps, store oauth.Store) {
 func exchangeRefresh(c *gin.Context, deps mcp.Deps, store oauth.Store) {
 	row, err := store.TakeRefresh(c.PostForm("refresh_token"))
 	if err != nil || row == nil || !row.Expires.After(time.Now().UTC()) || (c.PostForm("client_id") != "" && c.PostForm("client_id") != row.ClientID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_grant"})
+		return
+	}
+	rows, err := deps.Tokens.List(row.UserID)
+	if err != nil || !grantActive(rows, row.TokenID) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_grant"})
 		return
 	}
@@ -365,7 +383,51 @@ func callbackURL(redirect, code, state, oauthError string) string {
 	return redirect + "?" + values.Encode()
 }
 
-func renderConsent(c *gin.Context, client *oauth.Client, user *models.User, redirect, challenge, state string) {
+func grantActive(rows []models.McpTokenPublic, tokenID primitive.ObjectID) bool {
+	for _, row := range rows {
+		if row.ID == tokenID.Hex() && row.RevokedAt == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func resourceOK(c *gin.Context) bool {
+	resource := first(c, "resource")
+	return resource == "" || resource == utils.GetBaseUrl()+"/mcp"
+}
+
+func scopeOK(raw string) bool {
+	for _, part := range strings.Fields(raw) {
+		if part != "muster" && part != "offline_access" {
+			return false
+		}
+	}
+	return true
+}
+
+func saveConsent(c *gin.Context, clientID, redirect, challenge, state string) (string, bool) {
+	nonce, err := randomToken("consent_")
+	if err != nil {
+		return "", false
+	}
+	session := sessions.Default(c)
+	session.Set("oauthConsent", clientID+"\n"+redirect+"\n"+challenge+"\n"+state+"\n"+nonce)
+	if err := session.Save(); err != nil {
+		return "", false
+	}
+	return nonce, true
+}
+
+func takeConsent(c *gin.Context, clientID, redirect, challenge, state, nonce string) bool {
+	session := sessions.Default(c)
+	raw, _ := session.Get("oauthConsent").(string)
+	session.Delete("oauthConsent")
+	_ = session.Save()
+	return raw != "" && raw == clientID+"\n"+redirect+"\n"+challenge+"\n"+state+"\n"+nonce
+}
+
+func renderConsent(c *gin.Context, client *oauth.Client, user *models.User, redirect, challenge, state, nonce string) {
 	host := "unknown"
 	if parsed, err := url.Parse(redirect); err == nil {
 		host = parsed.Hostname()
@@ -374,7 +436,7 @@ func renderConsent(c *gin.Context, client *oauth.Client, user *models.User, redi
 	c.Status(http.StatusOK)
 	_ = consentPage.Execute(c.Writer, map[string]string{
 		"Name": client.Name, "Email": user.Email, "Host": host,
-		"ClientID": client.ID, "Redirect": redirect, "Challenge": challenge, "State": state,
+		"ClientID": client.ID, "Redirect": redirect, "Challenge": challenge, "State": state, "Consent": nonce,
 	})
 }
 
@@ -390,6 +452,7 @@ var consentPage = template.Must(template.New("consent").Parse(`<!doctype html>
 <input type="hidden" name="code_challenge" value="{{.Challenge}}">
 <input type="hidden" name="code_challenge_method" value="S256">
 <input type="hidden" name="state" value="{{.State}}">
+<input type="hidden" name="consent" value="{{.Consent}}">
 <button name="decision" value="approve" type="submit">Approve</button>
 <button name="decision" value="deny" type="submit">Deny</button>
 </form>

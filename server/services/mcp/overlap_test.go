@@ -28,6 +28,28 @@ func TestOverlapIntersection(t *testing.T) {
 	}
 }
 
+func TestOverlapMarkAtEndStaysOutside(t *testing.T) {
+	end := time.Date(2026, 11, 2, 11, 0, 0, 0, time.UTC)
+	start := end.Add(-time.Hour)
+	rows := []models.EventResponse{{UserId: "a", Response: &models.Response{Name: "A", Availability: []primitive.DateTime{primitive.NewDateTimeFromTime(end)}}}}
+	slots := overlapSlots(&models.Event{}, rows, start, end)
+	if len(slots) != 0 {
+		t.Fatal(slots)
+	}
+}
+
+func TestOverlapAnswerOutsideWindowBlocks(t *testing.T) {
+	start := time.Date(2026, 11, 2, 10, 0, 0, 0, time.UTC)
+	end := start.Add(time.Hour)
+	rows := []models.EventResponse{
+		{UserId: "a", Response: &models.Response{Name: "A", Availability: []primitive.DateTime{primitive.NewDateTimeFromTime(start)}}},
+		{UserId: "b", Response: &models.Response{Name: "B", Availability: []primitive.DateTime{primitive.NewDateTimeFromTime(start.Add(48 * time.Hour))}}},
+	}
+	if slots := overlapSlots(&models.Event{}, rows, start, end); len(slots) != 0 {
+		t.Fatal(slots)
+	}
+}
+
 func TestOverlapSameNameStaysTwoPeople(t *testing.T) {
 	event := &models.Event{}
 	mark := func(h int) primitive.DateTime {
