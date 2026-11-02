@@ -22,5 +22,5 @@ This is the control plane for what Muster does. The sequence is the order the pr
 | 16 | [Finalize a time](016-finalize.md) | [#18](https://github.com/shivasymbl/muster/issues/18) | Done |
 | 17 | [Archive a muster](017-archive.md) | [#19](https://github.com/shivasymbl/muster/issues/19) | Done |
 | 18 | [Remind and changes](018-remind-and-changes.md) | [#20](https://github.com/shivasymbl/muster/issues/20) | Done |
-| 19 | [Answer and sign-in safety](019-answer-and-sign-in-safety.md) | [#21](https://github.com/shivasymbl/muster/issues/21) [#22](https://github.com/shivasymbl/muster/issues/22) [#23](https://github.com/shivasymbl/muster/issues/23) [#24](https://github.com/shivasymbl/muster/issues/24) [#25](https://github.com/shivasymbl/muster/issues/25) | In progress |
+| 19 | [Answer and sign-in safety](019-answer-and-sign-in-safety.md) | [#21](https://github.com/shivasymbl/muster/issues/21) [#22](https://github.com/shivasymbl/muster/issues/22) [#23](https://github.com/shivasymbl/muster/issues/23) [#24](https://github.com/shivasymbl/muster/issues/24) [#25](https://github.com/shivasymbl/muster/issues/25) | Done |
 | 20 | Hold: mail outcome, OAuth retention, Go CI | [#26](https://github.com/shivasymbl/muster/issues/26) | Not done |
