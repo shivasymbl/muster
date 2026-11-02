@@ -107,7 +107,7 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 		wrote = true
 		c.Status(http.StatusAccepted)
 		return
-	case "initialize", "tools/list", "tools/call", "ping":
+	case "initialize", "tools/list", "tools/call", "ping", "resources/list", "resources/read":
 	default:
 		outcome = "bad_arguments"
 		wrote = true
@@ -163,8 +163,12 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 			"id":      rpcID(req.ID),
 			"result": gin.H{
 				"protocolVersion": "2025-03-26",
-				"capabilities":    gin.H{"tools": gin.H{"listChanged": false}},
-				"serverInfo":      gin.H{"name": "muster", "version": "1"},
+				"capabilities": gin.H{
+					"tools":     gin.H{"listChanged": false},
+					"resources": gin.H{"subscribe": false, "listChanged": false},
+				},
+				"serverInfo":   gin.H{"name": "muster", "version": "1"},
+				"instructions": mcpInstructions,
 			},
 		})
 	case "ping":
@@ -173,6 +177,28 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 	case "tools/list":
 		wrote = true
 		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{"tools": toolDefs()}})
+	case "resources/list":
+		wrote = true
+		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{"resources": skillResources()}})
+	case "resources/read":
+		wrote = true
+		var asked struct {
+			URI string `json:"uri"`
+		}
+		_ = json.Unmarshal(req.Params, &asked)
+		text, found := skillText(asked.URI)
+		if !found {
+			outcome = "bad_arguments"
+			c.JSON(http.StatusOK, gin.H{
+				"jsonrpc": "2.0",
+				"id":      rpcID(req.ID),
+				"error":   gin.H{"code": -32002, "message": "Resource not found"},
+			})
+			break
+		}
+		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{
+			"contents": []gin.H{{"uri": asked.URI, "mimeType": "text/markdown", "text": text}},
+		}})
 	case "tools/call":
 		result, toolErr, calledEvent := callTool(deps, user, req.Params)
 		if calledEvent != "" {

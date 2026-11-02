@@ -345,8 +345,27 @@ func TestMcpProtocol(t *testing.T) {
 		}
 		signed := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"initialize"}`, "muster_live", "", "", "")
 		body := decode(t, signed)
-		if signed.Code != http.StatusOK || body["result"].(map[string]any)["protocolVersion"] != "2025-03-26" {
+		result, _ := body["result"].(map[string]any)
+		if signed.Code != http.StatusOK || result["protocolVersion"] != "2025-03-26" || !strings.Contains(result["instructions"].(string), "muster://skills/pick-a-time") {
 			t.Fatal(signed.Body.String())
+		}
+	})
+
+	t.Run("skills are resources", func(t *testing.T) {
+		listed := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"resources/list"}`, "muster_live", "", "", "")
+		resources := decode(t, listed)["result"].(map[string]any)["resources"].([]any)
+		if listed.Code != http.StatusOK || len(resources) != 3 {
+			t.Fatal(listed.Body.String())
+		}
+		read := postMCP(r, `{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"muster://skills/pick-a-time"}}`, "muster_live", "", "", "")
+		contents := decode(t, read)["result"].(map[string]any)["contents"].([]any)
+		text := contents[0].(map[string]any)["text"].(string)
+		if read.Code != http.StatusOK || !strings.Contains(text, "muster_finalize") || !strings.Contains(text, "does not create a calendar event") {
+			t.Fatal(read.Body.String())
+		}
+		missing := postMCP(r, `{"jsonrpc":"2.0","id":3,"method":"resources/read","params":{"uri":"muster://skills/missing"}}`, "muster_live", "", "", "")
+		if decode(t, missing)["error"].(map[string]any)["code"].(float64) != -32002 {
+			t.Fatal(missing.Body.String())
 		}
 	})
 

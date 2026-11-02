@@ -10,4 +10,6 @@ The list is the caller's own musters, paged, with an optional name filter on tha
 
 A call with no token returns 401. `GET /mcp` returns 401 with a sign-in header when the caller is not signed in. A valid token on `GET /mcp` returns 405 because there is no event stream. The website routes do not accept the bearer token.
 
+`initialize` includes instructions for three workflows, also readable at `muster://skills/pick-a-time`, `muster://skills/answer`, and `muster://skills/run-a-group`. The server does not advertise resource-list changes.
+
 Done when a token from Settings can list the caller's musters and a missing token cannot.
