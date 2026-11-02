@@ -36,41 +36,41 @@ func rankSlots(event *models.Event, responses []models.EventResponse, start, end
 		}
 		for _, mark := range row.Response.Availability {
 			t := mark.Time().UTC()
-			if !t.Before(start) && t.Before(end) {
+			if !t.Before(start) && t.Before(end) && slotProblem(event, t) == "" {
 				p.free[t.Unix()] = true
 			}
 		}
 		for _, mark := range row.Response.IfNeeded {
 			t := mark.Time().UTC()
-			if !t.Before(start) && t.Before(end) {
+			if !t.Before(start) && t.Before(end) && slotProblem(event, t) == "" {
 				p.ifNeeded[t.Unix()] = true
 			}
-		}
-		if len(p.free) == 0 && len(p.ifNeeded) == 0 {
-			continue
 		}
 		people = append(people, p)
 	}
 	seen := map[int64]bool{}
 	starts := []time.Time{}
 	for _, p := range people {
-		for unix := range p.free {
-			if seen[unix] {
-				continue
+		for _, marks := range []map[int64]bool{p.free, p.ifNeeded} {
+			for unix := range marks {
+				if seen[unix] {
+					continue
+				}
+				seen[unix] = true
+				starts = append(starts, time.Unix(unix, 0).UTC())
 			}
-			seen[unix] = true
-			starts = append(starts, time.Unix(unix, 0).UTC())
 		}
 	}
 	sort.Slice(starts, func(i, j int) bool { return starts[i].Before(starts[j]) })
 	out := []bestSlot{}
-	steps := int(duration / inc)
-	if steps < 1 {
-		steps = 1
-	}
+	steps := 1
 	for _, slotStart := range starts {
 		slotEnd := slotStart.Add(duration)
-		if slotEnd.After(end) {
+		if slotEnd.After(end) || !spanOnGrid(event, slotStart, slotEnd) {
+			continue
+		}
+		steps = int(slotEnd.Sub(slotStart) / inc)
+		if steps < 1 {
 			continue
 		}
 		available := 0

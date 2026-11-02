@@ -31,6 +31,16 @@ func InitMcp(router *gin.Engine, enabled bool, deps mcp.Deps) {
 			c.Status(http.StatusMethodNotAllowed)
 			return
 		}
+		now := time.Now()
+		if deps.Now != nil {
+			now = deps.Now()
+		}
+		if middleware.AuthBlocked(c, now) {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"code": "RATE_LIMITED", "message": "Too many sign-in attempts.", "retryable": true,
+			})
+			return
+		}
 		if _, ok := middleware.AuthenticateMCP(c, deps); ok {
 			c.Header("Allow", "POST")
 			c.JSON(http.StatusMethodNotAllowed, gin.H{
@@ -56,11 +66,12 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 	eventID := "-"
 	outcome := "ok"
 	wrote := false
+	var rpc json.RawMessage
 
 	defer func() {
 		if rec := recover(); rec != nil && !wrote {
 			outcome = "internal"
-			writeToolResult(c, nil, nil, &mcp.ToolError{
+			writeToolResult(c, rpcID(rpc), nil, &mcp.ToolError{
 				Code: "INTERNAL", Message: "Try again.", WhatToDoNext: "Wait and retry.", Retryable: true,
 			})
 		}
@@ -92,6 +103,7 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 		})
 		return
 	}
+	rpc = req.ID
 	toolName = req.Method
 	if req.Method == "tools/call" {
 		var called struct {
@@ -392,7 +404,7 @@ func toolDefs() []gin.H {
 		{"name": "muster_list_attendees", "description": "Who was invited and who answered. status is invited, responded, declined, or cleared. Email is included for the owner only. A hidden muster shows a non-owner only their own row.", "annotations": read, "inputSchema": gin.H{
 			"type": "object", "properties": gin.H{"event_id": id}, "required": []string{"event_id"},
 		}},
-		{"name": "muster_find_best_times", "description": "Rank slot starts by how many respondents can make a meeting of duration_minutes. Includes if-needed counts and who is missing. Defaults the window to the muster's dates, capped at 7 days. Does not change the unanimous muster_summarize_overlap result. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
+		{"name": "muster_find_best_times", "description": "Rank slot starts by how many respondents can make a meeting of duration_minutes. A returned interval fits the current grid and that duration. A stored answer with no free time in the window is missing, not dropped. A time marked only if-needed is included. Defaults the window to the muster's dates, capped at 7 days. Does not change the unanimous muster_summarize_overlap result. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id":         id,

@@ -168,8 +168,11 @@ func listAttendees(deps Deps, user *models.User, args map[string]any) (any, *Too
 		if deps.Users != nil {
 			if account := deps.Users.GetByEmail(attendee.Email); account != nil {
 				name = strings.TrimSpace(account.FirstName + " " + account.LastName)
-				if response := byUser[account.Id.Hex()]; response != nil && len(response.Availability)+len(response.IfNeeded) > 0 && status != "declined" {
-					status = "responded"
+				if response := byUser[account.Id.Hex()]; response != nil && status != "declined" {
+					status = "cleared"
+					if len(response.Availability)+len(response.IfNeeded) > 0 {
+						status = "responded"
+					}
 				}
 			}
 		}

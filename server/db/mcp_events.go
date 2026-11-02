@@ -88,6 +88,7 @@ func ListEventsForUser(user *models.User, name string, limit int, cursor string)
 		SetProjection(bson.M{
 			"_id": 1, "shortId": 1, "name": 1, "type": 1, "isArchived": 1,
 			"blindAvailabilityEnabled": 1, "isSignUpForm": 1, "ownerId": 1,
+			"dates": 1, "duration": 1, "timeIncrement": 1, "daysOnly": 1, "startOnMonday": 1,
 		}))
 	if err != nil {
 		return nil, "", err
