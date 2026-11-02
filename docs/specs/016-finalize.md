@@ -1,9 +1,9 @@
 # 16. Finalize a time
 
-Status: Not done.
+Status: In progress.
 
-Nothing in the assistant picks a final time, notifies people, or closes the muster.
-
-When this is built, the owner chooses a start and end on the grid. The chosen time is stored and the muster is marked closed. Mail goes out only when Listmonk is on. A calendar event waits until a calendar write is an explicit scope.
+`muster_finalize` is owner only. The start and end must sit on the grid. The chosen time is stored and the muster is marked closed. No finalize mail is sent, so `email_sent` is false. It does not create a calendar event.
 
 Task: https://github.com/shivasymbl/muster/issues/18
+
+Done when the owner can close a time on the grid and a guest cannot.

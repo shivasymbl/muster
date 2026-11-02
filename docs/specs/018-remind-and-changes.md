@@ -1,9 +1,13 @@
 # 18. Remind, remove, and a change feed
 
-Status: Not done.
+Status: In progress.
 
-The assistant cannot nudge non-responders, remove an invitee, or ask what changed since yesterday.
+`muster_remind` lists group invitees who have not answered. No reminder mail is sent, because there is no reminder template, so `email_sent` is false.
 
-When this is built, reminders email only when Listmonk is on. Removing an invitee follows the website. A change list takes a timestamp. There is no webhook in the first version.
+`muster_remove_attendee` removes one invitee and that person's answer, matching the website. The owner cannot be removed.
+
+`muster_list_changes` returns answers and invites recorded at or after `since`. Older edits that have no timestamp are left out. There is no webhook.
 
 Task: https://github.com/shivasymbl/muster/issues/20
+
+Done when the owner can see who has not answered, remove one invitee, and read changes after a timestamp.

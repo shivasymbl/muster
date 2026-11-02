@@ -333,6 +333,68 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "emails"},
 		}},
+		{"name": "muster_create_event", "description": "Create a muster owned by the signed-in user. type is specific_dates, dow, or group. dates are RFC3339 starts. A weekly muster must use the reference week 2018-06-17 through 2018-06-24. duration_hours is the length of each day. slot_minutes is 15, 30, or 60. emails are allowed only when type is group. Invite mail is sent only when Listmonk is on. Returns event_id, short_id, and page_url.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true}, "inputSchema": gin.H{
+			"type": "object",
+			"properties": gin.H{
+				"name":            gin.H{"type": "string", "description": "1 to 80 characters."},
+				"type":            gin.H{"type": "string", "description": "specific_dates, dow, or group."},
+				"dates":           gin.H{"type": "array", "items": gin.H{"type": "string"}, "description": "RFC3339 start of each day."},
+				"duration_hours":  gin.H{"type": "number", "description": "Hours in each day, greater than 0 and at most 24."},
+				"slot_minutes":    gin.H{"type": "integer", "description": "15, 30, or 60. Defaults to 15."},
+				"blind":           gin.H{"type": "boolean"},
+				"days_only":       gin.H{"type": "boolean"},
+				"start_on_monday": gin.H{"type": "boolean"},
+				"emails":          gin.H{"type": "array", "items": gin.H{"type": "string"}, "description": "Invitees. Group musters only. At most 20."},
+			},
+			"required": []string{"name", "type", "duration_hours"},
+		}},
+		{"name": "muster_list_attendees", "description": "Who was invited and who answered. status is invited, responded, declined, or cleared. Email is included for the owner only. A hidden muster shows a non-owner only their own row.", "annotations": read, "inputSchema": gin.H{
+			"type": "object", "properties": gin.H{"event_id": id}, "required": []string{"event_id"},
+		}},
+		{"name": "muster_find_best_times", "description": "Rank slot starts by how many respondents can make a meeting of duration_minutes. Includes if-needed counts and who is missing. Defaults the window to the muster's dates, capped at 7 days. Does not change the unanimous muster_summarize_overlap result. Refuses when availability is hidden and the caller is not the owner.", "annotations": read, "inputSchema": gin.H{
+			"type": "object",
+			"properties": gin.H{
+				"event_id":         id,
+				"start":            gin.H{"type": "string", "description": window},
+				"end":              gin.H{"type": "string", "description": window},
+				"duration_minutes": gin.H{"type": "integer", "description": "Meeting length. Defaults to slot_minutes."},
+			},
+			"required": []string{"event_id"},
+		}},
+		{"name": "muster_finalize", "description": "Owner only. Store the chosen start and end and mark the muster closed. Both ends must sit on the grid. No finalize mail is sent, so email_sent is false. This does not create a calendar event.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+			"type": "object",
+			"properties": gin.H{
+				"event_id": id,
+				"start":    gin.H{"type": "string", "description": "RFC3339 start on the grid."},
+				"end":      gin.H{"type": "string", "description": "RFC3339 end on the grid, after start."},
+			},
+			"required": []string{"event_id", "start", "end"},
+		}},
+		{"name": "muster_update_event", "description": "Owner only. Rename, replace dates, change duration_hours, archive, or set blind. It cannot change the owner or the type.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+			"type": "object",
+			"properties": gin.H{
+				"event_id":       id,
+				"name":           gin.H{"type": "string"},
+				"dates":          gin.H{"type": "array", "items": gin.H{"type": "string"}},
+				"duration_hours": gin.H{"type": "number"},
+				"archive":        gin.H{"type": "boolean"},
+				"blind":          gin.H{"type": "boolean"},
+			},
+			"required": []string{"event_id"},
+		}},
+		{"name": "muster_remind", "description": "Owner only. List group invitees who have not answered. No reminder mail is sent, because there is no reminder template, so email_sent is false.", "annotations": gin.H{"readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+			"type": "object", "properties": gin.H{"event_id": id}, "required": []string{"event_id"},
+		}},
+		{"name": "muster_remove_attendee", "description": "Owner only. Remove one invitee from a group muster and delete that person's answer, matching the website. The owner cannot be removed.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+			"type":       "object",
+			"properties": gin.H{"event_id": id, "email": gin.H{"type": "string"}},
+			"required":   []string{"event_id", "email"},
+		}},
+		{"name": "muster_list_changes", "description": "Owner only. Answers and invites recorded at or after since. since is RFC3339. Older website edits that have no timestamp are left out. There is no webhook.", "annotations": read, "inputSchema": gin.H{
+			"type":       "object",
+			"properties": gin.H{"event_id": id, "since": gin.H{"type": "string", "description": "RFC3339 timestamp."}},
+			"required":   []string{"event_id", "since"},
+		}},
 		{"name": "muster_summarize_overlap", "description": "Times every respondent in the window can make. Returns those slots with display names, not user ids. It returns nothing when no slot suits every respondent. Refuses when availability is hidden and the caller is not the owner. Unanswered people are left out.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{

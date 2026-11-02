@@ -1,9 +1,9 @@
 # 13. Create a muster from the assistant
 
-Status: Not done.
+Status: In progress.
 
-There is no create tool. A new muster, its link, and a group invite list still start on the website.
-
-When this is built, `muster_create_event` uses the same create path as the website and returns `event_id`, `short_id`, and `page_url`. Invite mail stays off unless Listmonk is on.
+`muster_create_event` creates a muster for the signed-in user and returns `event_id`, `short_id`, and `page_url`. The type is `specific_dates`, `dow`, or `group`. A weekly muster must use the reference week 2018-06-17 through 2018-06-24. Invitees are allowed only on a group muster. Invite mail is sent only when Listmonk is on.
 
 Task: https://github.com/shivasymbl/muster/issues/15
+
+Done when the owner gets a link back and a weekly date outside that week is refused.

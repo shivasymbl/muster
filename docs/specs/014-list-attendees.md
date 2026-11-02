@@ -1,9 +1,9 @@
 # 14. List who was invited
 
-Status: Not done.
+Status: In progress.
 
-`muster_get_responses` lists people who answered. It does not list people who were invited and have not answered.
-
-When this is built, `muster_list_attendees` returns a status per person and totals. Email stays owner-only under the website rule. A hidden muster still hides other people's answers from a non-owner.
+`muster_list_attendees` returns each person with status `invited`, `responded`, `declined`, or `cleared`, plus totals. Email is included for the owner only. A hidden muster shows a non-owner only their own row.
 
 Task: https://github.com/shivasymbl/muster/issues/16
+
+Done when a guest can see statuses and cannot see email addresses.

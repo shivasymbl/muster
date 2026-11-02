@@ -6,8 +6,9 @@ type EventResponse struct {
 	Id      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	EventId primitive.ObjectID `json:"eventId" bson:"eventId"`
 
-	UserId   string    `json:"userId" bson:"userId"`
-	Response *Response `json:"response" bson:"response"`
+	UserId    string             `json:"userId" bson:"userId"`
+	Response  *Response          `json:"response" bson:"response"`
+	UpdatedAt primitive.DateTime `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 }
 
 // A response object containing an array of times that the given user is available

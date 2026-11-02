@@ -48,6 +48,30 @@ func Call(deps Deps, user *models.User, name string, args map[string]any) (any, 
 	case "muster_summarize_overlap":
 		payload, err := summarizeOverlap(deps, user, args)
 		return payload, err, eventID
+	case "muster_create_event":
+		payload, err := createEvent(deps, user, args)
+		return payload, err, eventID
+	case "muster_list_attendees":
+		payload, err := listAttendees(deps, user, args)
+		return payload, err, eventID
+	case "muster_find_best_times":
+		payload, err := findBestTimes(deps, user, args)
+		return payload, err, eventID
+	case "muster_finalize":
+		payload, err := finalizeEvent(deps, user, args)
+		return payload, err, eventID
+	case "muster_update_event":
+		payload, err := updateEvent(deps, user, args)
+		return payload, err, eventID
+	case "muster_remind":
+		payload, err := remindAttendees(deps, user, args)
+		return payload, err, eventID
+	case "muster_remove_attendee":
+		payload, err := removeAttendee(deps, user, args)
+		return payload, err, eventID
+	case "muster_list_changes":
+		payload, err := listChanges(deps, user, args)
+		return payload, err, eventID
 	default:
 		return nil, toolErr("BAD_ARGUMENTS", "Unknown tool.", "Call tools/list."), eventID
 	}

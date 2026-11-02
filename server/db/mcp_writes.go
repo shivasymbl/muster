@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/shivasymbl/muster/server/models"
 	"github.com/shivasymbl/muster/server/utils"
@@ -21,9 +22,10 @@ func ReplaceAvailability(user *models.User, eventID primitive.ObjectID, availabi
 	}
 	if err == mongo.ErrNoDocuments {
 		_, err = EventResponsesCollection.InsertOne(ctx, models.EventResponse{
-			UserId:   user.Id.Hex(),
-			EventId:  eventID,
-			Response: &response,
+			UserId:    user.Id.Hex(),
+			EventId:   eventID,
+			Response:  &response,
+			UpdatedAt: primitive.NewDateTimeFromTime(time.Now().UTC()),
 		})
 		if err != nil {
 			return err
@@ -38,7 +40,7 @@ func ReplaceAvailability(user *models.User, eventID primitive.ObjectID, availabi
 			response.EnabledCalendars = existing.Response.EnabledCalendars
 			response.CalendarOptions = existing.Response.CalendarOptions
 		}
-		_, err = EventResponsesCollection.UpdateOne(ctx, bson.M{"_id": existing.Id}, bson.M{"$set": bson.M{"response": &response}})
+		_, err = EventResponsesCollection.UpdateOne(ctx, bson.M{"_id": existing.Id}, bson.M{"$set": bson.M{"response": &response, "updatedAt": primitive.NewDateTimeFromTime(time.Now().UTC())}})
 	}
 	if err != nil {
 		return err
@@ -54,7 +56,7 @@ func DeclineInvite(user *models.User, eventID primitive.ObjectID) error {
 	res, err := AttendeesCollection.UpdateOne(context.Background(), bson.M{
 		"email":   user.Email,
 		"eventId": eventID,
-	}, bson.M{"$set": bson.M{"declined": true}})
+	}, bson.M{"$set": bson.M{"declined": true, "updatedAt": primitive.NewDateTimeFromTime(time.Now().UTC())}})
 	if err != nil {
 		return err
 	}
@@ -76,9 +78,10 @@ func AddAttendeeEmails(eventID primitive.ObjectID, emails []string) ([]string, e
 			continue
 		}
 		_, err = AttendeesCollection.InsertOne(ctx, models.Attendee{
-			Email:    email,
-			Declined: utils.FalsePtr(),
-			EventId:  eventID,
+			Email:     email,
+			Declined:  utils.FalsePtr(),
+			UpdatedAt: primitive.NewDateTimeFromTime(time.Now().UTC()),
+			EventId:   eventID,
 		})
 		if err != nil {
 			return nil, err

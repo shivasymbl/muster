@@ -6,6 +6,8 @@ The website stays public by link. These tools use the same signed-in bearer as t
 
 `muster_set_availability` replaces the caller's `availability` and `if_needed`. Omit a list to clear it. It does not merge with the previous answer. Calendar settings already stored on the answer are left in place. A new answer clears a previous decline. Sign-up forms are refused. When the muster has stored dates, a time outside those windows or off the slot length is rejected. A weekly muster stores those dates on the reference week 2018-06-17 through 2018-06-24, so a later week is rejected. A window that crosses midnight still accepts the later slots. A time in both lists is rejected. Duplicate times are stored once.
 
+`muster_create_event` creates a muster for the signed-in user. `muster_list_attendees` lists invite status. `muster_find_best_times` ranks partial fits. `muster_finalize` stores a chosen time and closes the muster. `muster_update_event` renames, replaces dates, or archives. `muster_remind` lists non-responders and does not send mail. `muster_remove_attendee` removes one invitee and that person's answer. `muster_list_changes` returns answers and invites recorded after a timestamp.
+
 `muster_get_event` returns that grid: `dates`, `duration_hours`, `slot_minutes`, `days_only`, `start_on_monday`, and `is_group`. A weekly muster also returns `weekdays`. There is no stored timezone. An empty display name is filled from the account when the caller is allowed to see that person. Read tools are annotated read-only. This replace tool is annotated destructive.
 
 `muster_decline` sets declined on a group muster. The caller must be on the invite list. The owner is not an invitee unless their email is on that list.

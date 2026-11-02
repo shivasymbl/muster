@@ -1,6 +1,8 @@
 package db
 
 import (
+	"time"
+
 	"github.com/shivasymbl/muster/server/models"
 	"github.com/shivasymbl/muster/server/services/mcp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -40,10 +42,30 @@ func (mongoEvents) AddAttendees(eventID primitive.ObjectID, emails []string) ([]
 	return AddAttendeeEmails(eventID, emails)
 }
 
+func (mongoEvents) Create(user *models.User, event models.Event, emails []string) (*models.Event, error) {
+	return CreateMuster(user, event, emails)
+}
+
+func (mongoEvents) Patch(eventID primitive.ObjectID, set map[string]any) error {
+	return PatchMuster(eventID, set)
+}
+
+func (mongoEvents) RemoveAttendee(eventID primitive.ObjectID, email, responseUserHex string) error {
+	return RemoveAttendeeEmail(eventID, email, responseUserHex)
+}
+
+func (mongoEvents) Changes(eventID primitive.ObjectID, since time.Time) ([]models.EventResponse, []models.Attendee, error) {
+	return ChangesSince(eventID, since)
+}
+
 type mongoUsers struct{}
 
 func (mongoUsers) GetByID(id string) *models.User {
 	return GetUserById(id)
+}
+
+func (mongoUsers) GetByEmail(email string) *models.User {
+	return GetUserByEmail(email)
 }
 
 // NewMcpDeps wires the tool route to Mongo.

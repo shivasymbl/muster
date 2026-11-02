@@ -866,14 +866,16 @@ func updateEventResponse(c *gin.Context) {
 				"_id": eventResponses[idx].Id,
 			}, bson.M{
 				"$set": bson.M{
-					"response": &response,
+					"response":  &response,
+					"updatedAt": primitive.NewDateTimeFromTime(time.Now().UTC()),
 				},
 			})
 		} else {
 			db.EventResponsesCollection.InsertOne(context.Background(), models.EventResponse{
-				UserId:   userIdString,
-				Response: &response,
-				EventId:  event.Id,
+				UserId:    userIdString,
+				Response:  &response,
+				EventId:   event.Id,
+				UpdatedAt: primitive.NewDateTimeFromTime(time.Now().UTC()),
 			})
 			*event.NumResponses++
 		}

@@ -58,6 +58,15 @@ func (f *fakeUsers) GetByID(id string) *models.User {
 	return f.byID[id]
 }
 
+func (f *fakeUsers) GetByEmail(email string) *models.User {
+	for _, user := range f.byID {
+		if user != nil && strings.EqualFold(user.Email, email) {
+			return user
+		}
+	}
+	return nil
+}
+
 type storedEvent struct {
 	event    *models.Event
 	owner    primitive.ObjectID
@@ -142,6 +151,70 @@ func (f *fakeEvents) Decline(user *models.User, eventID primitive.ObjectID) erro
 func (f *fakeEvents) AddAttendees(eventID primitive.ObjectID, emails []string) ([]string, error) {
 	f.added = emails
 	return emails, nil
+}
+
+func (f *fakeEvents) Create(user *models.User, event models.Event, emails []string) (*models.Event, error) {
+	event.Id = primitive.NewObjectID()
+	event.OwnerId = user.Id
+	shortID := "new123"
+	event.ShortId = &shortID
+	if f.byHex == nil {
+		f.byHex = map[string]*models.Event{}
+	}
+	f.byHex[event.Id.Hex()] = &event
+	if event.Type == models.GROUP {
+		people := []models.Attendee{{Email: user.Email, EventId: event.Id}}
+		for _, email := range emails {
+			people = append(people, models.Attendee{Email: email, EventId: event.Id})
+		}
+		if f.attendees == nil {
+			f.attendees = map[string][]models.Attendee{}
+		}
+		f.attendees[event.Id.Hex()] = people
+	}
+	f.added = emails
+	return &event, nil
+}
+
+func (f *fakeEvents) Patch(eventID primitive.ObjectID, set map[string]any) error {
+	event := f.byHex[eventID.Hex()]
+	if event == nil {
+		return nil
+	}
+	if name, ok := set["name"].(string); ok {
+		event.Name = name
+	}
+	if archived, ok := set["isArchived"].(bool); ok {
+		event.IsArchived = &archived
+	}
+	if _, ok := set["scheduledEvent"]; ok {
+		event.IsArchived = utils.TruePtr()
+	}
+	return nil
+}
+
+func (f *fakeEvents) RemoveAttendee(eventID primitive.ObjectID, email, responseUserHex string) error {
+	kept := []models.Attendee{}
+	for _, attendee := range f.attendees[eventID.Hex()] {
+		if !strings.EqualFold(attendee.Email, email) {
+			kept = append(kept, attendee)
+		}
+	}
+	f.attendees[eventID.Hex()] = kept
+	if responseUserHex != "" {
+		keptRows := []models.EventResponse{}
+		for _, row := range f.responses[eventID.Hex()] {
+			if row.UserId != responseUserHex {
+				keptRows = append(keptRows, row)
+			}
+		}
+		f.responses[eventID.Hex()] = keptRows
+	}
+	return nil
+}
+
+func (f *fakeEvents) Changes(eventID primitive.ObjectID, since time.Time) ([]models.EventResponse, []models.Attendee, error) {
+	return f.responses[eventID.Hex()], f.attendees[eventID.Hex()], nil
 }
 
 func (f *fakeEvents) ResponseFlags(userHex string, ids []primitive.ObjectID) map[string]mcp.ResponseFlags {
