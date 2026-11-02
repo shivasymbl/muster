@@ -319,7 +319,7 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},
-		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability or if_needed. An empty list clears that list. Omitting both leaves the answer unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability or if_needed. An empty list clears that list. Omitting both, or passing null, leaves the answer unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id":     id,

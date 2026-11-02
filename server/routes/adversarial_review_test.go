@@ -90,6 +90,13 @@ func TestAdversarialAvailabilityRequiresExplicitReplacement(t *testing.T) {
 	if len(events.responses[eventID.Hex()][0].Response.Availability) != 1 {
 		t.Fatal("stored answer was cleared")
 	}
+	_, err, _ = mcp.Call(mcp.Deps{Events: events}, user, "muster_set_availability", map[string]any{"event_id": eventID.Hex(), "availability": nil})
+	if err == nil {
+		t.Fatal("null availability changed the answer")
+	}
+	if len(events.responses[eventID.Hex()][0].Response.Availability) != 1 {
+		t.Fatal("null availability cleared the answer")
+	}
 }
 
 func TestAdversarialAvailabilityRejectsOutsideGrid(t *testing.T) {

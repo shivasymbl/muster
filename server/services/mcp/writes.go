@@ -28,8 +28,8 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	if utils.Coalesce(event.IsSignUpForm) {
 		return nil, toolErr("SIGN_UP_FORM", "This muster is a sign-up form.", utils.GetBaseUrl()+"/e/"+event.GetId())
 	}
-	_, hasAvailability := args["availability"]
-	_, hasIfNeeded := args["if_needed"]
+	hasAvailability := presentList(args, "availability")
+	hasIfNeeded := presentList(args, "if_needed")
 	if !hasAvailability && !hasIfNeeded {
 		return nil, toolErr("BAD_ARGUMENTS", "Pass availability or if_needed.", "An empty list clears that list. Omitting both leaves the answer unchanged.")
 	}
@@ -263,6 +263,11 @@ func slotsOnGrid(event *models.Event, lists ...[]primitive.DateTime) *ToolError 
 	return nil
 }
 
+func presentList(args map[string]any, key string) bool {
+	raw, ok := args[key]
+	return ok && raw != nil
+}
+
 func timeList(args map[string]any, key string) ([]primitive.DateTime, *ToolError) {
 	raw, ok := args[key]
 	if !ok || raw == nil {
@@ -270,7 +275,7 @@ func timeList(args map[string]any, key string) ([]primitive.DateTime, *ToolError
 	}
 	list, isList := raw.([]any)
 	if !isList {
-		return nil, toolErr("BAD_ARGUMENTS", key+" must be an array of RFC3339 timestamps.", "Pass "+key+" as an array, or omit it to clear it.")
+		return nil, toolErr("BAD_ARGUMENTS", key+" must be an array of RFC3339 timestamps.", "Pass "+key+" as an array. An empty array clears it.")
 	}
 	if len(list) > maxMarks {
 		return nil, toolErr("BAD_ARGUMENTS", key+" is too long.", "Send at most 2000 timestamps.")
