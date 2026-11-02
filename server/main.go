@@ -184,7 +184,13 @@ func main() {
 		logger.StdErr.Printf("Warning: index.html not found at %s", indexPath)
 	}
 	mcpOn := os.Getenv("MCP_ENABLED") == "true"
-	routes.InitMcp(router, mcpOn, db.NewMcpDeps())
+	appsOpts := routes.McpAppsFromEnv(frontendDist)
+	if mcpOn && appsOpts.Enabled {
+		if _, err := routes.LoadMcpApp(appsOpts); err != nil {
+			panic("MCP_APPS_ENABLED is true but the App bundle is unusable: " + err.Error())
+		}
+	}
+	routes.InitMcp(router, mcpOn, db.NewMcpDeps(), appsOpts)
 	routes.InitOAuth(router, apiRouter, mcpOn, db.NewMcpDeps(), db.NewOAuthStore())
 	router.NoRoute(noRouteHandler())
 

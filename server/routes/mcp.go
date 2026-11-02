@@ -25,7 +25,18 @@ type rpcRequest struct {
 
 // InitMcp registers POST /mcp and GET /mcp. The route stays registered when the flag is off
 // so the website fallback cannot answer it with HTML.
-func InitMcp(router *gin.Engine, enabled bool, deps mcp.Deps) {
+func InitMcp(router *gin.Engine, enabled bool, deps mcp.Deps, appOpts ...McpAppsOptions) {
+	var app *appAsset
+	if len(appOpts) > 0 {
+		var err error
+		if app, err = LoadMcpApp(appOpts[0]); err != nil {
+			// An enabled App with a bad bundle is never advertised. main.go checks LoadMcpApp to fail readiness.
+			app = nil
+			if logger.StdErr != nil {
+				logger.StdErr.Printf("mcp apps disabled: %s", err)
+			}
+		}
+	}
 	router.GET("/mcp", func(c *gin.Context) {
 		if !enabled {
 			c.Status(http.StatusMethodNotAllowed)
@@ -55,11 +66,11 @@ func InitMcp(router *gin.Engine, enabled bool, deps mcp.Deps) {
 		})
 	})
 	router.POST("/mcp", func(c *gin.Context) {
-		handleMcp(c, enabled, deps)
+		handleMcp(c, enabled, deps, app)
 	})
 }
 
-func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
+func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps, app *appAsset) {
 	start := time.Now()
 	requestID := newRequestID()
 	toolName := "-"
@@ -167,15 +178,34 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 		})
 		return
 	}
+	// The version is read per request and never stored. initialize negotiates in its body instead.
+	core := legacyCoreVersion
+	if req.Method != "initialize" {
+		v, supported := requestCoreVersion(c)
+		if !supported {
+			outcome = "bad_arguments"
+			wrote = true
+			writeRPCError(c, req.ID, http.StatusBadRequest, -32600, "Unsupported MCP-Protocol-Version.", gin.H{
+				"code": "UNSUPPORTED_PROTOCOL_VERSION", "message": "Unsupported MCP-Protocol-Version.",
+				"supported": supportedCoreVersions, "retryable": false,
+			})
+			return
+		}
+		core = v
+	}
 
 	switch req.Method {
 	case "initialize":
 		wrote = true
+		var init struct {
+			ProtocolVersion string `json:"protocolVersion"`
+		}
+		_ = json.Unmarshal(req.Params, &init)
 		c.JSON(http.StatusOK, gin.H{
 			"jsonrpc": "2.0",
 			"id":      rpcID(req.ID),
 			"result": gin.H{
-				"protocolVersion": "2025-03-26",
+				"protocolVersion": negotiateCoreVersion(init.ProtocolVersion),
 				"capabilities": gin.H{
 					"tools":     gin.H{"listChanged": false},
 					"resources": gin.H{"subscribe": false, "listChanged": false},
@@ -189,16 +219,22 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{}})
 	case "tools/list":
 		wrote = true
-		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{"tools": toolDefs()}})
+		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{"tools": toolList(app)}})
 	case "resources/list":
 		wrote = true
-		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{"resources": skillResources()}})
+		c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{"resources": resourceList(app)}})
 	case "resources/read":
 		wrote = true
 		var asked struct {
 			URI string `json:"uri"`
 		}
 		_ = json.Unmarshal(req.Params, &asked)
+		if app != nil && asked.URI == app.uri {
+			c.JSON(http.StatusOK, gin.H{"jsonrpc": "2.0", "id": rpcID(req.ID), "result": gin.H{
+				"contents": []gin.H{app.contents()},
+			}})
+			break
+		}
 		text, found := skillText(asked.URI)
 		if !found {
 			outcome = "bad_arguments"
@@ -213,6 +249,29 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps) {
 			"contents": []gin.H{{"uri": asked.URI, "mimeType": "text/markdown", "text": text}},
 		}})
 	case "tools/call":
+		if app != nil && toolName == appsOpenerTool {
+			var body struct {
+				Arguments map[string]any `json:"arguments"`
+			}
+			if err := json.Unmarshal(req.Params, &body); err != nil {
+				wrote = true
+				outcome = "bad_arguments"
+				writeToolResult(c, rpcID(req.ID), nil, mcpErr("BAD_ARGUMENTS", "arguments are not an object.", "Pass arguments as a JSON object."))
+				break
+			}
+			if body.Arguments == nil {
+				body.Arguments = map[string]any{}
+			}
+			res, toolErr := openView(body.Arguments, core)
+			wrote = true
+			if toolErr != nil {
+				outcome = outcomeFor(toolErr.Code)
+				writeToolResult(c, rpcID(req.ID), nil, toolErr)
+				break
+			}
+			writeAppsResult(c, rpcID(req.ID), res)
+			break
+		}
 		result, toolErr, calledEvent := callTool(deps, user, req.Params)
 		if calledEvent != "" {
 			eventID = calledEvent
@@ -463,4 +522,19 @@ func toolDefs() []gin.H {
 
 func mcpErr(code, message, next string) *mcp.ToolError {
 	return &mcp.ToolError{Code: code, Message: message, WhatToDoNext: next, Retryable: code == "INTERNAL"}
+}
+
+func toolList(app *appAsset) []gin.H {
+	if app == nil {
+		return toolDefs()
+	}
+	return withAppsVisibility(toolDefs(), app)
+}
+
+func resourceList(app *appAsset) []gin.H {
+	list := skillResources()
+	if app != nil {
+		list = append(list, app.resourceListing())
+	}
+	return list
 }

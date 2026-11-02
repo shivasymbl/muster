@@ -346,7 +346,7 @@ func TestMcpProtocol(t *testing.T) {
 		signed := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"initialize"}`, "muster_live", "", "", "")
 		body := decode(t, signed)
 		result, _ := body["result"].(map[string]any)
-		if signed.Code != http.StatusOK || result["protocolVersion"] != "2025-03-26" || !strings.Contains(result["instructions"].(string), "muster://skills/pick-a-time") {
+		if signed.Code != http.StatusOK || result["protocolVersion"] != "2025-11-25" || !strings.Contains(result["instructions"].(string), "muster://skills/pick-a-time") {
 			t.Fatal(signed.Body.String())
 		}
 	})
