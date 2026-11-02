@@ -2,7 +2,7 @@ package routes
 
 import "github.com/gin-gonic/gin"
 
-const mcpInstructions = "Muster is a group availability poll, not a calendar. Before a multi-step task, read one of muster://skills/pick-a-time, muster://skills/answer, or muster://skills/run-a-group. Weekly dates are the stored reference week 2018-06-17 through 2018-06-24. There is no timezone. muster_set_availability replaces the whole answer: an empty list clears that list, and omitting both lists is rejected so the stored answer stays unchanged. muster_summarize_overlap is only the times every stored answer in the window can make. People who have not answered are left out. An answer with no free time in the window blocks it. Use muster_find_best_times for a ranked partial fit. A duration that is not a positive multiple of slot_minutes is rejected. muster_finalize stores the chosen time and closes the muster. It does not create a calendar event and it sends no mail. muster_remind sends no mail. A hidden muster shows a non-owner nothing about other people."
+const mcpInstructions = "Muster is a group availability poll, not a calendar. Before a multi-step task, read one of muster://skills/pick-a-time, muster://skills/answer, or muster://skills/run-a-group. Weekly dates are the stored reference week 2018-06-17 through 2018-06-24. There is no timezone. {weekday: Monday, time: 15:00} means 2018-06-18T15:00:00Z. muster_list_my_events defaults to musters that still need an answer; pass status all for every muster. muster_set_availability replaces the whole answer: an empty list clears that list, and omitting both lists is rejected so the stored answer stays unchanged. Pass if_match to refuse when the stored answer differs; omit it to replace anyway. muster_summarize_overlap is only the times every stored answer in the window can make. People who have not answered are left out. An answer with no free time in the window blocks it. Use muster_find_best_times for a ranked partial fit. A duration that is not a positive multiple of slot_minutes is rejected. muster_finalize stores the chosen time and closes the muster. It does not create a calendar event and it sends no mail. muster_remind sends no mail. A hidden muster shows a non-owner nothing about other people."
 
 func skillResources() []gin.H {
 	out := make([]gin.H, 0, len(skillBodies))
@@ -57,7 +57,7 @@ Do not invent a time the grid rejected. Read the event again if you are unsure t
 Use this when the signed-in person is marking when they can make it.
 
 1. Call muster_get_event before writing. Copy slot starts from its grid. A weekly muster only accepts the stored reference-week instants.
-2. Call muster_set_availability with the full replacement. It does not merge. Pass availability, if_needed, or both. An empty list clears that list. Omitting one list clears it. Omitting both, or passing null, is rejected and the stored answer stays unchanged.
+2. Call muster_set_availability with the full replacement. It does not merge. Pass availability, if_needed, or both. An empty list clears that list. Omitting one list clears it. Omitting both, or passing null, is rejected and the stored answer stays unchanged. On a weekly muster, {weekday, time} uses the stored weekday. Monday 15:00 is 2018-06-18T15:00:00Z when that Monday is the only one stored. Pass if_match to refuse when the stored answer changed. Omit if_match to replace it anyway.
 3. Each time is an RFC3339 slot start. A time outside the muster dates, off slot_minutes, or in both lists is rejected. Duplicates are stored once.
 4. An empty stored answer is my_status cleared, not no_answer.
 5. Call muster_decline only for a group muster the caller was invited to. Decline does not delete an availability answer.
@@ -71,7 +71,7 @@ Use this when the signed-in person is marking when they can make it.
 
 Use this when the signed-in person is the owner and needs an invite list.
 
-1. Call muster_create_event with type group. dates are required unless you truly want an undated group. Weekly dates must be on 2018-06-17 through 2018-06-24. emails are allowed only for a group. The owner is not invited again.
+1. Call muster_create_event with type group. dates are required unless you truly want an undated group. Weekly dates must be on 2018-06-17 through 2018-06-24. {weekday: Monday, time: 15:00} means 2018-06-18T15:00:00Z. emails are allowed only for a group. The owner is not invited again.
 2. email_sent is true only when Listmonk is configured. Production usually returns false. Do not tell the user the invites were emailed unless email_sent is true. Give them page_url.
 3. Call muster_add_attendees to add more addresses. It does not remove anyone. Read added for who was newly invited and skipped for the owner, duplicates, and anyone already invited. An empty added list means nobody new was invited.
 4. Call muster_list_attendees for invited, responded, declined, and cleared. Then call muster_remind to list people who have not answered. Remind sends no mail, so email_sent is false.

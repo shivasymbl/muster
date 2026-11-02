@@ -28,16 +28,25 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	if utils.Coalesce(event.IsSignUpForm) {
 		return nil, toolErr("SIGN_UP_FORM", "This muster is a sign-up form.", utils.GetBaseUrl()+"/e/"+event.GetId())
 	}
-	hasAvailability := presentList(args, "availability")
+	hasRanges := args["availability_ranges"] != nil
+	hasAvailability := presentList(args, "availability") || hasRanges
 	hasIfNeeded := presentList(args, "if_needed")
 	if !hasAvailability && !hasIfNeeded {
 		return nil, toolErr("BAD_ARGUMENTS", "Pass availability or if_needed.", "An empty list clears that list. Omitting both leaves the answer unchanged.")
 	}
-	availability, bad := timeList(args, "availability")
+	if hasRanges && presentList(args, "availability") {
+		return nil, toolErr("BAD_ARGUMENTS", "Pass availability or availability_ranges, not both.", "Use timestamps, or ranges, for the available times.")
+	}
+	var availability []primitive.DateTime
+	if hasRanges {
+		availability, bad = expandRanges(event, args["availability_ranges"])
+	} else {
+		availability, bad = markList(event, event.Type, args, "availability")
+	}
 	if bad != nil {
 		return nil, bad
 	}
-	ifNeeded, bad := timeList(args, "if_needed")
+	ifNeeded, bad := markList(event, event.Type, args, "if_needed")
 	if bad != nil {
 		return nil, bad
 	}
@@ -48,6 +57,13 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	}
 	if bad := slotsOnGrid(event, availability, ifNeeded); bad != nil {
 		return nil, bad
+	}
+	if raw, ok := args["if_match"].(map[string]any); ok {
+		if same, bad := answerMatches(callerAnswer(deps, user, event.Id), raw); bad != nil {
+			return nil, bad
+		} else if !same {
+			return nil, toolErr("CONFLICT", "The stored answer changed.", "Read the current answer and pass it as if_match, or omit if_match to replace it anyway.")
+		}
 	}
 	if err := deps.Events.ReplaceAvailability(user, event.Id, availability, ifNeeded); err != nil {
 		return nil, toolErr("INTERNAL", "Try again.", "Wait and retry.")
@@ -275,31 +291,13 @@ func presentList(args map[string]any, key string) bool {
 	return ok && raw != nil
 }
 
-func timeList(args map[string]any, key string) ([]primitive.DateTime, *ToolError) {
-	raw, ok := args[key]
-	if !ok || raw == nil {
-		return []primitive.DateTime{}, nil
-	}
-	list, isList := raw.([]any)
-	if !isList {
-		return nil, toolErr("BAD_ARGUMENTS", key+" must be an array of RFC3339 timestamps.", "Pass "+key+" as an array. An empty array clears it.")
-	}
-	if len(list) > maxMarks {
-		return nil, toolErr("BAD_ARGUMENTS", key+" is too long.", "Send at most 2000 timestamps.")
-	}
-	out := make([]primitive.DateTime, 0, len(list))
-	for _, item := range list {
-		text, ok := item.(string)
-		if !ok {
-			return nil, toolErr("BAD_ARGUMENTS", key+" must be RFC3339 strings.", "Use timestamps like 2026-05-01T15:00:00Z.")
+func callerAnswer(deps Deps, user *models.User, eventID primitive.ObjectID) *models.Response {
+	for _, row := range deps.Events.Responses(eventID) {
+		if row.UserId == user.Id.Hex() && row.Response != nil {
+			return row.Response
 		}
-		parsed, err := time.Parse(time.RFC3339, text)
-		if err != nil {
-			return nil, toolErr("BAD_ARGUMENTS", key+" must be RFC3339 strings.", "Use timestamps like 2026-05-01T15:00:00Z.")
-		}
-		out = append(out, primitive.NewDateTimeFromTime(parsed))
 	}
-	return out, nil
+	return nil
 }
 
 func window(args map[string]any) (time.Time, time.Time, *ToolError) {

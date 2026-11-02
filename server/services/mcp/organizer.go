@@ -38,7 +38,7 @@ func createEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 	if bad != nil {
 		return nil, bad
 	}
-	dates, bad := timeList(args, "dates")
+	dates, bad := markList(nil, eventType, args, "dates")
 	if bad != nil {
 		return nil, bad
 	}
@@ -294,7 +294,7 @@ func updateEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 		set["name"] = name
 	}
 	if raw, ok := args["dates"]; ok && raw != nil {
-		dates, bad := timeList(args, "dates")
+		dates, bad := markList(event, event.Type, args, "dates")
 		if bad != nil {
 			return nil, bad
 		}

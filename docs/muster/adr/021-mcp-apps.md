@@ -1,6 +1,6 @@
 # ADR 021: MCP Apps stay on the existing Muster server
 
-Status: accepted for the shape. Six behavior choices are still open. Not live.
+Status: accepted for the shape. Five behavior choices are decided. Archived musters stay editable. The App UI is not live.
 
 ## Decision
 
@@ -16,16 +16,14 @@ Claude can render an HTML tool resource. Muster already has the text tools and t
 
 A generic embedded page with its own token. An event stream only so the host can refresh. Icons in `initialize`, which Claude has dropped connections for. Rounding a meeting length onto the next slot.
 
-## Open choices
+## Decided 2 Nov 2026
 
-These are not approved. Do not implement them as if they were.
-
-1. Owner follow-up: keep the owner as a participant, or keep today's reminder list.
-2. Omitting both availability lists: keep today's rejection, or return a successful no-op.
-3. Event list default: keep every event, or default to ones that need an answer.
-4. Text writes: guard new ranges, and leave old whole-list replaces unconditional.
-5. Archived and finalized musters: keep them editable, or lock them.
-6. Weekly shorthand: map Monday 15:00 to the stored reference week in UTC.
+1. Reminders stay as they are today, including the owner when the owner still needs an answer.
+2. Omitting both availability lists stays a rejection. The stored answer is unchanged.
+3. muster_list_my_events defaults to needs_answer. status all returns every muster. The filter runs before the page is cut.
+4. A whole-list replace stays unconditional. availability_ranges expands onto the grid and uses that same replace. if_match refuses the write when the stored answer differs. Omit if_match to replace anyway. This check is not a database transaction.
+5. Not decided. Archived and finalized musters stay editable.
+6. {weekday: Monday, time: 15:00} means 2018-06-18T15:00:00Z. New weekly dates use Monday 18 June through Sunday 24 June 2018. Answering uses the one stored date with that weekday and puts the clock on that day. Two stored dates with the same weekday are rejected. There is no timezone.
 
 ## Upgrade
 

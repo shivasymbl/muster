@@ -402,10 +402,11 @@ func toolDefs() []gin.H {
 	read := gin.H{"readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false}
 	return []gin.H{
 		{"name": "muster_whoami", "description": "Who the token belongs to. Returns user_id, email, and name.", "annotations": read, "inputSchema": gin.H{"type": "object", "properties": gin.H{}}},
-		{"name": "muster_list_my_events", "description": "Musters this signed-in user owns, was invited to, or answered. name is a case-insensitive substring. limit is 1 to 50 and defaults to 20. cursor is the next_cursor from the previous page. my_status is one of no_answer, invited_no_answer, responded, cleared, declined. type is specific_dates, dow, or group. is_group is true only when type is group. cleared means an answer was saved and then emptied. It is not no_answer.", "annotations": read, "inputSchema": gin.H{
+		{"name": "muster_list_my_events", "description": "Musters this signed-in user owns, was invited to, or answered. The default status is needs_answer, which is my_status no_answer or invited_no_answer. Pass status all for every muster, or one my_status value. Filtering happens before the page is cut. name is a case-insensitive substring. limit is 1 to 50 and defaults to 20. cursor is the next_cursor from the previous page. my_status is one of no_answer, invited_no_answer, responded, cleared, declined. type is specific_dates, dow, or group. is_group is true only when type is group. cleared means an answer was saved and then emptied. It is not no_answer.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"name":   gin.H{"type": "string", "description": "Case-insensitive name substring. At most 80 characters."},
+				"status": gin.H{"type": "string", "description": "needs_answer (default), all, or one of no_answer, invited_no_answer, responded, cleared, declined."},
 				"limit":  gin.H{"type": "integer", "description": "Page size from 1 to 50. Defaults to 20."},
 				"cursor": gin.H{"type": "string", "description": "24-character hex next_cursor from the previous page."},
 			},
@@ -424,12 +425,14 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},
-		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability or if_needed. An empty list clears that list. Omitting both, or passing null, is rejected and the stored answer stays unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability, availability_ranges, or if_needed. An empty list clears that list. Omitting both, or passing null, is rejected and the stored answer stays unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 slot start, or {weekday, time} when that weekday and clock match one stored date. Monday 15:00 on a new weekly muster is 2018-06-18T15:00:00Z. Two stored matches are rejected. availability_ranges expands {start, end} onto the grid and replaces the available list. Pass if_match with the current availability and if_needed to refuse when the stored answer differs. Omit if_match to replace anyway. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
-				"event_id":     id,
-				"availability": gin.H{"type": "array", "description": "RFC3339 slot starts that replace the previous available times.", "items": gin.H{"type": "string"}},
-				"if_needed":    gin.H{"type": "array", "description": "RFC3339 slot starts that replace the previous if-needed times.", "items": gin.H{"type": "string"}},
+				"event_id":            id,
+				"availability":        gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous available times.", "items": gin.H{}},
+				"availability_ranges": gin.H{"type": "array", "description": "Half-open RFC3339 ranges expanded onto slot_minutes. Do not also pass availability.", "items": gin.H{"type": "object"}},
+				"if_needed":           gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous if-needed times.", "items": gin.H{}},
+				"if_match":            gin.H{"type": "object", "description": "Current availability and if_needed. The write is refused when they differ from the stored answer."},
 			},
 			"required": []string{"event_id"},
 		}},
@@ -446,12 +449,12 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "emails"},
 		}},
-		{"name": "muster_create_event", "description": "Create a muster owned by the signed-in user. type is specific_dates, dow, or group. dates are RFC3339 starts. A weekly muster must use the reference week 2018-06-17 through 2018-06-24. duration_hours is the length of each day. slot_minutes is 15, 30, or 60. emails are allowed only when type is group. Invite mail is sent only when Listmonk is on. Returns event_id, short_id, and page_url.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true}, "inputSchema": gin.H{
+		{"name": "muster_create_event", "description": "Create a muster owned by the signed-in user. type is specific_dates, dow, or group. dates are RFC3339 starts, or {weekday, time} on a weekly muster. Monday 15:00 means 2018-06-18T15:00:00Z. Sunday means 2018-06-24. A weekly muster must land on 2018-06-17 through 2018-06-24. duration_hours is the length of each day. slot_minutes is 15, 30, or 60. emails are allowed only when type is group. Invite mail is sent only when Listmonk is on. Returns event_id, short_id, and page_url.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"name":            gin.H{"type": "string", "description": "1 to 80 characters."},
 				"type":            gin.H{"type": "string", "description": "specific_dates, dow, or group."},
-				"dates":           gin.H{"type": "array", "items": gin.H{"type": "string"}, "description": "RFC3339 start of each day."},
+				"dates":           gin.H{"type": "array", "items": gin.H{}, "description": "RFC3339 start of each day, or {weekday, time} on a weekly muster."},
 				"duration_hours":  gin.H{"type": "number", "description": "Hours in each day, greater than 0 and at most 24."},
 				"slot_minutes":    gin.H{"type": "integer", "description": "15, 30, or 60. Defaults to 15."},
 				"blind":           gin.H{"type": "boolean"},

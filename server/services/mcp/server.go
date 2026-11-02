@@ -116,16 +116,68 @@ func listEvents(deps Deps, user *models.User, args map[string]any) (*ListPage, *
 		}
 		cursor = s
 	}
-	rows, next, err := deps.Events.ListForUser(user, name, limit, cursor)
-	if err != nil {
-		return nil, toolErr("INTERNAL", "Try again.", "Wait and retry.")
+	status := "needs_answer"
+	if raw, ok := args["status"]; ok && raw != nil {
+		s, ok := raw.(string)
+		if !ok {
+			return nil, toolErr("BAD_ARGUMENTS", "status must be a string.", "Omit status, or pass needs_answer or all.")
+		}
+		status = strings.TrimSpace(s)
+		if status == "" {
+			status = "needs_answer"
+		}
 	}
-	// toolErr INTERNAL sets Retryable only when code is INTERNAL. toolErr does that.
-	page := &ListPage{Events: make([]EventRow, 0, len(rows)), NextCursor: next}
-	for _, row := range rows {
-		page.Events = append(page.Events, eventRow(user, &row.Event, row.IsAttendee, row.Declined, ResponseFlags{Exists: row.HasResponse, NonEmpty: row.NonEmpty}))
+	match, bad := statusMatch(status)
+	if bad != nil {
+		return nil, bad
+	}
+	page := &ListPage{Events: []EventRow{}}
+	for len(page.Events) < limit {
+		batch := limit
+		if status != "all" {
+			batch = 50
+		}
+		rows, next, err := deps.Events.ListForUser(user, name, batch, cursor)
+		if err != nil {
+			return nil, toolErr("INTERNAL", "Try again.", "Wait and retry.")
+		}
+		if len(rows) == 0 {
+			break
+		}
+		filled := false
+		for i, row := range rows {
+			item := eventRow(user, &row.Event, row.IsAttendee, row.Declined, ResponseFlags{Exists: row.HasResponse, NonEmpty: row.NonEmpty})
+			if !match(item.MyStatus) {
+				continue
+			}
+			page.Events = append(page.Events, item)
+			if len(page.Events) == limit {
+				if i < len(rows)-1 || next != "" {
+					page.NextCursor = item.EventID
+				}
+				filled = true
+				break
+			}
+		}
+		if filled || next == "" {
+			break
+		}
+		cursor = next
 	}
 	return page, nil
+}
+
+func statusMatch(status string) (func(string) bool, *ToolError) {
+	switch status {
+	case "all":
+		return func(string) bool { return true }, nil
+	case "needs_answer":
+		return func(got string) bool { return got == "no_answer" || got == "invited_no_answer" }, nil
+	case "no_answer", "invited_no_answer", "responded", "cleared", "declined":
+		return func(got string) bool { return got == status }, nil
+	default:
+		return nil, toolErr("BAD_ARGUMENTS", "status must be needs_answer, all, or one my_status value.", "Omit status to list musters that still need an answer.")
+	}
 }
 
 func getEvent(deps Deps, user *models.User, args map[string]any) (*EventRow, *ToolError) {
