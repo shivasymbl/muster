@@ -160,7 +160,7 @@ func getResponses(deps Deps, user *models.User, args map[string]any) (*Responses
 		Email:  strings.ToLower(strings.TrimSpace(user.Email)),
 	}
 	filtered := eventlogic.FilterResponses(event, viewer, responses, attendees, start, end)
-	payload := buildResponses(event, user.Id.Hex(), start, end, filtered)
+	payload := buildResponses(deps, event, user.Id.Hex(), start, end, filtered)
 	applyCap(payload, user.Id.Hex())
 	return payload, nil
 }
@@ -199,13 +199,14 @@ func attendeeState(deps Deps, user *models.User, eventID primitive.ObjectID) (bo
 func eventRow(user *models.User, event *models.Event, isAttendee bool, declined *bool, flags ResponseFlags) EventRow {
 	row := EventRow{
 		EventID:           event.Id.Hex(),
-		Name:              truncateRunes(event.Name, 200),
+		Name:              truncateRunes(strings.TrimSpace(event.Name), 200),
 		Type:              string(event.Type),
 		IsArchived:        utils.Coalesce(event.IsArchived),
 		BlindAvailability: utils.Coalesce(event.BlindAvailabilityEnabled),
 		MyRoles:           MyRoles(event.OwnerId == user.Id, isAttendee),
 		MyStatus:          MyStatus(flags, isAttendee, declined),
 		PageURL:           utils.GetBaseUrl() + "/e/" + event.GetId(),
+		Grid:              eventGrid(event),
 	}
 	if event.ShortId != nil {
 		row.ShortID = *event.ShortId
@@ -213,7 +214,7 @@ func eventRow(user *models.User, event *models.Event, isAttendee bool, declined 
 	return row
 }
 
-func buildResponses(event *models.Event, callerKey string, start, end time.Time, filtered map[string]*models.Response) *ResponsesPayload {
+func buildResponses(deps Deps, event *models.Event, callerKey string, start, end time.Time, filtered map[string]*models.Response) *ResponsesPayload {
 	inc := increment(event)
 	people := make([]Person, 0, len(filtered))
 	for key, response := range filtered {
@@ -222,7 +223,7 @@ func buildResponses(event *models.Event, callerKey string, start, end time.Time,
 		}
 		person := Person{
 			Key:       key,
-			Name:      personName(response),
+			Name:      displayName(deps, response),
 			Available: mergeMarks(dateTimes(response.Availability), inc),
 			IfNeeded:  mergeMarks(dateTimes(response.IfNeeded), inc),
 			Manual:    mergeMarks(manualMarks(response, start, end), inc),
@@ -249,6 +250,20 @@ func buildResponses(event *models.Event, callerKey string, start, end time.Time,
 		Hint:      "",
 		People:    people,
 	}
+}
+
+func displayName(deps Deps, response *models.Response) string {
+	if name := strings.TrimSpace(personName(response)); name != "" {
+		return name
+	}
+	if response.UserId.IsZero() || deps.Users == nil {
+		return ""
+	}
+	user := deps.Users.GetByID(response.UserId.Hex())
+	if user == nil {
+		return ""
+	}
+	return strings.TrimSpace(user.FirstName + " " + user.LastName)
 }
 
 func personName(response *models.Response) string {

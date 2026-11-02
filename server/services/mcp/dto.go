@@ -23,6 +23,7 @@ type EventRow struct {
 	MyRoles           []string `json:"my_roles"`
 	MyStatus          string   `json:"my_status"`
 	PageURL           string   `json:"page_url"`
+	Grid
 }
 
 // ListPage is the muster_list_my_events result.

@@ -274,7 +274,7 @@ func outcomeFor(code string) string {
 		return "window"
 	case "SIGN_UP_FORM":
 		return "sign_up"
-	case "NOT_OWNER", "NOT_AN_INVITEE", "OVERLAP_HIDDEN":
+	case "NOT_OWNER", "NOT_AN_INVITEE", "OVERLAP_HIDDEN", "SLOT_OUTSIDE", "SLOT_OFF_GRID", "SLOT_IN_BOTH":
 		return "bad_arguments"
 	case "INTERNAL":
 		return "internal"
@@ -284,58 +284,61 @@ func outcomeFor(code string) string {
 }
 
 func toolDefs() []gin.H {
+	id := gin.H{"type": "string", "description": "24-character event_id or the short id, for example QTTyVU."}
+	window := "RFC3339 timestamp. start and end must be at most 7 days apart. For a weekly muster, match the stored UTC weekday and UTC clock from weekdays and dates."
+	read := gin.H{"readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false}
 	return []gin.H{
-		{"name": "muster_whoami", "description": "Who the token belongs to.", "inputSchema": gin.H{"type": "object", "properties": gin.H{}}},
-		{"name": "muster_list_my_events", "description": "Musters this signed-in user owns, was invited to, or answered.", "inputSchema": gin.H{
+		{"name": "muster_whoami", "description": "Who the token belongs to. Returns user_id, email, and name.", "annotations": read, "inputSchema": gin.H{"type": "object", "properties": gin.H{}}},
+		{"name": "muster_list_my_events", "description": "Musters this signed-in user owns, was invited to, or answered. name is a case-insensitive substring. limit is 1 to 50 and defaults to 20. cursor is the next_cursor from the previous page. my_status is one of no_answer, invited_no_answer, responded, cleared, declined. type is specific_dates, dow, or group. is_group is true only when type is group. cleared means an answer was saved and then emptied. It is not no_answer.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
-				"name":   gin.H{"type": "string"},
-				"limit":  gin.H{"type": "integer"},
-				"cursor": gin.H{"type": "string"},
+				"name":   gin.H{"type": "string", "description": "Case-insensitive name substring. At most 80 characters."},
+				"limit":  gin.H{"type": "integer", "description": "Page size from 1 to 50. Defaults to 20."},
+				"cursor": gin.H{"type": "string", "description": "24-character hex next_cursor from the previous page."},
 			},
 		}},
-		{"name": "muster_get_event", "description": "One muster the caller is a member of.", "inputSchema": gin.H{
+		{"name": "muster_get_event", "description": "One muster the caller is a member of. Returns the grid: dates as UTC instants, duration_hours, slot_minutes, days_only, start_on_monday, and is_group. A weekly muster also returns weekdays. Muster does not store a timezone. A group muster is the only kind with an invite list.", "annotations": read, "inputSchema": gin.H{
 			"type":       "object",
-			"properties": gin.H{"event_id": gin.H{"type": "string"}},
+			"properties": gin.H{"event_id": id},
 			"required":   []string{"event_id"},
 		}},
-		{"name": "muster_get_responses", "description": "Availability the caller is allowed to see, merged into ranges.", "inputSchema": gin.H{
+		{"name": "muster_get_responses", "description": "Availability the caller is allowed to see, merged into ranges. People include a display name when one is allowed. manual is day-level marks and is empty when the person only used the slot grid. A hidden muster shows the caller only their own answer.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
-				"event_id": gin.H{"type": "string"},
-				"start":    gin.H{"type": "string"},
-				"end":      gin.H{"type": "string"},
+				"event_id": id,
+				"start":    gin.H{"type": "string", "description": window + " Example: 2026-10-23T16:00:00Z."},
+				"end":      gin.H{"type": "string", "description": window},
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},
-		{"name": "muster_set_availability", "description": "Replace the caller's availability. This does not merge with the previous answer.", "inputSchema": gin.H{
+		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Omit a list or pass an empty list to clear it. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 start of one slot, for example 2026-10-23T16:00:00Z. When the muster has dates, a time outside those windows or off slot_minutes is rejected. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
-				"event_id":     gin.H{"type": "string"},
-				"availability": gin.H{"type": "array", "items": gin.H{"type": "string"}},
-				"if_needed":    gin.H{"type": "array", "items": gin.H{"type": "string"}},
+				"event_id":     id,
+				"availability": gin.H{"type": "array", "description": "RFC3339 slot starts that replace the previous available times.", "items": gin.H{"type": "string"}},
+				"if_needed":    gin.H{"type": "array", "description": "RFC3339 slot starts that replace the previous if-needed times.", "items": gin.H{"type": "string"}},
 			},
 			"required": []string{"event_id"},
 		}},
-		{"name": "muster_decline", "description": "Decline a group muster the caller was invited to.", "inputSchema": gin.H{
+		{"name": "muster_decline", "description": "Decline a group muster the caller was invited to. is_group must be true. This does not delete an availability answer.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type":       "object",
-			"properties": gin.H{"event_id": gin.H{"type": "string"}},
+			"properties": gin.H{"event_id": id},
 			"required":   []string{"event_id"},
 		}},
-		{"name": "muster_add_attendees", "description": "Owner only. Add email addresses to a group muster. Does not remove anyone.", "inputSchema": gin.H{
+		{"name": "muster_add_attendees", "description": "Owner only. Add email addresses to a group muster (is_group true). Does not remove anyone. An address already invited is skipped. Invite mail is sent only when Listmonk is configured. email_sent is false when it is not. Returns the addresses actually added.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": true}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
-				"event_id": gin.H{"type": "string"},
-				"emails":   gin.H{"type": "array", "items": gin.H{"type": "string"}},
+				"event_id": id,
+				"emails":   gin.H{"type": "array", "description": "Plain email addresses, at most 20.", "items": gin.H{"type": "string"}},
 			},
 			"required": []string{"event_id", "emails"},
 		}},
-		{"name": "muster_summarize_overlap", "description": "Times every respondent can make. Refuses when availability is hidden and the caller is not the owner.", "inputSchema": gin.H{
+		{"name": "muster_summarize_overlap", "description": "Times every respondent in the window can make. Returns those slots with display names, not user ids. It returns nothing when no slot suits every respondent. Refuses when availability is hidden and the caller is not the owner. Unanswered people are left out.", "annotations": read, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
-				"event_id": gin.H{"type": "string"},
-				"start":    gin.H{"type": "string"},
-				"end":      gin.H{"type": "string"},
+				"event_id": id,
+				"start":    gin.H{"type": "string", "description": window},
+				"end":      gin.H{"type": "string", "description": window},
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},

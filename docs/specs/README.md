@@ -13,3 +13,12 @@ This is the control plane for what Muster does. The sequence is the order the pr
 | 7 | [Overlap summary](007-overlap-summary.md) | [#9](https://github.com/shivasymbl/muster/issues/9) | Done |
 | 8 | [Claude sign-in](008-claude-sign-in.md) | [#10](https://github.com/shivasymbl/muster/issues/10) | Done |
 | 9 | [Microsoft sign-in](009-microsoft-sign-in.md) | [#11](https://github.com/shivasymbl/muster/issues/11) | Not done |
+| 10 | [Muster grid](010-muster-grid.md) | [#12](https://github.com/shivasymbl/muster/issues/12) | In progress |
+| 11 | [Slot grid](011-slot-grid.md) | [#13](https://github.com/shivasymbl/muster/issues/13) | In progress |
+| 12 | [Names and descriptions](012-names-and-descriptions.md) | [#14](https://github.com/shivasymbl/muster/issues/14) | In progress |
+| 13 | [Create a muster](013-create-muster.md) | [#15](https://github.com/shivasymbl/muster/issues/15) | Not done |
+| 14 | [List invitees](014-list-attendees.md) | [#16](https://github.com/shivasymbl/muster/issues/16) | Not done |
+| 15 | [Ranked times](015-ranked-times.md) | [#17](https://github.com/shivasymbl/muster/issues/17) | Not done |
+| 16 | [Finalize a time](016-finalize.md) | [#18](https://github.com/shivasymbl/muster/issues/18) | Not done |
+| 17 | [Archive a muster](017-archive.md) | [#19](https://github.com/shivasymbl/muster/issues/19) | Not done |
+| 18 | [Remind and changes](018-remind-and-changes.md) | [#20](https://github.com/shivasymbl/muster/issues/20) | Not done |

@@ -36,14 +36,23 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	if bad != nil {
 		return nil, bad
 	}
+	availability, droppedA := dedupeTimes(availability)
+	ifNeeded, droppedI := dedupeTimes(ifNeeded)
+	if timesOverlap(availability, ifNeeded) {
+		return nil, toolErr("SLOT_IN_BOTH", "A time cannot be both available and if-needed.", "Put each timestamp in only one list.")
+	}
+	if bad := slotsOnGrid(event, availability, ifNeeded); bad != nil {
+		return nil, bad
+	}
 	if err := deps.Events.ReplaceAvailability(user, event.Id, availability, ifNeeded); err != nil {
 		return nil, toolErr("INTERNAL", "Try again.", "Wait and retry.")
 	}
 	return map[string]any{
-		"event_id":     event.Id.Hex(),
-		"availability": len(availability),
-		"if_needed":    len(ifNeeded),
-		"replaced":     true,
+		"event_id":           event.Id.Hex(),
+		"availability":       len(availability),
+		"if_needed":          len(ifNeeded),
+		"duplicates_ignored": droppedA + droppedI,
+		"replaced":           true,
 	}, nil
 }
 
@@ -161,6 +170,14 @@ func summarizeOverlap(deps Deps, user *models.User, args map[string]any) (any, *
 		return nil, toolErr("OVERLAP_HIDDEN", "Hidden availability cannot be summarized.", "Ask the owner to read the muster.")
 	}
 	responses := deps.Events.Responses(event.Id)
+	for i := range responses {
+		if responses[i].Response == nil {
+			continue
+		}
+		if strings.TrimSpace(personName(responses[i].Response)) == "" {
+			responses[i].Response.Name = displayName(deps, responses[i].Response)
+		}
+	}
 	slots := overlapSlots(event, responses, start, end)
 	return map[string]any{
 		"event_id": event.Id.Hex(),
@@ -196,6 +213,49 @@ func alreadyInvited(deps Deps, eventID primitive.ObjectID, address string) bool 
 		}
 	}
 	return false
+}
+
+func dedupeTimes(in []primitive.DateTime) ([]primitive.DateTime, int) {
+	seen := map[int64]bool{}
+	out := make([]primitive.DateTime, 0, len(in))
+	dropped := 0
+	for _, t := range in {
+		key := t.Time().UTC().UnixMilli()
+		if seen[key] {
+			dropped++
+			continue
+		}
+		seen[key] = true
+		out = append(out, t)
+	}
+	return out, dropped
+}
+
+func timesOverlap(a, b []primitive.DateTime) bool {
+	seen := map[int64]bool{}
+	for _, t := range a {
+		seen[t.Time().UTC().UnixMilli()] = true
+	}
+	for _, t := range b {
+		if seen[t.Time().UTC().UnixMilli()] {
+			return true
+		}
+	}
+	return false
+}
+
+func slotsOnGrid(event *models.Event, lists ...[]primitive.DateTime) *ToolError {
+	for _, list := range lists {
+		for _, mark := range list {
+			switch slotProblem(event, mark.Time()) {
+			case "outside":
+				return toolErr("SLOT_OUTSIDE", "slot outside this muster's dates", "Read dates and duration_hours from muster_get_event and pick a time inside one of those windows.")
+			case "off":
+				return toolErr("SLOT_OFF_GRID", "slot is off this muster's grid", "Use a start that matches slot_minutes from muster_get_event.")
+			}
+		}
+	}
+	return nil
 }
 
 func timeList(args map[string]any, key string) ([]primitive.DateTime, *ToolError) {

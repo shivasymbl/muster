@@ -642,6 +642,70 @@ func TestMcpWrites(t *testing.T) {
 		}
 	})
 
+	t.Run("tools list marks reads and the replace write", func(t *testing.T) {
+		rec := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`, "muster_owner", "", "", "")
+		body := decode(t, rec)
+		tools := body["result"].(map[string]any)["tools"].([]any)
+		var set map[string]any
+		for _, item := range tools {
+			tool := item.(map[string]any)
+			if tool["name"] == "muster_set_availability" {
+				set = tool
+			}
+		}
+		ann := set["annotations"].(map[string]any)
+		if ann["destructiveHint"] != true || ann["readOnlyHint"] != false {
+			t.Fatal(ann)
+		}
+	})
+
+	t.Run("dated muster rejects an outside slot and a duplicate", func(t *testing.T) {
+		hours := float32(1)
+		event.Type = models.SPECIFIC_DATES
+		event.Duration = &hours
+		event.Dates = []primitive.DateTime{primitive.NewDateTimeFromTime(time.Date(2033, 11, 22, 15, 0, 0, 0, time.UTC))}
+		result, structured := tool("muster_owner", "muster_set_availability", `{"event_id":"`+eventID.Hex()+`","availability":["2030-01-01T04:30:00Z"]}`)
+		if result["isError"] != true || structured["code"] != "SLOT_OUTSIDE" {
+			t.Fatal(structured)
+		}
+		_, stored := tool("muster_owner", "muster_set_availability", `{"event_id":"`+eventID.Hex()+`","availability":["2033-11-22T15:00:00Z","2033-11-22T15:00:00Z","2033-11-22T15:15:00Z"]}`)
+		if stored["availability"] != float64(2) || stored["duplicates_ignored"] != float64(1) {
+			t.Fatal(stored)
+		}
+		both, bad := tool("muster_owner", "muster_set_availability", `{"event_id":"`+eventID.Hex()+`","availability":["2033-11-22T15:00:00Z"],"if_needed":["2033-11-22T15:00:00Z"]}`)
+		if both["isError"] != true || bad["code"] != "SLOT_IN_BOTH" {
+			t.Fatal(bad)
+		}
+		event.Dates = nil
+		event.Type = models.GROUP
+	})
+
+	t.Run("get event returns the grid and a trimmed name", func(t *testing.T) {
+		hours := float32(2)
+		event.Name = "Panel "
+		event.Duration = &hours
+		event.Dates = []primitive.DateTime{primitive.NewDateTimeFromTime(time.Date(2033, 11, 22, 15, 0, 0, 0, time.UTC))}
+		_, structured := tool("muster_owner", "muster_get_event", `{"event_id":"`+eventID.Hex()+`"}`)
+		if structured["name"] != "Panel" || structured["is_group"] != true || structured["slot_minutes"] != float64(15) || structured["duration_hours"] != float64(2) {
+			t.Fatal(structured)
+		}
+		dates, _ := structured["dates"].([]any)
+		if len(dates) != 1 {
+			t.Fatal(structured)
+		}
+	})
+
+	t.Run("empty response name is filled from the user", func(t *testing.T) {
+		events.responses[eventID.Hex()] = []models.EventResponse{
+			{UserId: ownerID.Hex(), Response: &models.Response{UserId: ownerID, Availability: []primitive.DateTime{hiddenWhen}}},
+		}
+		_, structured := tool("muster_owner", "muster_get_responses", `{"event_id":"`+eventID.Hex()+`","start":"2033-11-22T00:00:00Z","end":"2033-11-23T00:00:00Z"}`)
+		raw := fmt.Sprint(structured)
+		if !strings.Contains(raw, "Ada") {
+			t.Fatal(structured)
+		}
+	})
+
 	t.Run("owner summary names both people", func(t *testing.T) {
 		events.responses[eventID.Hex()] = []models.EventResponse{
 			{UserId: ownerID.Hex(), Response: &models.Response{UserId: ownerID, Name: "Ada", Availability: []primitive.DateTime{hiddenWhen}}},
