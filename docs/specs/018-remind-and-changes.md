@@ -1,6 +1,6 @@
 # 18. Remind, remove, and a change feed
 
-Status: In progress.
+Status: Done.
 
 `muster_remind` lists group invitees who have not answered. No reminder mail is sent, because there is no reminder template, so `email_sent` is false.
 

@@ -1,6 +1,6 @@
 # 17. Archive or close a muster
 
-Status: In progress.
+Status: Done.
 
 `muster_update_event` is owner only. It can rename, replace dates, change the daily duration, archive, reopen, and set blind availability. It cannot change the owner or the type.
 

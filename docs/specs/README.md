@@ -16,9 +16,9 @@ This is the control plane for what Muster does. The sequence is the order the pr
 | 10 | [Muster grid](010-muster-grid.md) | [#12](https://github.com/shivasymbl/muster/issues/12) | Done |
 | 11 | [Slot grid](011-slot-grid.md) | [#13](https://github.com/shivasymbl/muster/issues/13) | Done |
 | 12 | [Names and descriptions](012-names-and-descriptions.md) | [#14](https://github.com/shivasymbl/muster/issues/14) | Done |
-| 13 | [Create a muster](013-create-muster.md) | [#15](https://github.com/shivasymbl/muster/issues/15) | In progress |
-| 14 | [List invitees](014-list-attendees.md) | [#16](https://github.com/shivasymbl/muster/issues/16) | In progress |
-| 15 | [Ranked times](015-ranked-times.md) | [#17](https://github.com/shivasymbl/muster/issues/17) | In progress |
-| 16 | [Finalize a time](016-finalize.md) | [#18](https://github.com/shivasymbl/muster/issues/18) | In progress |
-| 17 | [Archive a muster](017-archive.md) | [#19](https://github.com/shivasymbl/muster/issues/19) | In progress |
-| 18 | [Remind and changes](018-remind-and-changes.md) | [#20](https://github.com/shivasymbl/muster/issues/20) | In progress |
+| 13 | [Create a muster](013-create-muster.md) | [#15](https://github.com/shivasymbl/muster/issues/15) | Done |
+| 14 | [List invitees](014-list-attendees.md) | [#16](https://github.com/shivasymbl/muster/issues/16) | Done |
+| 15 | [Ranked times](015-ranked-times.md) | [#17](https://github.com/shivasymbl/muster/issues/17) | Done |
+| 16 | [Finalize a time](016-finalize.md) | [#18](https://github.com/shivasymbl/muster/issues/18) | Done |
+| 17 | [Archive a muster](017-archive.md) | [#19](https://github.com/shivasymbl/muster/issues/19) | Done |
+| 18 | [Remind and changes](018-remind-and-changes.md) | [#20](https://github.com/shivasymbl/muster/issues/20) | Done |
