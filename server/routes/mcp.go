@@ -31,6 +31,13 @@ func InitMcp(router *gin.Engine, enabled bool, deps mcp.Deps) {
 			c.Status(http.StatusMethodNotAllowed)
 			return
 		}
+		if _, ok := middleware.AuthenticateMCP(c, deps); ok {
+			c.Header("Allow", "POST")
+			c.JSON(http.StatusMethodNotAllowed, gin.H{
+				"code": "NO_EVENT_STREAM", "message": "This server has no event stream. Use POST.",
+			})
+			return
+		}
 		c.Header("WWW-Authenticate", oauthChallenge())
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"code": "NOT_SIGNED_IN", "message": "Sign in by creating a token in Muster Settings.",

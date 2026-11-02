@@ -324,6 +324,20 @@ func TestMcpProtocol(t *testing.T) {
 		}
 	})
 
+	t.Run("signed-in get has no event stream", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/mcp", nil)
+		req.Header.Set("Authorization", "Bearer muster_live")
+		req.Header.Set("Accept", "text/event-stream")
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		if rec.Code != http.StatusMethodNotAllowed || rec.Header().Get("Allow") != "POST" {
+			t.Fatalf("status %d allow %q body %s", rec.Code, rec.Header().Get("Allow"), rec.Body.String())
+		}
+		if strings.Contains(rec.Header().Get("Content-Type"), "text/event-stream") {
+			t.Fatal(rec.Header().Get("Content-Type"))
+		}
+	})
+
 	t.Run("initialize without a token is the sign-in challenge", func(t *testing.T) {
 		rec := postMCP(r, `{"jsonrpc":"2.0","id":1,"method":"initialize"}`, "", "", "", "")
 		if rec.Code != http.StatusUnauthorized || !strings.Contains(rec.Header().Get("WWW-Authenticate"), "resource_metadata=") {

@@ -8,6 +8,6 @@ The read tools are `muster_whoami`, `muster_list_my_events`, `muster_get_event`,
 
 The list is the caller's own musters, paged, with an optional name filter on that list only. A response window is at most 7 days. The assistant sees the same answers the website would show that person. A sign-up form is refused with a link to the page.
 
-A call with no token returns 401. `GET /mcp` returns 401 with a sign-in header. The website routes do not accept the bearer token.
+A call with no token returns 401. `GET /mcp` returns 401 with a sign-in header when the caller is not signed in. A valid token on `GET /mcp` returns 405 because there is no event stream. The website routes do not accept the bearer token.
 
 Done when a token from Settings can list the caller's musters and a missing token cannot.
