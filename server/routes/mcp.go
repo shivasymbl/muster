@@ -531,7 +531,11 @@ func toolList(app *appAsset) []gin.H {
 	if app == nil {
 		return toolDefs()
 	}
-	return withAppsVisibility(toolDefs(), app)
+	tools := withAppsVisibility(toolDefs(), app)
+	if mcp.WritesEnabled() {
+		tools = append(tools, actionToolDefs()...)
+	}
+	return tools
 }
 
 func resourceList(app *appAsset) []gin.H {

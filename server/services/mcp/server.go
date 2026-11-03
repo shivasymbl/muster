@@ -72,6 +72,12 @@ func Call(deps Deps, user *models.User, name string, args map[string]any) (any, 
 	case "muster_list_changes":
 		payload, err := listChanges(deps, user, args)
 		return payload, err, eventID
+	case "muster_ui_prepare_action", "muster_ui_commit_action", "muster_ui_get_action":
+		if !WritesEnabled() {
+			return nil, toolErr("BAD_ARGUMENTS", "Unknown tool.", "Call tools/list."), eventID
+		}
+		payload, err := callAction(deps, user, name, args)
+		return payload, err, eventID
 	default:
 		return nil, toolErr("BAD_ARGUMENTS", "Unknown tool.", "Call tools/list."), eventID
 	}

@@ -50,12 +50,37 @@ type UserStore interface {
 	GetByEmail(email string) *models.User
 }
 
+// ActionRecord is one prepared App write. It is not an authorization token.
+type ActionRecord struct {
+	ID          primitive.ObjectID `bson:"_id"`
+	UserID      primitive.ObjectID `bson:"userId"`
+	Operation   string             `bson:"operation"`
+	EventID     string             `bson:"eventId,omitempty"`
+	Fingerprint string             `bson:"fingerprint,omitempty"`
+	Payload     map[string]any     `bson:"payload"`
+	Preview     map[string]any     `bson:"preview"`
+	Status      string             `bson:"status"`
+	Result      map[string]any     `bson:"result,omitempty"`
+	ErrCode     string             `bson:"errCode,omitempty"`
+	ErrMessage  string             `bson:"errMessage,omitempty"`
+	ExpiresAt   time.Time          `bson:"expiresAt"`
+}
+
+// ActionStore persists prepared writes. Claim must succeed at most once.
+type ActionStore interface {
+	Create(rec *ActionRecord) error
+	Claim(userID, id primitive.ObjectID, now time.Time) (*ActionRecord, error)
+	Get(userID, id primitive.ObjectID) (*ActionRecord, error)
+	Finish(userID, id primitive.ObjectID, status string, result map[string]any, errCode, errMessage string) error
+}
+
 // Deps is what the route passes into every tool. Now is nil in production and means time.Now.
 type Deps struct {
-	Tokens TokenStore
-	Events EventStore
-	Users  UserStore
-	Now    func() time.Time
+	Tokens  TokenStore
+	Events  EventStore
+	Users   UserStore
+	Actions ActionStore
+	Now     func() time.Time
 }
 
 func (d Deps) now() time.Time {

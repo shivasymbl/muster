@@ -71,8 +71,9 @@ func (mongoUsers) GetByEmail(email string) *models.User {
 // NewMcpDeps wires the tool route to Mongo.
 func NewMcpDeps() mcp.Deps {
 	return mcp.Deps{
-		Tokens: NewMongoTokenStore(),
-		Events: mongoEvents{},
-		Users:  mongoUsers{},
+		Tokens:  NewMongoTokenStore(),
+		Events:  mongoEvents{},
+		Users:   mongoUsers{},
+		Actions: mongoActions{},
 	}
 }
