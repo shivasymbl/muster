@@ -34,6 +34,10 @@ func (mongoEvents) ReplaceAvailability(user *models.User, eventID primitive.Obje
 	return ReplaceAvailability(user, eventID, availability, ifNeeded)
 }
 
+func (mongoEvents) ReplaceAvailabilityIf(user *models.User, eventID primitive.ObjectID, snap mcp.AnswerSnapshot, availability, ifNeeded []primitive.DateTime) (bool, error) {
+	return ReplaceAvailabilityIf(user, eventID, snap, availability, ifNeeded)
+}
+
 func (mongoEvents) Decline(user *models.User, eventID primitive.ObjectID) error {
 	return DeclineInvite(user, eventID)
 }

@@ -9,11 +9,13 @@ import (
 )
 
 type decisionEvents struct {
-	event    *models.Event
-	answers  []models.EventResponse
-	replaced []primitive.DateTime
-	created  []primitive.DateTime
-	listed   []ListedEvent
+	event        *models.Event
+	answers      []models.EventResponse
+	replaced     []primitive.DateTime
+	replacedNeed []primitive.DateTime
+	casMiss      bool
+	created      []primitive.DateTime
+	listed       []ListedEvent
 }
 
 func (f *decisionEvents) GetByEitherID(string) *models.Event { return f.event }
@@ -152,4 +154,15 @@ func TestListDefaultsToNeedsAnswer(t *testing.T) {
 	if bad != nil || len(all.(*ListPage).Events) != 2 {
 		t.Fatalf("%#v %v", bad, all)
 	}
+}
+
+// ReplaceAvailabilityIf is a route-level fake: it records the write and can
+// simulate a lost compare. The real conditional update is proven against Mongo
+// in db.TestMCPAvailabilityCAS.
+func (f *decisionEvents) ReplaceAvailabilityIf(_ *models.User, _ primitive.ObjectID, _ AnswerSnapshot, availability, ifNeeded []primitive.DateTime) (bool, error) {
+	if f.casMiss {
+		return false, nil
+	}
+	f.replaced, f.replacedNeed = availability, ifNeeded
+	return true, nil
 }
