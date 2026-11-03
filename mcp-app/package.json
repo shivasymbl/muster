@@ -1,0 +1,25 @@
+{
+  "name": "muster-mcp-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node scripts/run-tests.mjs test/unit",
+    "test:perf": "node scripts/run-tests.mjs test/perf",
+    "test:e2e": "node scripts/run-tests.mjs test/e2e"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "1.7.5"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "jsdom": "30.1.3",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}
