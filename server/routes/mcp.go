@@ -262,7 +262,7 @@ func handleMcp(c *gin.Context, enabled bool, deps mcp.Deps, app *appAsset) {
 			if body.Arguments == nil {
 				body.Arguments = map[string]any{}
 			}
-			res, toolErr := openView(body.Arguments, core)
+			res, toolErr := openView(deps, user, body.Arguments, core)
 			wrote = true
 			if toolErr != nil {
 				outcome = outcomeFor(toolErr.Code)

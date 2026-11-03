@@ -36,10 +36,12 @@ func TestMCPAppsProtocol(t *testing.T) {
 	middleware.ResetMCPLimits()
 	owner := primitive.NewObjectID()
 	caller := &models.User{Id: owner, Email: "owner@x.com"}
+	short := "abc"
+	seeded := &models.Event{Id: primitive.NewObjectID(), ShortId: &short, OwnerId: owner, Name: "Plan"}
 	deps := mcp.Deps{
 		Tokens: &fakeTokens{active: map[string]*models.McpToken{"muster_live": {UserID: owner}}},
 		Users:  &fakeUsers{byID: map[string]*models.User{owner.Hex(): caller}},
-		Events: &fakeEvents{},
+		Events: &fakeEvents{byShort: map[string]*models.Event{"abc": seeded}},
 	}
 	on := McpAppsOptions{Enabled: true, LoadHTML: func() ([]byte, error) { return []byte(testAppHTML), nil }}
 	r := appsEngine(deps, on)
@@ -144,7 +146,7 @@ func TestMCPAppsProtocol(t *testing.T) {
 				t.Fatalf("%s accepted: %v", name, res)
 			}
 		}
-		ok := decode(t, postWithVersion(r, `{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"muster_open_view","arguments":{"workflow":"answer","event_id":"a","window":null,"duration_minutes":null,"people_cursor":null}}}`, ""))["result"].(map[string]any)
+		ok := decode(t, postWithVersion(r, `{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"muster_open_view","arguments":{"workflow":"answer","event_id":"abc","window":null,"duration_minutes":null,"people_cursor":null}}}`, ""))["result"].(map[string]any)
 		if ok["isError"] != false {
 			t.Fatal(ok)
 		}
