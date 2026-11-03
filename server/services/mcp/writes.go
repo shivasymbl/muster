@@ -28,6 +28,16 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	if utils.Coalesce(event.IsSignUpForm) {
 		return nil, toolErr("SIGN_UP_FORM", "This muster is a sign-up form.", utils.GetBaseUrl()+"/e/"+event.GetId())
 	}
+	_, hasNewRanges := args["ranges"]
+	if hasNewRanges {
+		return setRanges(deps, user, event, args)
+	}
+	if mode, ok := args["mode"].(string); ok && mode == "merge" {
+		return nil, toolErr("BAD_ARGUMENTS", "mode merge needs ranges.", "Pass ranges, or use replace with full lists.")
+	}
+	if mode, ok := args["mode"]; ok && mode != nil && mode != "replace" && mode != "merge" {
+		return nil, toolErr("BAD_ARGUMENTS", "mode must be replace or merge.", "Pass mode replace or merge.")
+	}
 	hasRanges := args["availability_ranges"] != nil
 	hasAvailability := presentList(args, "availability") || hasRanges
 	hasIfNeeded := presentList(args, "if_needed")
@@ -58,23 +68,164 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	if bad := slotsOnGrid(event, availability, ifNeeded); bad != nil {
 		return nil, bad
 	}
+	snap := callerSnapshot(deps, user, event.Id)
 	if raw, ok := args["if_match"].(map[string]any); ok {
-		if same, bad := answerMatches(callerAnswer(deps, user, event.Id), raw); bad != nil {
+		if same, bad := answerMatches(snapResponse(snap), raw); bad != nil {
 			return nil, bad
 		} else if !same {
 			return nil, toolErr("CONFLICT", "The stored answer changed.", "Read the current answer and pass it as if_match, or omit if_match to replace it anyway.")
 		}
 	}
-	if err := deps.Events.ReplaceAvailability(user, event.Id, availability, ifNeeded); err != nil {
+	changed := !sameInstants(snap.Availability, availability) || !sameInstants(snap.IfNeeded, ifNeeded)
+	if hasRanges {
+		// Range writes are conditional on the answer read above.
+		if bad := conditionalWrite(deps, user, event.Id, snap, availability, ifNeeded); bad != nil {
+			return nil, bad
+		}
+	} else if err := deps.Events.ReplaceAvailability(user, event.Id, availability, ifNeeded); err != nil {
+		// Legacy arrays stay an unconditional whole-answer replace (owner decision).
 		return nil, toolErr("INTERNAL", "Try again.", "Wait and retry.")
 	}
-	return map[string]any{
+	out := map[string]any{
 		"event_id":           event.Id.Hex(),
 		"availability":       len(availability),
 		"if_needed":          len(ifNeeded),
 		"duplicates_ignored": droppedA + droppedI,
 		"replaced":           true,
-	}, nil
+		"changed":            changed,
+	}
+	addEcho(out, deps, user, event, availability, ifNeeded)
+	return out, nil
+}
+
+// setRanges handles the ranges/mode arguments. It never accepts the legacy list keys.
+func setRanges(deps Deps, user *models.User, event *models.Event, args map[string]any) (any, *ToolError) {
+	if _, ok := args["availability"]; ok {
+		return nil, toolErr("BAD_ARGUMENTS", "Pass ranges or availability, not both.", "Use ranges alone, or the legacy lists alone.")
+	}
+	if _, ok := args["if_needed"]; ok {
+		return nil, toolErr("BAD_ARGUMENTS", "Pass ranges or if_needed, not both.", "Use ranges alone, or the legacy lists alone.")
+	}
+	if _, ok := args["availability_ranges"]; ok {
+		return nil, toolErr("BAD_ARGUMENTS", "Pass ranges or availability_ranges, not both.", "Use ranges alone.")
+	}
+	merge := false
+	if raw, ok := args["mode"]; ok && raw != nil {
+		switch raw {
+		case "replace":
+		case "merge":
+			merge = true
+		default:
+			return nil, toolErr("BAD_ARGUMENTS", "mode must be replace or merge.", "Pass mode replace or merge.")
+		}
+	}
+	changes, bad := parseRanges(args["ranges"])
+	if bad != nil {
+		return nil, bad
+	}
+	snap := callerSnapshot(deps, user, event.Id)
+	if want, ok := args["expected_state_fingerprint"].(string); ok && want != "" {
+		if stateFingerprint(snap.Availability, snap.IfNeeded) != want {
+			return nil, toolErr("CONFLICT", "The stored answer changed.", "Read the current answer, then retry with its state_fingerprint.")
+		}
+	} else if raw, present := args["expected_state_fingerprint"]; present && raw != nil {
+		return nil, toolErr("BAD_ARGUMENTS", "expected_state_fingerprint must be a non-empty string.", "Pass the state_fingerprint from a previous receipt.")
+	}
+	out := map[string]any{"event_id": event.Id.Hex(), "mode": map[bool]string{true: "merge", false: "replace"}[merge]}
+	if len(changes) == 0 {
+		// Nothing to apply: merge is a no-op; replace clears the stored answer.
+		if merge {
+			out["changed"] = false
+			addEcho(out, deps, user, event, snap.Availability, snap.IfNeeded)
+			return out, nil
+		}
+		return finishRanges(deps, user, event, snap, nil, nil, out, nil)
+	}
+	requested, requestedIfNeeded, bad := applyRanges(event, changes, false, nil)
+	if bad != nil {
+		return nil, bad
+	}
+	if bad := slotsOnGrid(event, requested, requestedIfNeeded); bad != nil {
+		return nil, bad
+	}
+	avail, ifNeeded, bad := applyRanges(event, changes, merge, &snap)
+	if bad != nil {
+		return nil, bad
+	}
+	return finishRanges(deps, user, event, snap, avail, ifNeeded, out, changes)
+}
+
+func finishRanges(deps Deps, user *models.User, event *models.Event, snap AnswerSnapshot, avail, ifNeeded []primitive.DateTime, out map[string]any, changes []rangeChange) (any, *ToolError) {
+	if avail == nil {
+		avail = []primitive.DateTime{}
+	}
+	if ifNeeded == nil {
+		ifNeeded = []primitive.DateTime{}
+	}
+	if changes != nil {
+		start, end := affectedWindow(changes)
+		out["window"] = map[string]string{"start": start.Format(time.RFC3339), "end": end.Format(time.RFC3339)}
+	}
+	same := sameInstants(snap.Availability, avail) && sameInstants(snap.IfNeeded, ifNeeded)
+	out["availability"] = len(avail)
+	out["if_needed"] = len(ifNeeded)
+	if same {
+		// Repeating the same intent writes nothing.
+		out["changed"] = false
+		out["replaced"] = false
+		addEcho(out, deps, user, event, avail, ifNeeded)
+		return out, nil
+	}
+	if bad := conditionalWrite(deps, user, event.Id, snap, avail, ifNeeded); bad != nil {
+		return nil, bad
+	}
+	out["changed"] = true
+	out["replaced"] = true
+	addEcho(out, deps, user, event, avail, ifNeeded)
+	return out, nil
+}
+
+func conditionalWrite(deps Deps, user *models.User, eventID primitive.ObjectID, snap AnswerSnapshot, avail, ifNeeded []primitive.DateTime) *ToolError {
+	ok, err := deps.Events.ReplaceAvailabilityIf(user, eventID, snap, avail, ifNeeded)
+	if err != nil {
+		return toolErr("INTERNAL", "The write may not have been saved.", "Read the current answer before retrying.")
+	}
+	if !ok {
+		return toolErr("CONFLICT", "The stored answer changed.", "Read the current answer and send the ranges again.")
+	}
+	return nil
+}
+
+// addEcho reads the stored answer back and adds it, so the caller needs no second call.
+// echo_complete is false when the readback is missing or differs from what was written.
+func addEcho(out map[string]any, deps Deps, user *models.User, event *models.Event, wantAvail, wantNeed []primitive.DateTime) {
+	stored := callerSnapshot(deps, user, event.Id)
+	out["answer"] = map[string]any{
+		"availability": slotViews(event, stored.Availability),
+		"if_needed":    slotViews(event, stored.IfNeeded),
+	}
+	out["state_fingerprint"] = stateFingerprint(stored.Availability, stored.IfNeeded)
+	complete := stored.Exists && sameInstants(stored.Availability, wantAvail) && sameInstants(stored.IfNeeded, wantNeed)
+	if !stored.Exists && len(wantAvail) == 0 && len(wantNeed) == 0 {
+		complete = true
+	}
+	out["echo_complete"] = complete
+}
+
+func callerSnapshot(deps Deps, user *models.User, eventID primitive.ObjectID) AnswerSnapshot {
+	for _, row := range deps.Events.Responses(eventID) {
+		if row.UserId == user.Id.Hex() && row.Response != nil {
+			return AnswerSnapshot{Exists: true, UpdatedAt: row.UpdatedAt, Availability: row.Response.Availability, IfNeeded: row.Response.IfNeeded}
+		}
+	}
+	return AnswerSnapshot{}
+}
+
+func snapResponse(snap AnswerSnapshot) *models.Response {
+	if !snap.Exists {
+		return nil
+	}
+	return &models.Response{Availability: snap.Availability, IfNeeded: snap.IfNeeded}
 }
 
 func decline(deps Deps, user *models.User, args map[string]any) (any, *ToolError) {

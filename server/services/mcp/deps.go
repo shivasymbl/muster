@@ -36,6 +36,8 @@ type EventStore interface {
 	ListForUser(user *models.User, name string, limit int, cursor string) ([]ListedEvent, string, error)
 	ResponseFlags(userHex string, ids []primitive.ObjectID) map[string]ResponseFlags
 	ReplaceAvailability(user *models.User, eventID primitive.ObjectID, availability, ifNeeded []primitive.DateTime) error
+	// ReplaceAvailabilityIf writes only if the stored answer still equals snap. false means it changed.
+	ReplaceAvailabilityIf(user *models.User, eventID primitive.ObjectID, snap AnswerSnapshot, availability, ifNeeded []primitive.DateTime) (bool, error)
 	Decline(user *models.User, eventID primitive.ObjectID) error
 	AddAttendees(eventID primitive.ObjectID, emails []string) ([]string, error)
 	Create(user *models.User, event models.Event, emails []string) (*models.Event, error)

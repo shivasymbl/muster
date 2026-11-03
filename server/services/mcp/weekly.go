@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"sort"
 	"strings"
 	"time"
 
@@ -183,4 +184,38 @@ func sameInstants(a, b []primitive.DateTime) bool {
 		}
 	}
 	return true
+}
+
+// SlotView is one stored mark with its canonical instant. Weekday and Time
+// (reference UTC clock) are set only for weekly (dow/group) musters.
+type SlotView struct {
+	Instant string `json:"instant"`
+	Weekday string `json:"weekday,omitempty"`
+	Time    string `json:"time,omitempty"`
+}
+
+// weeklyShorthand returns the weekday name and HH:MM clock of a stored instant.
+func weeklyShorthand(t time.Time) (string, string) {
+	t = t.UTC()
+	return t.Weekday().String(), t.Format("15:04")
+}
+
+// slotViews returns each mark as its canonical RFC3339 instant, plus the weekly
+// shorthand when the muster is weekly. Marks are sorted by instant.
+func slotViews(event *models.Event, marks []primitive.DateTime) []SlotView {
+	times := make([]time.Time, 0, len(marks))
+	for _, m := range marks {
+		times = append(times, m.Time().UTC())
+	}
+	sort.Slice(times, func(i, j int) bool { return times[i].Before(times[j]) })
+	weekly := event != nil && (event.Type == models.DOW || event.Type == models.GROUP)
+	out := make([]SlotView, 0, len(times))
+	for _, t := range times {
+		view := SlotView{Instant: t.Format(time.RFC3339)}
+		if weekly {
+			view.Weekday, view.Time = weeklyShorthand(t)
+		}
+		out = append(out, view)
+	}
+	return out
 }

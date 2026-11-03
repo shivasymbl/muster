@@ -826,3 +826,7 @@ func TestMcpWrites(t *testing.T) {
 		}
 	})
 }
+
+func (f *fakeEvents) ReplaceAvailabilityIf(user *models.User, eventID primitive.ObjectID, _ mcp.AnswerSnapshot, availability, ifNeeded []primitive.DateTime) (bool, error) {
+	return true, f.ReplaceAvailability(user, eventID, availability, ifNeeded)
+}
