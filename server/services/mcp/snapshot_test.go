@@ -167,11 +167,17 @@ func TestMCPAppsSnapshot(t *testing.T) {
 		}
 	})
 
-	t.Run("duplicate own records are an error", func(t *testing.T) {
+	t.Run("duplicate own records hide only the edit", func(t *testing.T) {
 		d, _ := setup(false, resp(member, []primitive.DateTime{dt(9, 0)}, nil), resp(member, nil, nil))
-		_, bad := open(d, member, SnapshotRequest{})
-		if bad == nil || bad.Code != "DUPLICATE_OWN_RESPONSE" {
-			t.Fatalf("%v", bad)
+		s, bad := open(d, member, SnapshotRequest{})
+		if bad != nil {
+			t.Fatal(bad)
+		}
+		if s.Sections.OwnAnswer.Status != SectionUnavailable || s.Sections.OwnAnswer.Reason != "duplicate_own_response" || s.Permissions.CanEditOwnAnswer {
+			t.Fatalf("%+v %+v", s.Sections.OwnAnswer, s.Permissions)
+		}
+		if s.Event == nil || s.Event.Name == "" {
+			t.Fatal("the rest of the muster did not open")
 		}
 	})
 

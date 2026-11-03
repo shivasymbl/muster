@@ -5,7 +5,7 @@ import { render, type Handlers } from "../../src/render";
 import { initialState, reduce, type State } from "../../src/state";
 import { answer, answerTooLarge, draft, group, hiddenPeople, pickATime } from "../fixtures";
 
-const handlers = (): Handlers => ({ select: vi.fn(), sort: vi.fn(), view: vi.fn(), tz: vi.fn(), refresh: vi.fn(), loadMore: vi.fn(), expand: vi.fn() });
+const handlers = (): Handlers => ({ select: vi.fn(), sort: vi.fn(), view: vi.fn(), tz: vi.fn(), refresh: vi.fn(), loadMore: vi.fn(), expand: vi.fn(), ask: vi.fn(), confirm: vi.fn(), cancelReview: vi.fn() });
 const stateFor = (res: unknown): State => reduce(initialState("UTC"), { type: "result", parsed: parseToolResult(res) });
 let root: HTMLElement;
 beforeEach(() => { document.body.innerHTML = '<div id="app"></div>'; root = document.getElementById("app")!; });
@@ -84,6 +84,24 @@ describe("render", () => {
   it("labels hidden availability with the server reason", () => {
     render(root, stateFor(hiddenPeople()), handlers());
     expect(root.textContent).toContain("hidden availability");
+  });
+  it("shows a review before confirm", () => {
+    const raw = pickATime() as { _meta: { muster: { action_bases: Record<string, string>; permissions: Record<string, boolean> } } };
+    raw._meta.muster.action_bases = { write: "fp1" };
+    raw._meta.muster.permissions = { ...raw._meta.muster.permissions, can_finalize: true };
+    let s = stateFor(raw);
+    s = reduce(s, { type: "select", index: 0 });
+    const hd = handlers();
+    render(root, s, hd);
+    expect(root.textContent).toContain("Review this time");
+    expect(root.textContent).not.toContain("Nothing is saved until you confirm.");
+    root.querySelector<HTMLButtonElement>("[data-fid=review-finalize]")!.click();
+    expect(hd.ask).toHaveBeenCalledWith("finalize_time", expect.objectContaining({ start: "2018-06-20T15:00:00Z" }));
+    s = reduce(s, { type: "review", actionId: "a1", effect: "Record this time and archive the muster." });
+    render(root, s, hd);
+    expect(root.textContent).toContain("Nothing is saved until you confirm.");
+    root.querySelector<HTMLButtonElement>("[data-fid=confirm]")!.click();
+    expect(hd.confirm).toHaveBeenCalledOnce();
   });
   it("renders a draft read-only", () => {
     render(root, stateFor(draft()), handlers());

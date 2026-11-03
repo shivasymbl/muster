@@ -10,6 +10,7 @@ export interface UiState {
   canExpand: boolean;
   reading: boolean;
   notice: string | null;
+  review: { actionId: string; effect: string } | null;
 }
 export interface State {
   phase: Phase;
@@ -35,13 +36,15 @@ export type Action =
   | { type: "tz"; tz: string }
   | { type: "host"; displayMode?: string; canExpand?: boolean; tz?: string }
   | { type: "notice"; message: string | null }
+  | { type: "review"; actionId: string; effect: string }
+  | { type: "clear_review" }
   | { type: "teardown" };
 
 // Muster stores no timezone, so the default display zone is UTC; the user may pick their browser zone.
 export function initialState(tz = "UTC"): State {
   return {
     phase: "loading", hint: { workflow: null, eventId: null }, snapshot: null, fallback: null, error: null, readSeq: 0,
-    ui: { selected: null, sort: "rank", view: "list", tz, displayMode: "inline", canExpand: false, reading: false, notice: null },
+    ui: { selected: null, sort: "rank", view: "list", tz, displayMode: "inline", canExpand: false, reading: false, notice: null, review: null },
   };
 }
 
@@ -57,7 +60,7 @@ export function reduce(s: State, a: Action): State {
       if (a.seq !== undefined && a.seq !== s.readSeq) return s;
       // A host-pushed result (no seq) supersedes any read still in flight.
       if (a.seq === undefined) s = { ...s, readSeq: s.readSeq + 1 };
-      const ui = { ...s.ui, reading: false, selected: null };
+      const ui = { ...s.ui, reading: false, selected: null, review: null };
       const p = a.parsed;
       if (p.kind === "snapshot") {
         return { ...s, phase: "ready", snapshot: p.snapshot, fallback: null, error: null, ui };
@@ -83,6 +86,8 @@ export function reduce(s: State, a: Action): State {
         tz: s.snapshot ? s.ui.tz : a.tz ?? s.ui.tz,
       } };
     case "notice": return { ...s, ui: { ...s.ui, notice: a.message } };
+    case "review": return { ...s, ui: { ...s.ui, reading: false, review: { actionId: a.actionId, effect: a.effect }, notice: null } };
+    case "clear_review": return { ...s, ui: { ...s.ui, review: null } };
     case "teardown":
       // Clear sensitive data; any in-flight read becomes obsolete.
       return { ...initialState(s.ui.tz), readSeq: s.readSeq + 1 };

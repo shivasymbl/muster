@@ -301,6 +301,7 @@ func BuildSnapshot(deps Deps, user *models.User, req SnapshotRequest) (*Snapshot
 		OwnAnswer:  own,
 	}
 	snap.StateFingerprint = fingerprint("event", snap.Event, snap.Permissions, grid, cands.Data, people.Data, own.Data)
+	snap.ActionBases["write"] = StateFingerprint(deps, user, event)
 	return snap, nil
 }
 
@@ -580,7 +581,8 @@ func readOwnAnswer(deps Deps, user *models.User, event *models.Event, attendees 
 		}
 	}
 	if len(rows) > 1 {
-		return Section{}, toolErr("DUPLICATE_OWN_RESPONSE", "More than one stored answer exists for you on this muster.", "Open the muster on the website.")
+		// The rest of the muster still opens. Only this person's edit is unavailable.
+		return sectionOf(SectionUnavailable, "duplicate_own_response", nil), nil
 	}
 	isAttendee, declined := false, false
 	for _, a := range attendees {

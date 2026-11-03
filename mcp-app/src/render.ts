@@ -10,6 +10,9 @@ export interface Handlers {
   refresh(): void;
   loadMore(cursor: string): void;
   expand(): void;
+  ask(operation: string, payload: Record<string, unknown>): void;
+  confirm(): void;
+  cancelReview(): void;
 }
 
 type Child = Node | string | null | undefined | false;
@@ -33,6 +36,7 @@ const REASONS: Record<string, string> = {
   candidate_cap: "Only the first 20 candidates are listed.",
   page: "Showing one page of participants.",
   own_answer_too_large: "Your stored answer is too large to show safely here.",
+  duplicate_own_response: "More than one stored answer exists for you, so editing is turned off. The rest of this muster is still shown.",
 };
 const reasonText = (r: string | null): string => (r ? REASONS[r] ?? "" : "");
 
@@ -68,8 +72,9 @@ function header(snap: Snapshot, state: State): HTMLElement {
   return h("header", {},
     h("p", { class: "kicker" }, WORKFLOW_TITLE[snap.workflow]),
     h("h1", {}, ev ? ev.name : "New group draft"),
-    h("p", { class: "meta" }, "Read-only view. Nothing here changes your schedule."),
+    h("p", { class: "meta" }, snap.action_base ? "A change is saved only after you review it and confirm." : "Read-only view. Nothing here changes your schedule."),
     ev?.archived ? h("p", { class: "badge" }, "Archived") : null,
+    ev?.archived ? h("p", { class: "meta" }, "Archived does not lock your answer.") : null,
     ev?.scheduled ? h("p", { class: "meta" }, `Stored final time: ${formatRange(ev.scheduled.start, ev.scheduled.end, mode, state.ui.tz)}`) : null,
     ev && ev.scheduled_status === "invalid" ? h("p", { class: "state incomplete", role: "note" }, "The stored final time could not be read.") : null);
 }
@@ -154,7 +159,12 @@ function pickATime(state: State, snap: Snapshot, hd: Handlers): Node[] {
         h("p", {}, c.not_fully_available_labels.length
           ? `Not fully available: ${c.not_fully_available_labels.join(", ")}`
           : c.not_fully_available === 0 ? "Everyone stored is fully available." : "Names are not shown."),
-        h("p", { class: "meta" }, "Selecting a time does not record it. Finalizing is not available in this read-only view.")));
+        h("p", { class: "meta" }, snap.action_base && snap.permissions.can_finalize
+          ? "Review records this exact interval. It does not create a calendar event and it sends no email."
+          : "Selecting a time does not record it."),
+        snap.action_base && snap.permissions.can_finalize
+          ? btn("Review this time", () => hd.ask("finalize_time", { start: c.start, end: c.end }), { id: "review-finalize" })
+          : null));
     }
     ol.append(li);
   });
@@ -195,7 +205,12 @@ function answer(state: State, snap: Snapshot, hd: Handlers): Node[] {
         : h("p", { class: "meta" }, "None marked."));
     }
   }
-  out.push(h("p", { class: "meta" }, "Editing is not available in this read-only view. Use Muster to change your answer."));
+  if (snap.action_base && snap.permissions.can_edit_own_answer && a.complete && a.editable) {
+    out.push(btn("Review clearing my answer", () => hd.ask("clear_own_answer", {}), { id: "review-clear" }));
+    out.push(h("p", { class: "meta" }, "Clearing removes availability and if-needed marks. It does not delete manual calendar marks."));
+  } else {
+    out.push(h("p", { class: "meta" }, a.editable ? "Editing is not available in this view." : "This answer cannot be edited here."));
+  }
   return out;
 }
 
@@ -214,8 +229,19 @@ function group(state: State, snap: Snapshot, hd: Handlers): Node[] {
     h("li", {}, h("span", { class: "name" }, x.name || "(no name)"), x.is_me ? h("span", { class: "badge" }, "You") : null,
       h("span", { class: "status" }, statusLabel(x.status)),
       x.available.length + x.if_needed.length ? h("span", { class: "meta" }, `${x.available.length} available, ${x.if_needed.length} if needed ranges`) : null,
-      x.email ? h("span", { class: "email" }, x.email) : null))));
-  out.push(h("p", { class: "meta" }, "Reminders and group changes are not available in this read-only view."));
+      x.email ? h("span", { class: "email" }, x.email) : null,
+      snap.action_base && snap.permissions.can_manage_group && x.email && !x.is_me
+        ? btn("Review remove", () => hd.ask("remove_attendee", { email: x.email }), { id: "review-remove" })
+        : null))));
+  if (snap.action_base && snap.permissions.can_manage_group) {
+    const input = h("input", { type: "email", id: "invite-email", "data-fid": "invite-email", placeholder: "name@example.com" });
+    out.push(h("div", { class: "toolbar" }, input, btn("Review invite", () => hd.ask("add_attendees", { emails: [(input as HTMLInputElement).value] }), { id: "review-invite" })));
+  }
+  const me = snap.own_answer.data;
+  if (snap.action_base && me?.is_attendee && !me.declined) {
+    out.push(btn("Review declining my invitation", () => hd.ask("decline_own_invitation", {}), { id: "review-decline" }));
+  }
+  if (!snap.action_base) out.push(h("p", { class: "meta" }, "Group changes are not available in this view."));
   void state;
   return out;
 }
@@ -233,6 +259,14 @@ function ready(state: State, snap: Snapshot, hd: Handlers): Node[] {
   if (gridSec.data?.date_mode === "ambiguous") out.push(h("p", { class: "state incomplete", role: "note" }, "This event mixes date types, so it is read-only and shown in UTC."));
   out.push(toolbar(state, snap, hd));
   if (state.ui.notice) out.push(h("p", { class: "state error", role: "alert" }, state.ui.notice));
+  if (state.ui.review) {
+    out.push(h("div", { class: "detail", role: "region", "aria-label": "Review" },
+      h("p", {}, "Review"),
+      h("p", {}, state.ui.review.effect),
+      h("p", { class: "meta" }, "Nothing is saved until you confirm."),
+      btn("Confirm", hd.confirm, { id: "confirm", disabled: state.ui.reading }),
+      btn("Cancel", hd.cancelReview, { id: "cancel-review" })));
+  }
   if (snap.workflow === "pick-a-time") out.push(...pickATime(state, snap, hd));
   else if (snap.workflow === "answer") out.push(...answer(state, snap, hd));
   else out.push(...group(state, snap, hd));

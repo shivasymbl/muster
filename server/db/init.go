@@ -65,6 +65,16 @@ func Init() func() {
 	}
 	OtpCodesCollection.Indexes().CreateOne(context.Background(), otpIndexModel)
 
+	// One stored answer per person per muster. If older duplicates exist, this
+	// fails and the server still starts. The range write then reports a conflict.
+	answerIndex := mongo.IndexModel{
+		Keys:    bson.D{{Key: "userId", Value: 1}, {Key: "eventId", Value: 1}},
+		Options: options.Index().SetUnique(true).SetName("userId_1_eventId_1"),
+	}
+	if _, err := EventResponsesCollection.Indexes().CreateOne(context.Background(), answerIndex); err != nil {
+		logger.StdErr.Printf("answer unique index not created: %v", err)
+	}
+
 	// Return a function to close the connection
 	return func() {
 		Client.Disconnect(ctx)

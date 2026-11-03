@@ -27,7 +27,20 @@ services:
       [
         "sh",
         "-c",
-        "rm -rf /app/dist/* && cp -r /build/* /app/dist/ && echo 'Frontend assets copied' && tail -f /dev/null",
+        "find /app/dist -mindepth 1 -maxdepth 1 ! -name mcp-app -exec rm -rf {} + && cp -r /build/* /app/dist/ && echo 'Frontend assets copied' && tail -f /dev/null",
+      ]
+
+  mcp-app:
+    build:
+      context: .
+      target: mcpapp
+    volumes:
+      - frontend_dist:/dist
+    command:
+      [
+        "sh",
+        "-c",
+        "mkdir -p /dist/mcp-app && cp -a /out/. /dist/mcp-app/ && echo 'MCP app copied' && tail -f /dev/null",
       ]
 
   server:
@@ -48,6 +61,8 @@ services:
       mongo:
         condition: service_healthy
       frontend:
+        condition: service_started
+      mcp-app:
         condition: service_started
     healthcheck:
       test:

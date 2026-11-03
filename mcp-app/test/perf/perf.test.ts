@@ -6,7 +6,7 @@ import { render } from "../../src/render";
 import { initialState, reduce } from "../../src/state";
 import { manyCandidates } from "../fixtures";
 
-const hd = { select: vi.fn(), sort: vi.fn(), view: vi.fn(), tz: vi.fn(), refresh: vi.fn(), loadMore: vi.fn(), expand: vi.fn() };
+const hd = { select: vi.fn(), sort: vi.fn(), view: vi.fn(), tz: vi.fn(), refresh: vi.fn(), loadMore: vi.fn(), expand: vi.fn(), ask: vi.fn(), confirm: vi.fn(), cancelReview: vi.fn() };
 
 describe("performance budgets", () => {
   it("parses 5000 candidates in under 250 ms", () => {

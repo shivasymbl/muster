@@ -65,6 +65,71 @@ export async function start(opts: StartOptions): Promise<{ app: App; getState: (
         () => dispatch({ type: "notice", message: "The host did not allow a larger view. Use the list in place." }),
       );
     },
+    ask: (operation, payload) => { void prepare(operation, payload); },
+    confirm: () => { void confirm(); },
+    cancelReview: () => dispatch({ type: "clear_review" }),
+  };
+
+  const toolObject = (res: unknown): Record<string, unknown> | null => {
+    if (!res || typeof res !== "object") return null;
+    const body = res as { isError?: boolean; structuredContent?: unknown };
+    const data = body.structuredContent;
+    if (!data || typeof data !== "object") return null;
+    return data as Record<string, unknown>;
+  };
+
+  const prepare = async (operation: string, payload: Record<string, unknown>): Promise<void> => {
+    const snap = state.snapshot;
+    const base = snap?.action_base;
+    const eventId = snap?.event?.id;
+    if (!base || !eventId) {
+      dispatch({ type: "notice", message: "This view cannot save. Refresh and try again." });
+      return;
+    }
+    dispatch({ type: "notice", message: "Checking the review…" });
+    try {
+      const res = await app.callServerTool({
+        name: "muster_ui_prepare_action",
+        arguments: { operation, event_id: eventId, expected_state_fingerprint: base, payload },
+      });
+      const data = toolObject(res);
+      if (!data || (res as { isError?: boolean }).isError) {
+        const message = data && typeof data.message === "string" ? data.message : "The review was refused.";
+        dispatch({ type: "notice", message });
+        return;
+      }
+      const actionId = typeof data.action_id === "string" ? data.action_id : "";
+      const preview = data.preview && typeof data.preview === "object" ? data.preview as Record<string, unknown> : {};
+      const effect = typeof preview.effect === "string" ? preview.effect : "Confirm this change.";
+      if (!actionId) {
+        dispatch({ type: "notice", message: "The review did not return an action." });
+        return;
+      }
+      dispatch({ type: "review", actionId, effect });
+    } catch (e) {
+      dispatch({ type: "notice", message: e instanceof Error && e.message ? e.message : "The review failed." });
+    }
+  };
+
+  const confirm = async (): Promise<void> => {
+    const actionId = state.ui.review?.actionId;
+    if (!actionId) return;
+    dispatch({ type: "notice", message: "Saving…" });
+    try {
+      const res = await app.callServerTool({ name: "muster_ui_commit_action", arguments: { action_id: actionId } });
+      const data = toolObject(res);
+      if (!data || (res as { isError?: boolean }).isError) {
+        const message = data && typeof data.message === "string" ? data.message : "The change was not saved.";
+        dispatch({ type: "clear_review" });
+        dispatch({ type: "notice", message });
+        return;
+      }
+      dispatch({ type: "clear_review" });
+      dispatch({ type: "notice", message: "Saved. Refreshing." });
+      await read();
+    } catch (e) {
+      dispatch({ type: "notice", message: e instanceof Error && e.message ? e.message : "The change may not have been saved. Refresh before trying again." });
+    }
   };
 
   const applyContext = (ctx: ReturnType<App["getHostContext"]>): void => {

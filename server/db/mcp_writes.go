@@ -145,15 +145,20 @@ func ReplaceAvailabilityIf(user *models.User, eventID primitive.ObjectID, snap m
 				"response":  models.Response{UserId: user.Id, Availability: availability, IfNeeded: ifNeeded},
 				"updatedAt": now,
 			}}, options.Update().SetUpsert(true))
+		if mongo.IsDuplicateKeyError(err) {
+			return false, nil
+		}
 		if err != nil {
 			return false, err
 		}
 		if res.UpsertedCount == 0 {
 			return false, nil
 		}
-		// No unique (userId,eventId) index exists, so two first-answer upserts can both
-		// insert. Each inserter counts afterwards and removes its own row if another exists:
-		// at most one survives, and a double loss reports a conflict to both (safe to retry).
+		// Startup tries a unique (userId, eventId) index. If that index is missing,
+		// two first-answer upserts can both insert. Each inserter counts afterwards
+		// and removes its own row if another exists: at most one survives, and a
+		// double loss reports a conflict to both (safe to retry). A duplicate-key
+		// error from the unique index is the same conflict, with no delete.
 		n, err := EventResponsesCollection.CountDocuments(ctx, bson.M{"userId": user.Id.Hex(), "eventId": eventID})
 		if err != nil {
 			return false, err

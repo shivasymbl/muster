@@ -191,6 +191,7 @@ export function parseSnapshot(meta: unknown, summary: string): Snapshot {
     snapshot_id: optStr(m.snapshot_id, "snapshot_id"),
     read_at: m.read_at == null ? null : iso(m.read_at, "read_at"),
     summary,
+    action_base: isObj(m.action_bases) && typeof m.action_bases.write === "string" && m.action_bases.write !== "" ? m.action_bases.write : null,
     event: m.event == null ? null : parseEvent(m.event),
     permissions: parsePermissions(m.permissions ?? {}),
     grid: section(s.grid, "grid", parseGrid),

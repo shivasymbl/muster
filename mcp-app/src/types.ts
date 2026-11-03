@@ -90,6 +90,8 @@ export interface Snapshot {
   snapshot_id: string | null;
   read_at: string | null;
   summary: string;
+  /** Server comparison value for a confirmed write. Absent means this view cannot save. */
+  action_base: string | null;
   event: EventInfo | null;
   permissions: Permissions;
   grid: Section<Grid>;
