@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shivasymbl/muster/server/models"
 	"github.com/shivasymbl/muster/server/services/mcp"
 )
 
@@ -177,6 +178,9 @@ func openerDef(a *appAsset) gin.H {
 
 type openerArgs struct {
 	workflow, eventID string
+	start, end        *time.Time
+	duration          *int
+	cursor            string
 }
 
 // parseOpenerArgs enforces opener-input.schema.json plus the checks a schema cannot express.
@@ -223,17 +227,22 @@ func parseOpenerArgs(args map[string]any) (*openerArgs, *mcp.ToolError) {
 		if !st.Before(en) || en.Sub(st) > 7*24*time.Hour {
 			return bad("window.start must be before window.end, at most 7 days apart.")
 		}
+		out.start, out.end = &st, &en
 	}
 	if raw, present := args["duration_minutes"]; present && raw != nil {
 		f, ok := raw.(float64)
 		if !ok || f != math.Trunc(f) || f < 1 {
 			return bad("duration_minutes must be a whole number of at least 1.")
 		}
+		n := int(f)
+		out.duration = &n
 	}
 	if raw, present := args["people_cursor"]; present && raw != nil {
-		if _, ok := raw.(string); !ok {
+		c, ok := raw.(string)
+		if !ok {
 			return bad("people_cursor must be a string or null.")
 		}
+		out.cursor = c
 	}
 	return out, nil
 }
@@ -257,10 +266,19 @@ func mcpBaseURL() string {
 	return "https://muster.asymbl.app"
 }
 
-// openView handles muster_open_view. It reads nothing from the database yet, so it can
-// neither leak nor change anything: it returns the text fallback and a metadata stub with no snapshot.
-func openView(args map[string]any, core string) (gin.H, *mcp.ToolError) {
+// openView handles muster_open_view. With event_id it returns an authorized snapshot built from
+// the same stores and rules as the text tools. Without one (run-a-group only) it returns an
+// unsaved creation draft. It never writes.
+func openView(deps mcp.Deps, user *models.User, args map[string]any, core string) (gin.H, *mcp.ToolError) {
 	in, toolErr := parseOpenerArgs(args)
+	if toolErr != nil {
+		return nil, toolErr
+	}
+	snap, toolErr := mcp.BuildSnapshot(deps, user, mcp.SnapshotRequest{
+		Workflow: in.workflow, EventID: in.eventID,
+		WindowStart: in.start, WindowEnd: in.end,
+		DurationMinutes: in.duration, PeopleCursor: in.cursor,
+	})
 	if toolErr != nil {
 		return nil, toolErr
 	}
@@ -268,18 +286,19 @@ func openView(args map[string]any, core string) (gin.H, *mcp.ToolError) {
 	if in.eventID != "" {
 		link += "/e/" + url.PathEscape(in.eventID)
 	}
-	text := "Muster view (" + in.workflow + ") is read-only. The interactive view has no snapshot yet. " +
-		"Use the Muster text tools, or open " + link + " in a browser."
+	summary := snap.Summary()
+	text := summary + " This view is read-only. Use the Muster text tools, or open " + link + " in a browser."
 	result := gin.H{
 		"content": []gin.H{{"type": "text", "text": text}},
 		"isError": false,
-		"_meta":   gin.H{"muster": gin.H{"schema_version": 1, "workflow": in.workflow, "snapshot": nil}},
+		"_meta":   gin.H{"muster": snap},
 	}
 	if coreHasStructuredOutput(core) {
-		result["structuredContent"] = gin.H{
-			"schema_version": 1, "workflow": in.workflow, "read_only": true,
-			"summary": "No snapshot is available yet.",
+		sc := gin.H{"schema_version": 1, "workflow": in.workflow, "read_only": true, "summary": summary}
+		if snap.Event != nil {
+			sc["event_id"] = snap.Event.ID
 		}
+		result["structuredContent"] = sc
 	}
 	return result, nil
 }
