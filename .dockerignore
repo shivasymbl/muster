@@ -1,5 +1,6 @@
 .git
 frontend/node_modules
 frontend/dist
+mcp-app/node_modules
 **/.env
 docs/muster/screenshots
