@@ -240,6 +240,9 @@ func finalizeEvent(deps Deps, user *models.User, args map[string]any) (any, *Too
 	if bad != nil {
 		return nil, bad
 	}
+	if utils.Coalesce(event.IsArchived) {
+		return nil, toolErr("EVENT_ARCHIVED", "This muster is already closed.", "The answer is still editable. Finalize does not record another time.")
+	}
 	startRaw, bad := requiredString(args, "start")
 	if bad != nil {
 		return nil, bad

@@ -425,17 +425,17 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},
-		{"name": "muster_set_availability", "description": "Change the caller's answer. Legacy availability and if_needed arrays replace the whole answer unconditionally. Pass at least one of those lists, availability_ranges, or ranges. An empty list clears that list. Omitting both lists, or passing null, is rejected and the stored answer stays unchanged. ranges is a list of {start, end, state} with state available, if_needed, or unavailable. mode replace is the default and rebuilds the answer from the ranges. mode merge applies them onto the stored answer. Range writes, including availability_ranges, are refused with CONFLICT when the stored answer changed since it was read. Repeating the same ranges returns changed false and writes nothing. expected_state_fingerprint is an optional extra check. if_match does the same check for a legacy replace. Do not mix ranges with the legacy lists. Each time is RFC3339, or {weekday, time} on a weekly muster. Monday 15:00 is 2018-06-18T15:00:00Z. The receipt includes answer and state_fingerprint.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+		{"name": "muster_set_availability", "description": "Change the caller's answer. Legacy availability and if_needed arrays replace the whole answer unconditionally. Pass at least one of those lists, availability_ranges, or ranges. An empty list clears that list. Omitting both lists, or passing null, is rejected and the stored answer stays unchanged. ranges is a list of {start, end, state} with state available, if_needed, or unavailable. mode replace is the default and rebuilds the answer from the ranges. mode merge applies them onto the stored answer. Range writes, including availability_ranges, are refused with CONFLICT when the stored answer changed since it was read. Repeating the same ranges returns changed false and writes nothing. expected_state_fingerprint refuses the write when it differs. if_match accepts that same fingerprint string, or {availability, if_needed}. A wrong if_match is an error, not a skip. Do not mix ranges with the legacy lists. Each time is RFC3339, or {weekday, time} on a weekly muster. Monday 15:00 is 2018-06-18T15:00:00Z. The receipt includes answer and state_fingerprint.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id":                   id,
 				"availability":               gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous available times.", "items": gin.H{}},
 				"availability_ranges":        gin.H{"type": "array", "description": "Half-open RFC3339 ranges expanded onto slot_minutes. Conditional. Do not also pass availability or ranges.", "items": gin.H{"type": "object"}},
 				"if_needed":                  gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous if-needed times.", "items": gin.H{}},
-				"if_match":                   gin.H{"type": "object", "description": "Current availability and if_needed. A legacy replace is refused when they differ from the stored answer."},
+				"if_match":                   gin.H{"description": "state_fingerprint string, or {availability, if_needed}. The write is refused when it differs from the stored answer."},
 				"ranges":                     gin.H{"type": "array", "description": "Half-open ranges with state available, if_needed, or unavailable. Conditional. Do not also pass the legacy lists.", "items": gin.H{"type": "object"}},
 				"mode":                       gin.H{"type": "string", "enum": []string{"replace", "merge"}, "description": "replace rebuilds from ranges. merge applies ranges onto the stored answer. Default replace."},
-				"expected_state_fingerprint": gin.H{"type": "string", "description": "state_fingerprint from the last receipt. The range write is refused when it differs."},
+				"expected_state_fingerprint": gin.H{"type": "string", "description": "state_fingerprint from the last receipt. The write is refused when it differs."},
 			},
 			"required": []string{"event_id"},
 		}},
@@ -444,7 +444,7 @@ func toolDefs() []gin.H {
 			"properties": gin.H{"event_id": id},
 			"required":   []string{"event_id"},
 		}},
-		{"name": "muster_add_attendees", "description": "Owner only. Add email addresses to a group muster (is_group true). Does not remove anyone. added is who was newly invited. skipped names the owner, duplicates, and anyone already invited, including different capitalisation. An empty added list means nobody new was invited. Invite mail is sent only when Listmonk is configured. email_sent is false when it is not.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": true}, "inputSchema": gin.H{
+		{"name": "muster_add_attendees", "description": "Owner only. Add email addresses to a group muster (is_group true). Does not remove anyone. added is who was newly invited. skipped names the owner, duplicates, and anyone already invited, including different capitalisation. An empty added list means nobody new was invited. Invite mail is sent only when mail delivery is configured. email_sent is false when it is not.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": true}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"event_id": id,
@@ -452,7 +452,7 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "emails"},
 		}},
-		{"name": "muster_create_event", "description": "Create a muster owned by the signed-in user. type is specific_dates, dow, or group. dates are RFC3339 starts, or {weekday, time} on a weekly muster. Monday 15:00 means 2018-06-18T15:00:00Z. Sunday means 2018-06-24. A weekly muster must land on 2018-06-17 through 2018-06-24. duration_hours is the length of each day. slot_minutes is 15, 30, or 60. emails are allowed only when type is group. Invite mail is sent only when Listmonk is on. Returns event_id, short_id, and page_url.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true}, "inputSchema": gin.H{
+		{"name": "muster_create_event", "description": "Create a muster owned by the signed-in user. type is specific_dates, dow, or group. dates are RFC3339 starts, or {weekday, time} on a weekly muster. Monday 15:00 means 2018-06-18T15:00:00Z. Sunday means 2018-06-24. A weekly muster must land on 2018-06-17 through 2018-06-24. duration_hours is the length of each day. slot_minutes is 15, 30, or 60. emails are allowed only when type is group. Invite mail is sent only when mail delivery is on. Returns event_id, short_id, and page_url.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
 				"name":            gin.H{"type": "string", "description": "1 to 80 characters."},

@@ -120,6 +120,39 @@ func TestWeeklyShorthandAndGuardedReplace(t *testing.T) {
 	if bad != nil || len(events.replaced) != 2 {
 		t.Fatalf("bad %#v replaced %#v", bad, events.replaced)
 	}
+	events.replaced = nil
+	_, bad, _ = Call(deps, user, "muster_set_availability", map[string]any{
+		"event_id":     events.event.Id.Hex(),
+		"availability": []any{"2018-06-18T16:00:00Z"},
+		"if_needed":    []any{},
+		"if_match":     "00000000000000000000000000000000",
+	})
+	if bad == nil || bad.Code != "CONFLICT" || events.replaced != nil {
+		t.Fatalf("string if_match %#v replaced %#v", bad, events.replaced)
+	}
+	fp := stateFingerprint(events.answers[0].Response.Availability, nil)
+	_, bad, _ = Call(deps, user, "muster_set_availability", map[string]any{
+		"event_id": events.event.Id.Hex(),
+		"ranges": []any{map[string]any{
+			"start": "2018-06-18T15:00:00Z", "end": "2018-06-18T16:00:00Z", "state": "available",
+		}},
+		"mode":     "merge",
+		"if_match": "bf42notarealfingerprint",
+	})
+	if bad == nil || bad.Code != "CONFLICT" {
+		t.Fatalf("range if_match %#v", bad)
+	}
+	_, bad, _ = Call(deps, user, "muster_set_availability", map[string]any{
+		"event_id": events.event.Id.Hex(),
+		"ranges": []any{map[string]any{
+			"start": "2018-06-18T15:00:00Z", "end": "2018-06-18T16:00:00Z", "state": "available",
+		}},
+		"mode":     "merge",
+		"if_match": fp,
+	})
+	if bad != nil {
+		t.Fatal(bad.Message)
+	}
 
 	sunday := primitive.NewDateTimeFromTime(time.Date(2018, 6, 17, 0, 0, 0, 0, time.UTC))
 	sunday2 := primitive.NewDateTimeFromTime(time.Date(2018, 6, 24, 0, 0, 0, 0, time.UTC))

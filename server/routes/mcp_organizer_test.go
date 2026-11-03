@@ -90,6 +90,10 @@ func TestMcpOrganizer(t *testing.T) {
 		if closed["closed"] != true || closed["email_sent"] != false || archived == nil || !*archived {
 			t.Fatal(closed)
 		}
+		again, bad := tool("muster_owner", "muster_finalize", `{"event_id":"`+eventID.Hex()+`","start":"2033-11-22T16:00:00Z","end":"2033-11-22T16:30:00Z"}`)
+		if again["isError"] != true || bad["code"] != "EVENT_ARCHIVED" {
+			t.Fatal(bad)
+		}
 	})
 
 	t.Run("remind lists the guest and remove drops them", func(t *testing.T) {

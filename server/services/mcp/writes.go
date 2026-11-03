@@ -69,12 +69,8 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 		return nil, bad
 	}
 	snap := callerSnapshot(deps, user, event.Id)
-	if raw, ok := args["if_match"].(map[string]any); ok {
-		if same, bad := answerMatches(snapResponse(snap), raw); bad != nil {
-			return nil, bad
-		} else if !same {
-			return nil, toolErr("CONFLICT", "The stored answer changed.", "Read the current answer and pass it as if_match, or omit if_match to replace it anyway.")
-		}
+	if bad := guardMatch(args, snap); bad != nil {
+		return nil, bad
 	}
 	changed := !sameInstants(snap.Availability, availability) || !sameInstants(snap.IfNeeded, ifNeeded)
 	if hasRanges {
@@ -96,6 +92,39 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	}
 	addEcho(out, deps, user, event, availability, ifNeeded)
 	return out, nil
+}
+
+// guardMatch refuses a write when if_match or expected_state_fingerprint does not
+// match the answer just read. A string if_match is the state_fingerprint. An
+// object if_match is the current availability and if_needed lists. A wrong type
+// is an error, not a silent skip.
+func guardMatch(args map[string]any, snap AnswerSnapshot) *ToolError {
+	if raw, present := args["if_match"]; present && raw != nil {
+		switch match := raw.(type) {
+		case map[string]any:
+			same, bad := answerMatches(snapResponse(snap), match)
+			if bad != nil {
+				return bad
+			}
+			if !same {
+				return toolErr("CONFLICT", "The stored answer changed.", "Read the current answer and pass it as if_match, or pass its state_fingerprint.")
+			}
+		case string:
+			if match == "" || stateFingerprint(snap.Availability, snap.IfNeeded) != match {
+				return toolErr("CONFLICT", "The stored answer changed.", "Read the current answer and pass its state_fingerprint as if_match or expected_state_fingerprint.")
+			}
+		default:
+			return toolErr("BAD_ARGUMENTS", "if_match must be a state_fingerprint or the current lists.", "Pass the state_fingerprint string, or {availability, if_needed}.")
+		}
+	}
+	if want, ok := args["expected_state_fingerprint"].(string); ok && want != "" {
+		if stateFingerprint(snap.Availability, snap.IfNeeded) != want {
+			return toolErr("CONFLICT", "The stored answer changed.", "Read the current answer, then retry with its state_fingerprint.")
+		}
+	} else if raw, present := args["expected_state_fingerprint"]; present && raw != nil {
+		return toolErr("BAD_ARGUMENTS", "expected_state_fingerprint must be a non-empty string.", "Pass the state_fingerprint from a previous receipt.")
+	}
+	return nil
 }
 
 // setRanges handles the ranges/mode arguments. It never accepts the legacy list keys.
@@ -124,12 +153,8 @@ func setRanges(deps Deps, user *models.User, event *models.Event, args map[strin
 		return nil, bad
 	}
 	snap := callerSnapshot(deps, user, event.Id)
-	if want, ok := args["expected_state_fingerprint"].(string); ok && want != "" {
-		if stateFingerprint(snap.Availability, snap.IfNeeded) != want {
-			return nil, toolErr("CONFLICT", "The stored answer changed.", "Read the current answer, then retry with its state_fingerprint.")
-		}
-	} else if raw, present := args["expected_state_fingerprint"]; present && raw != nil {
-		return nil, toolErr("BAD_ARGUMENTS", "expected_state_fingerprint must be a non-empty string.", "Pass the state_fingerprint from a previous receipt.")
+	if bad := guardMatch(args, snap); bad != nil {
+		return nil, bad
 	}
 	out := map[string]any{"event_id": event.Id.Hex(), "mode": map[bool]string{true: "merge", false: "replace"}[merge]}
 	if len(changes) == 0 {
