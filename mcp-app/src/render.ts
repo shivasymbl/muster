@@ -46,8 +46,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 const statusLabel = (s: string): string => STATUS_LABEL[s] ?? s;
 
-function btn(label: string, on: () => void, opts: { pressed?: boolean; disabled?: boolean; id?: string } = {}): HTMLElement {
-  const b = h("button", { type: "button", "data-fid": opts.id, "aria-pressed": opts.pressed === undefined ? undefined : String(opts.pressed), disabled: opts.disabled }, label);
+function btn(label: string, on: () => void, opts: { pressed?: boolean; disabled?: boolean; id?: string; variant?: "primary" | "ghost" } = {}): HTMLElement {
+  const b = h("button", { type: "button", class: opts.variant, "data-fid": opts.id, "aria-pressed": opts.pressed === undefined ? undefined : String(opts.pressed), disabled: opts.disabled }, label);
   b.addEventListener("click", on);
   return b;
 }
@@ -71,9 +71,10 @@ function header(snap: Snapshot, state: State): HTMLElement {
   const mode = snap.grid.data?.date_mode ?? "actual";
   return h("header", {},
     h("p", { class: "kicker" }, WORKFLOW_TITLE[snap.workflow]),
-    h("h1", {}, ev ? ev.name : "New group draft"),
+    h("div", { class: "title-row" },
+      h("h1", {}, ev ? ev.name : "New group draft"),
+      ev?.archived ? h("span", { class: "badge" }, "Archived") : null),
     h("p", { class: "meta" }, snap.action_base ? "A change is saved only after you review it and confirm." : "Read-only view. Nothing here changes your schedule."),
-    ev?.archived ? h("p", { class: "badge" }, "Archived") : null,
     ev?.archived ? h("p", { class: "meta" }, "Archived does not lock your answer.") : null,
     ev?.scheduled ? h("p", { class: "meta" }, `Stored final time: ${formatRange(ev.scheduled.start, ev.scheduled.end, mode, state.ui.tz)}`) : null,
     ev && ev.scheduled_status === "invalid" ? h("p", { class: "state incomplete", role: "note" }, "The stored final time could not be read.") : null);
@@ -115,7 +116,7 @@ function pickATime(state: State, snap: Snapshot, hd: Handlers): Node[] {
   out.push(h("p", { class: "best" }, best.not_fully_available !== 0
     ? "No full fit: every candidate leaves someone not fully available."
     : "Best candidate fits every stored respondent."));
-  out.push(h("div", { class: "toolbar", role: "group", "aria-label": "Sort and layout" },
+  out.push(h("div", { class: "toolbar segment", role: "group", "aria-label": "Sort and layout" },
     btn("Best first", () => hd.sort("rank"), { pressed: state.ui.sort === "rank", id: "sort-rank" }),
     btn("By time", () => hd.sort("time"), { pressed: state.ui.sort === "time", id: "sort-time" }),
     btn("List", () => hd.view("list"), { pressed: state.ui.view === "list", id: "view-list" }),
@@ -163,7 +164,7 @@ function pickATime(state: State, snap: Snapshot, hd: Handlers): Node[] {
           ? "Review records this exact interval. It does not create a calendar event and it sends no email."
           : "Selecting a time does not record it."),
         snap.action_base && snap.permissions.can_finalize
-          ? btn("Review this time", () => hd.ask("finalize_time", { start: c.start, end: c.end }), { id: "review-finalize" })
+          ? h("div", { class: "actions" }, btn("Review this time", () => hd.ask("finalize_time", { start: c.start, end: c.end }), { id: "review-finalize", variant: "primary" }))
           : null));
     }
     ol.append(li);
@@ -206,7 +207,7 @@ function answer(state: State, snap: Snapshot, hd: Handlers): Node[] {
     }
   }
   if (snap.action_base && snap.permissions.can_edit_own_answer && a.complete && a.editable) {
-    out.push(btn("Review clearing my answer", () => hd.ask("clear_own_answer", {}), { id: "review-clear" }));
+    out.push(btn("Review clearing my answer", () => hd.ask("clear_own_answer", {}), { id: "review-clear", variant: "primary" }));
     out.push(h("p", { class: "meta" }, "Clearing removes availability and if-needed marks. It does not delete manual calendar marks."));
   } else {
     out.push(h("p", { class: "meta" }, a.editable ? "Editing is not available in this view." : "This answer cannot be edited here."));
@@ -235,11 +236,11 @@ function group(state: State, snap: Snapshot, hd: Handlers): Node[] {
         : null))));
   if (snap.action_base && snap.permissions.can_manage_group) {
     const input = h("input", { type: "email", id: "invite-email", "data-fid": "invite-email", placeholder: "name@example.com" });
-    out.push(h("div", { class: "toolbar" }, input, btn("Review invite", () => hd.ask("add_attendees", { emails: [(input as HTMLInputElement).value] }), { id: "review-invite" })));
+    out.push(h("div", { class: "toolbar" }, input, btn("Review invite", () => hd.ask("add_attendees", { emails: [(input as HTMLInputElement).value] }), { id: "review-invite", variant: "primary" })));
   }
   const me = snap.own_answer.data;
   if (snap.action_base && me?.is_attendee && !me.declined) {
-    out.push(btn("Review declining my invitation", () => hd.ask("decline_own_invitation", {}), { id: "review-decline" }));
+    out.push(btn("Review declining my invitation", () => hd.ask("decline_own_invitation", {}), { id: "review-decline", variant: "ghost" }));
   }
   if (!snap.action_base) out.push(h("p", { class: "meta" }, "Group changes are not available in this view."));
   void state;
@@ -260,12 +261,13 @@ function ready(state: State, snap: Snapshot, hd: Handlers): Node[] {
   out.push(toolbar(state, snap, hd));
   if (state.ui.notice) out.push(h("p", { class: "state error", role: "alert" }, state.ui.notice));
   if (state.ui.review) {
-    out.push(h("div", { class: "detail", role: "region", "aria-label": "Review" },
-      h("p", {}, "Review"),
-      h("p", {}, state.ui.review.effect),
+    out.push(h("div", { class: "review", role: "region", "aria-label": "Review" },
+      h("p", { class: "kicker" }, "Review"),
+      h("p", { class: "effect" }, state.ui.review.effect),
       h("p", { class: "meta" }, "Nothing is saved until you confirm."),
-      btn("Confirm", hd.confirm, { id: "confirm", disabled: state.ui.reading }),
-      btn("Cancel", hd.cancelReview, { id: "cancel-review" })));
+      h("div", { class: "actions" },
+        btn("Confirm", hd.confirm, { id: "confirm", disabled: state.ui.reading, variant: "primary" }),
+        btn("Cancel", hd.cancelReview, { id: "cancel-review", variant: "ghost" }))));
   }
   if (snap.workflow === "pick-a-time") out.push(...pickATime(state, snap, hd));
   else if (snap.workflow === "answer") out.push(...answer(state, snap, hd));
