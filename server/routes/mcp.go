@@ -425,14 +425,17 @@ func toolDefs() []gin.H {
 			},
 			"required": []string{"event_id", "start", "end"},
 		}},
-		{"name": "muster_set_availability", "description": "Replace the caller's whole answer. This does not merge. Pass at least one of availability, availability_ranges, or if_needed. An empty list clears that list. Omitting both, or passing null, is rejected and the stored answer stays unchanged. Omitting one list clears that list. An empty answer leaves my_status as cleared, not no_answer. Each time is an RFC3339 slot start, or {weekday, time} when that weekday and clock match one stored date. Monday 15:00 on a new weekly muster is 2018-06-18T15:00:00Z. Two stored matches are rejected. availability_ranges expands {start, end} onto the grid and replaces the available list. Pass if_match with the current availability and if_needed to refuse when the stored answer differs. Omit if_match to replace anyway. The same time cannot be in both lists. Duplicate times are stored once and reported as duplicates_ignored.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
+		{"name": "muster_set_availability", "description": "Change the caller's answer. Legacy availability and if_needed arrays replace the whole answer unconditionally. Pass at least one of those lists, availability_ranges, or ranges. An empty list clears that list. Omitting both lists, or passing null, is rejected and the stored answer stays unchanged. ranges is a list of {start, end, state} with state available, if_needed, or unavailable. mode replace is the default and rebuilds the answer from the ranges. mode merge applies them onto the stored answer. Range writes, including availability_ranges, are refused with CONFLICT when the stored answer changed since it was read. Repeating the same ranges returns changed false and writes nothing. expected_state_fingerprint is an optional extra check. if_match does the same check for a legacy replace. Do not mix ranges with the legacy lists. Each time is RFC3339, or {weekday, time} on a weekly muster. Monday 15:00 is 2018-06-18T15:00:00Z. The receipt includes answer and state_fingerprint.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
 			"properties": gin.H{
-				"event_id":            id,
-				"availability":        gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous available times.", "items": gin.H{}},
-				"availability_ranges": gin.H{"type": "array", "description": "Half-open RFC3339 ranges expanded onto slot_minutes. Do not also pass availability.", "items": gin.H{"type": "object"}},
-				"if_needed":           gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous if-needed times.", "items": gin.H{}},
-				"if_match":            gin.H{"type": "object", "description": "Current availability and if_needed. The write is refused when they differ from the stored answer."},
+				"event_id":                   id,
+				"availability":               gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous available times.", "items": gin.H{}},
+				"availability_ranges":        gin.H{"type": "array", "description": "Half-open RFC3339 ranges expanded onto slot_minutes. Conditional. Do not also pass availability or ranges.", "items": gin.H{"type": "object"}},
+				"if_needed":                  gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous if-needed times.", "items": gin.H{}},
+				"if_match":                   gin.H{"type": "object", "description": "Current availability and if_needed. A legacy replace is refused when they differ from the stored answer."},
+				"ranges":                     gin.H{"type": "array", "description": "Half-open ranges with state available, if_needed, or unavailable. Conditional. Do not also pass the legacy lists.", "items": gin.H{"type": "object"}},
+				"mode":                       gin.H{"type": "string", "enum": []string{"replace", "merge"}, "description": "replace rebuilds from ranges. merge applies ranges onto the stored answer. Default replace."},
+				"expected_state_fingerprint": gin.H{"type": "string", "description": "state_fingerprint from the last receipt. The range write is refused when it differs."},
 			},
 			"required": []string{"event_id"},
 		}},
