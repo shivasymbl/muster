@@ -830,3 +830,27 @@ func TestMcpWrites(t *testing.T) {
 func (f *fakeEvents) ReplaceAvailabilityIf(user *models.User, eventID primitive.ObjectID, _ mcp.AnswerSnapshot, availability, ifNeeded []primitive.DateTime) (bool, error) {
 	return true, f.ReplaceAvailability(user, eventID, availability, ifNeeded)
 }
+
+func TestWriteToolResultErrorTextStartsWithCode(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	writeToolResult(c, 1, nil, &mcp.ToolError{Code: "CONFLICT", Message: "The stored answer changed.", WhatToDoNext: "Reload.", Retryable: true})
+	var out struct {
+		Result struct {
+			Content []struct {
+				Text string `json:"text"`
+			} `json:"content"`
+			StructuredContent map[string]any `json:"structuredContent"`
+			IsError           bool           `json:"isError"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if got := out.Result.Content[0].Text; got != "CONFLICT: The stored answer changed." {
+		t.Fatalf("text = %q", got)
+	}
+	if out.Result.StructuredContent["code"] != "CONFLICT" || out.Result.StructuredContent["message"] != "The stored answer changed." || !out.Result.IsError {
+		t.Fatalf("structuredContent changed: %v", out.Result.StructuredContent)
+	}
+}
