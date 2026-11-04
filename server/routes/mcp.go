@@ -404,6 +404,22 @@ func outcomeFor(code string) string {
 func toolDefs() []gin.H {
 	id := gin.H{"type": "string", "description": "24-character event_id or the short id, for example QTTyVU."}
 	window := "RFC3339 timestamp. start and end must be at most 7 days apart. A weekly muster stores its times on the reference week 2018-06-17 through 2018-06-24. Use the dates from muster_get_event, not a later calendar week."
+	markItem := gin.H{"description": "RFC3339 timestamp, or {weekday, time} on a weekly muster.", "oneOf": []gin.H{
+		{"type": "string"},
+		{"type": "object", "properties": gin.H{
+			"weekday": gin.H{"type": "string", "description": "Sunday through Saturday."},
+			"time":    gin.H{"type": "string", "description": "Clock time HH:MM, such as 15:00."},
+		}, "required": []string{"weekday", "time"}},
+	}}
+	span := gin.H{"type": "object", "required": []string{"start", "end"}, "properties": gin.H{
+		"start": gin.H{"type": "string", "description": "RFC3339 start. Example: 2026-10-23T16:00:00Z."},
+		"end":   gin.H{"type": "string", "description": "RFC3339 end after start. The range is half-open."},
+	}}
+	ranged := gin.H{"type": "object", "required": []string{"start", "end", "state"}, "properties": gin.H{
+		"start": span["properties"].(gin.H)["start"],
+		"end":   span["properties"].(gin.H)["end"],
+		"state": gin.H{"type": "string", "enum": []string{"available", "if_needed", "unavailable"}, "description": "available, if_needed, or unavailable."},
+	}}
 	read := gin.H{"readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false}
 	return []gin.H{
 		{"name": "muster_whoami", "description": "Who the token belongs to. Returns user_id, email, and name.", "annotations": read, "inputSchema": gin.H{"type": "object", "properties": gin.H{}}},
@@ -411,9 +427,9 @@ func toolDefs() []gin.H {
 			"type": "object",
 			"properties": gin.H{
 				"name":   gin.H{"type": "string", "description": "Case-insensitive name substring. At most 80 characters."},
-				"status":          gin.H{"type": "string", "description": "needs_answer (default), all, open, archived, or one of no_answer, invited_no_answer, responded, cleared, declined. There is no archived boolean. status open excludes archived musters. status archived returns only those."},
+				"status":          gin.H{"type": "string", "enum": []string{"needs_answer", "all", "open", "archived", "no_answer", "invited_no_answer", "responded", "cleared", "declined"}, "description": "needs_answer (default), all, open, archived, or one of no_answer, invited_no_answer, responded, cleared, declined. There is no archived boolean. status open excludes archived musters. status archived returns only those."},
 				"needs_my_answer": gin.H{"type": "boolean", "description": "When true, keep only musters whose my_status is no_answer or invited_no_answer."},
-				"projection":      gin.H{"type": "string", "description": "compact leaves out the grid. Anything else returns the full row."},
+				"projection":      gin.H{"type": "string", "enum": []string{"full", "compact"}, "description": "full is the default and includes the grid. compact leaves the grid out."},
 				"limit":           gin.H{"type": "integer", "description": "Page size from 1 to 50. Defaults to 20."},
 				"cursor":          gin.H{"type": "string", "description": "24-character hex next_cursor from the previous page."},
 			},
@@ -436,11 +452,11 @@ func toolDefs() []gin.H {
 			"type": "object",
 			"properties": gin.H{
 				"event_id":                   id,
-				"availability":               gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous available times.", "items": gin.H{}},
-				"availability_ranges":        gin.H{"type": "array", "description": "Half-open RFC3339 ranges expanded onto slot_minutes. Conditional. Do not also pass availability or ranges.", "items": gin.H{"type": "object"}},
-				"if_needed":                  gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous if-needed times.", "items": gin.H{}},
-				"if_match":                   gin.H{"description": "state_fingerprint string, or {availability, if_needed}. The write is refused when it differs from the stored answer."},
-				"ranges":                     gin.H{"type": "array", "description": "Half-open ranges with state available, if_needed, or unavailable. Conditional. Do not also pass the legacy lists.", "items": gin.H{"type": "object"}},
+				"availability":               gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous available times.", "items": markItem},
+				"availability_ranges":        gin.H{"type": "array", "description": "Half-open RFC3339 ranges expanded onto slot_minutes. Conditional. Do not also pass availability or ranges.", "items": span},
+				"if_needed":                  gin.H{"type": "array", "description": "RFC3339 slot starts, or {weekday, time}, that replace the previous if-needed times.", "items": markItem},
+				"if_match":                   gin.H{"description": "state_fingerprint string, or {availability, if_needed}. The write is refused when it differs from the stored answer. A boolean is rejected.", "oneOf": []gin.H{{"type": "string"}, {"type": "object", "description": "The answer to compare.", "properties": gin.H{"availability": gin.H{"type": "array", "items": markItem}, "if_needed": gin.H{"type": "array", "items": markItem}}}}},
+				"ranges":                     gin.H{"type": "array", "description": "Half-open ranges with state available, if_needed, or unavailable. Conditional. Do not also pass the legacy lists.", "items": ranged},
 				"mode":                       gin.H{"type": "string", "enum": []string{"replace", "merge"}, "description": "replace rebuilds from ranges. merge applies ranges onto the stored answer. Default replace."},
 				"expected_state_fingerprint": gin.H{"type": "string", "description": "state_fingerprint from the last receipt. The write is refused when it differs."},
 			},
@@ -464,7 +480,7 @@ func toolDefs() []gin.H {
 			"properties": gin.H{
 				"name":            gin.H{"type": "string", "description": "1 to 80 characters."},
 				"type":            gin.H{"type": "string", "description": "specific_dates, dow, or group."},
-				"dates":           gin.H{"type": "array", "items": gin.H{}, "description": "RFC3339 start of each day, or {weekday, time} on a weekly muster."},
+				"dates":           gin.H{"type": "array", "items": markItem, "description": "RFC3339 start of each day, or {weekday, time} on a weekly muster."},
 				"duration_hours":  gin.H{"type": "number", "description": "Hours in each day, greater than 0 and at most 24."},
 				"slot_minutes":    gin.H{"type": "integer", "description": "15, 30, or 60. Defaults to 15."},
 				"blind":             gin.H{"type": "boolean", "description": "Hide other people's answers from non-owners."},
@@ -502,7 +518,7 @@ func toolDefs() []gin.H {
 			"properties": gin.H{
 				"event_id":       id,
 				"name":             gin.H{"type": "string", "description": "1 to 80 characters. Omitted leaves the name."},
-				"dates":            gin.H{"type": "array", "items": gin.H{"type": "string"}, "description": "RFC3339 starts, or {weekday, time} on a weekly muster. Replaces the stored dates."},
+				"dates":            gin.H{"type": "array", "items": markItem, "description": "RFC3339 starts, or {weekday, time} on a weekly muster. Replaces the stored dates."},
 				"duration_hours":   gin.H{"type": "number", "description": "Hours in each day, greater than 0 and at most 24."},
 				"archive":          gin.H{"type": "boolean", "description": "true archives the muster. Answers stay editable."},
 				"blind":            gin.H{"type": "boolean", "description": "Hide other people's answers from non-owners."},

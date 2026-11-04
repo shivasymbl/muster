@@ -185,7 +185,11 @@ func (s *Snapshot) Summary() string {
 	b.WriteString(s.Event.Name)
 	if c, ok := s.Sections.Candidates.Data.(*SnapshotCandidates); ok && len(c.Items) > 0 {
 		top := c.Items[0]
-		fmt.Fprintf(&b, ": %d candidate times; best has %d available and %d if needed.", len(c.Items), top.Available, top.IfNeeded)
+		label := "candidate times"
+		if len(c.Items) == 1 {
+			label = "candidate time"
+		}
+		fmt.Fprintf(&b, ": %d %s; best has %d available and %d if needed.", len(c.Items), label, top.Available, top.IfNeeded)
 	} else {
 		b.WriteString(": no candidate times to show.")
 	}

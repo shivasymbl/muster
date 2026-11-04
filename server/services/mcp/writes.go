@@ -29,6 +29,9 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	if utils.Coalesce(event.IsSignUpForm) {
 		return nil, toolErr("SIGN_UP_FORM", "This muster is a sign-up form.", utils.GetBaseUrl()+"/e/"+event.GetId())
 	}
+	if bad := matchShape(args); bad != nil {
+		return nil, bad
+	}
 	_, hasNewRanges := args["ranges"]
 	if hasNewRanges {
 		return setRanges(deps, user, event, args)
@@ -43,7 +46,7 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	hasAvailability := presentList(args, "availability") || hasRanges
 	hasIfNeeded := presentList(args, "if_needed")
 	if !hasAvailability && !hasIfNeeded {
-		return nil, toolErr("BAD_ARGUMENTS", "Pass availability or if_needed.", "An empty list clears that list. Omitting both leaves the answer unchanged.")
+		return nil, toolErr("BAD_ARGUMENTS", "Pass availability, if_needed, availability_ranges, or ranges.", "An empty list clears that list. Omitting all of them leaves the answer unchanged.")
 	}
 	if hasRanges && presentList(args, "availability") {
 		return nil, toolErr("BAD_ARGUMENTS", "Pass availability or availability_ranges, not both.", "Use timestamps, or ranges, for the available times.")
@@ -94,6 +97,23 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	}
 	addEcho(out, deps, user, event, availability, ifNeeded)
 	return out, nil
+}
+
+// matchShape rejects a present if_match or fingerprint of the wrong type before any write check.
+func matchShape(args map[string]any) *ToolError {
+	if raw, present := args["if_match"]; present && raw != nil {
+		switch raw.(type) {
+		case map[string]any, string:
+		default:
+			return toolErr("BAD_ARGUMENTS", "if_match must be a state_fingerprint or the current lists.", "Pass the state_fingerprint string, or {availability, if_needed}.")
+		}
+	}
+	if raw, present := args["expected_state_fingerprint"]; present && raw != nil {
+		if _, ok := raw.(string); !ok {
+			return toolErr("BAD_ARGUMENTS", "expected_state_fingerprint must be a non-empty string.", "Pass the state_fingerprint from a previous receipt.")
+		}
+	}
+	return nil
 }
 
 // guardMatch refuses a write when if_match or expected_state_fingerprint does not

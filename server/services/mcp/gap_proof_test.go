@@ -89,4 +89,10 @@ func TestGapIfMatchBooleanVsString(t *testing.T) {
 	if bad := call("true"); bad == nil || bad.Code != "CONFLICT" || events.replaced != nil || events.replacedNeed != nil {
 		t.Fatalf("string: %#v replaced %#v", bad, events.replaced)
 	}
+	_, bare, _ := Call(deps, user, "muster_set_availability", map[string]any{
+		"event_id": events.event.Id.Hex(), "if_match": true,
+	})
+	if bare == nil || bare.Code != "BAD_ARGUMENTS" || !strings.Contains(bare.Message, "if_match") || events.replaced != nil {
+		t.Fatalf("boolean without lists: %#v", bare)
+	}
 }
