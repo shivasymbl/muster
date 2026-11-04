@@ -12,6 +12,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// listEventFields is everything a list row needs to match muster_get_event.
+// scheduledEvent and displayTimezone must stay: closed is derived from the stored interval,
+// and the timezone is a label. Dropping either makes a finalized muster look open.
+var listEventFields = bson.M{
+	"_id": 1, "shortId": 1, "name": 1, "type": 1, "isArchived": 1,
+	"blindAvailabilityEnabled": 1, "isSignUpForm": 1, "ownerId": 1,
+	"dates": 1, "duration": 1, "timeIncrement": 1, "daysOnly": 1, "startOnMonday": 1,
+	"scheduledEvent": 1, "displayTimezone": 1,
+}
+
 // ListEventsForUser returns the caller's musters, including declined invites and archived musters.
 // Deleted musters are excluded. The name filter is applied in this query.
 func ListEventsForUser(user *models.User, name string, limit int, cursor string) ([]mcp.ListedEvent, string, error) {
@@ -85,11 +95,7 @@ func ListEventsForUser(user *models.User, name string, limit int, cursor string)
 	find, err := EventsCollection.Find(ctx, bson.M{"$and": and}, options.Find().
 		SetSort(bson.D{{Key: "_id", Value: -1}}).
 		SetLimit(int64(limit+1)).
-		SetProjection(bson.M{
-			"_id": 1, "shortId": 1, "name": 1, "type": 1, "isArchived": 1,
-			"blindAvailabilityEnabled": 1, "isSignUpForm": 1, "ownerId": 1,
-			"dates": 1, "duration": 1, "timeIncrement": 1, "daysOnly": 1, "startOnMonday": 1,
-		}))
+		SetProjection(listEventFields))
 	if err != nil {
 		return nil, "", err
 	}

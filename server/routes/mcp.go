@@ -411,7 +411,7 @@ func toolDefs() []gin.H {
 			"type": "object",
 			"properties": gin.H{
 				"name":   gin.H{"type": "string", "description": "Case-insensitive name substring. At most 80 characters."},
-				"status":          gin.H{"type": "string", "description": "needs_answer (default), all, open, archived, or one of no_answer, invited_no_answer, responded, cleared, declined."},
+				"status":          gin.H{"type": "string", "description": "needs_answer (default), all, open, archived, or one of no_answer, invited_no_answer, responded, cleared, declined. There is no archived boolean. status open excludes archived musters. status archived returns only those."},
 				"needs_my_answer": gin.H{"type": "boolean", "description": "When true, keep only musters whose my_status is no_answer or invited_no_answer."},
 				"projection":      gin.H{"type": "string", "description": "compact leaves out the grid. Anything else returns the full row."},
 				"limit":           gin.H{"type": "integer", "description": "Page size from 1 to 50. Defaults to 20."},

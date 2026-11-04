@@ -371,10 +371,10 @@ func TestMCPTextParityCatalog(t *testing.T) {
 		if size > 24*1024 {
 			t.Errorf("catalog is %d bytes, over the 24 KiB soft target", size)
 		}
-		// Approved 2026-11-04. 12,666 -> 15,503 is the descriptions, list filters, and display_timezone label.
-		// Still under the 24 KiB soft target. A different size needs a new approval.
-		const approvedText = 15503
-		const approvedFull = 19779
+		// Approved 2026-11-04. 12,666 -> 15,608 is the descriptions, list filters, the timezone label,
+		// and the note that archive is a status, not a boolean. Still under the 24 KiB soft target.
+		const approvedText = 15608
+		const approvedFull = 19884
 		if size != approvedText {
 			t.Errorf("text catalog is %d bytes; the approved size is %d (was 12,666)", size, approvedText)
 		}
