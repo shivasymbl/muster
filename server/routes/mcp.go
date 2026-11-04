@@ -303,11 +303,15 @@ func callTool(deps mcp.Deps, user *models.User, params json.RawMessage) (any, *m
 
 func writeToolResult(c *gin.Context, id any, result any, toolErr *mcp.ToolError) {
 	if toolErr != nil {
+		text := toolErr.Message
+		if toolErr.Code != "" {
+			text = toolErr.Code + ": " + toolErr.Message
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"jsonrpc": "2.0",
 			"id":      id,
 			"result": gin.H{
-				"content":           []gin.H{{"type": "text", "text": toolErr.Message}},
+				"content":           []gin.H{{"type": "text", "text": text}},
 				"structuredContent": toolErr,
 				"isError":           true,
 			},
