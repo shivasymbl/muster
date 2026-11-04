@@ -338,6 +338,7 @@ func eventRow(user *models.User, event *models.Event, isAttendee bool, declined 
 		MyRoles:           MyRoles(event.OwnerId == user.Id, isAttendee),
 		MyStatus:          MyStatus(flags, isAttendee, declined),
 		PageURL:           utils.GetBaseUrl() + "/e/" + event.GetId(),
+		DisplayTimezone:   event.DisplayTimezone,
 		Grid:              eventGrid(event),
 	}
 	if event.ShortId != nil {

@@ -150,21 +150,21 @@ func openerDef(a *appAsset) gin.H {
 			"type":                 "object",
 			"additionalProperties": false,
 			"properties": gin.H{
-				"workflow": gin.H{"type": "string", "enum": []string{"pick-a-time", "answer", "run-a-group"}},
+				"workflow": gin.H{"type": "string", "enum": []string{"pick-a-time", "answer", "run-a-group"}, "description": "pick-a-time or answer needs event_id. run-a-group opens the group tools."},
 				"event_id": gin.H{"type": "string", "minLength": 1, "pattern": `\S`, "description": "Canonical or short ID. Required for pick-a-time and answer."},
 				"window": gin.H{"oneOf": []gin.H{
 					{"type": "null"},
 					{
 						"type": "object", "additionalProperties": false,
 						"properties": gin.H{
-							"start": gin.H{"type": "string", "format": "date-time"},
-							"end":   gin.H{"type": "string", "format": "date-time"},
+							"start": gin.H{"type": "string", "format": "date-time", "description": "RFC3339 start, for example 2026-10-23T16:00:00Z."},
+							"end":   gin.H{"type": "string", "format": "date-time", "description": "RFC3339 end, after start and at most 7 days later."},
 						},
 						"required": []string{"start", "end"},
 					},
 				}, "description": "Null or omitted lets the server choose. start must be before end, at most 7 days apart."},
-				"duration_minutes": gin.H{"type": []string{"integer", "null"}, "minimum": 1},
-				"people_cursor":    gin.H{"type": []string{"string", "null"}},
+				"duration_minutes": gin.H{"type": []string{"integer", "null"}, "minimum": 1, "description": "Meeting length in minutes, or null to use the muster slot."},
+				"people_cursor":    gin.H{"type": []string{"string", "null"}, "description": "Opaque cursor for the next page of people, or null to start."},
 			},
 			"required": []string{"workflow"},
 			"allOf": []gin.H{{

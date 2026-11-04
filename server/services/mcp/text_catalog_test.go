@@ -371,14 +371,18 @@ func TestMCPTextParityCatalog(t *testing.T) {
 		if size > 24*1024 {
 			t.Errorf("catalog is %d bytes, over the 24 KiB soft target", size)
 		}
-		if limit := 12666 * 110 / 100; size > limit {
-			t.Errorf("catalog grew %d%% over the 12,666 byte baseline (%d bytes); the transition needs reviewer approval", (size-12666)*100/12666, size)
+		// Approved 2026-11-04. 12,666 -> 15,503 is the descriptions, list filters, and display_timezone label.
+		// Still under the 24 KiB soft target. A different size needs a new approval.
+		const approvedText = 15503
+		const approvedFull = 19779
+		if size != approvedText {
+			t.Errorf("text catalog is %d bytes; the approved size is %d (was 12,666)", size, approvedText)
 		}
 		t.Setenv("MCP_APPS_WRITES_ENABLED", "true")
 		_, full, fullSize := newWire(true).tools(t)
 		t.Logf("full-build catalog: %d tools, %d bytes", len(full), fullSize)
-		if len(full) != 20 || fullSize > 32*1024 {
-			t.Errorf("full build is %d tools, %d bytes", len(full), fullSize)
+		if len(full) != 20 || fullSize != approvedFull || fullSize > 32*1024 {
+			t.Errorf("full build is %d tools, %d bytes; approved 20 tools, %d bytes", len(full), fullSize, approvedFull)
 		}
 	})
 	t.Run("REQ_EFF_005", func(t *testing.T) {

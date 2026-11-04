@@ -127,6 +127,8 @@ type EventRow struct {
 	// It is independent of IsArchived, which a manual archive also sets.
 	Scheduled *ScheduledSpan `json:"scheduled"`
 	Closed    bool           `json:"closed"`
+	// DisplayTimezone is a presentation label. Null means unspecified, not UTC.
+	DisplayTimezone *string `json:"display_timezone"`
 	Grid
 }
 

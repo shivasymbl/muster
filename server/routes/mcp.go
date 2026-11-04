@@ -303,9 +303,10 @@ func callTool(deps mcp.Deps, user *models.User, params json.RawMessage) (any, *m
 
 func writeToolResult(c *gin.Context, id any, result any, toolErr *mcp.ToolError) {
 	if toolErr != nil {
+		raw, err := json.Marshal(toolErr)
 		text := toolErr.Message
-		if toolErr.Code != "" {
-			text = toolErr.Code + ": " + toolErr.Message
+		if err == nil {
+			text = string(raw)
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"jsonrpc": "2.0",
@@ -410,9 +411,11 @@ func toolDefs() []gin.H {
 			"type": "object",
 			"properties": gin.H{
 				"name":   gin.H{"type": "string", "description": "Case-insensitive name substring. At most 80 characters."},
-				"status": gin.H{"type": "string", "description": "needs_answer (default), all, or one of no_answer, invited_no_answer, responded, cleared, declined."},
-				"limit":  gin.H{"type": "integer", "description": "Page size from 1 to 50. Defaults to 20."},
-				"cursor": gin.H{"type": "string", "description": "24-character hex next_cursor from the previous page."},
+				"status":          gin.H{"type": "string", "description": "needs_answer (default), all, open, archived, or one of no_answer, invited_no_answer, responded, cleared, declined."},
+				"needs_my_answer": gin.H{"type": "boolean", "description": "When true, keep only musters whose my_status is no_answer or invited_no_answer."},
+				"projection":      gin.H{"type": "string", "description": "compact leaves out the grid. Anything else returns the full row."},
+				"limit":           gin.H{"type": "integer", "description": "Page size from 1 to 50. Defaults to 20."},
+				"cursor":          gin.H{"type": "string", "description": "24-character hex next_cursor from the previous page."},
 			},
 		}},
 		{"name": "muster_get_event", "description": "One muster the caller is a member of. Returns the grid: dates as UTC instants, duration_hours, slot_minutes, days_only, start_on_monday, and is_group. A weekly muster also returns weekdays, and its dates are on the reference week 2018-06-17 through 2018-06-24. Muster does not store a timezone. A group muster is the only kind with an invite list.", "annotations": read, "inputSchema": gin.H{
@@ -427,7 +430,7 @@ func toolDefs() []gin.H {
 				"start":    gin.H{"type": "string", "description": window + " Example: 2026-10-23T16:00:00Z."},
 				"end":      gin.H{"type": "string", "description": window},
 			},
-			"required": []string{"event_id", "start", "end"},
+			"required": []string{"event_id"},
 		}},
 		{"name": "muster_set_availability", "description": "Change the caller's answer. Legacy availability and if_needed arrays replace the whole answer unconditionally. Pass at least one of those lists, availability_ranges, or ranges. An empty list clears that list. Omitting both lists, or passing null, is rejected and the stored answer stays unchanged. ranges is a list of {start, end, state} with state available, if_needed, or unavailable. mode replace is the default and rebuilds the answer from the ranges. mode merge applies them onto the stored answer. Range writes, including availability_ranges, are refused with CONFLICT when the stored answer changed since it was read. Repeating the same ranges returns changed false and writes nothing. expected_state_fingerprint refuses the write when it differs. if_match accepts that same fingerprint string, or {availability, if_needed}. A wrong if_match is an error, not a skip. Do not mix ranges with the legacy lists. Each time is RFC3339, or {weekday, time} on a weekly muster. Monday 15:00 is 2018-06-18T15:00:00Z. The receipt includes answer and state_fingerprint.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type": "object",
@@ -464,9 +467,10 @@ func toolDefs() []gin.H {
 				"dates":           gin.H{"type": "array", "items": gin.H{}, "description": "RFC3339 start of each day, or {weekday, time} on a weekly muster."},
 				"duration_hours":  gin.H{"type": "number", "description": "Hours in each day, greater than 0 and at most 24."},
 				"slot_minutes":    gin.H{"type": "integer", "description": "15, 30, or 60. Defaults to 15."},
-				"blind":           gin.H{"type": "boolean"},
-				"days_only":       gin.H{"type": "boolean"},
-				"start_on_monday": gin.H{"type": "boolean"},
+				"blind":             gin.H{"type": "boolean", "description": "Hide other people's answers from non-owners."},
+				"days_only":         gin.H{"type": "boolean", "description": "Poll days, not times."},
+				"start_on_monday":   gin.H{"type": "boolean", "description": "Weekly grid starts Monday. Default is Sunday."},
+				"display_timezone":  gin.H{"type": "string", "description": "IANA name used as a label only, such as America/New_York. It does not change stored UTC times. Omit it for unspecified."},
 				"emails":          gin.H{"type": "array", "items": gin.H{"type": "string"}, "description": "Invitees. Group musters only. At most 20."},
 			},
 			"required": []string{"name", "type", "duration_hours"},
@@ -497,11 +501,12 @@ func toolDefs() []gin.H {
 			"type": "object",
 			"properties": gin.H{
 				"event_id":       id,
-				"name":           gin.H{"type": "string"},
-				"dates":          gin.H{"type": "array", "items": gin.H{"type": "string"}},
-				"duration_hours": gin.H{"type": "number"},
-				"archive":        gin.H{"type": "boolean"},
-				"blind":          gin.H{"type": "boolean"},
+				"name":             gin.H{"type": "string", "description": "1 to 80 characters. Omitted leaves the name."},
+				"dates":            gin.H{"type": "array", "items": gin.H{"type": "string"}, "description": "RFC3339 starts, or {weekday, time} on a weekly muster. Replaces the stored dates."},
+				"duration_hours":   gin.H{"type": "number", "description": "Hours in each day, greater than 0 and at most 24."},
+				"archive":          gin.H{"type": "boolean", "description": "true archives the muster. Answers stay editable."},
+				"blind":            gin.H{"type": "boolean", "description": "Hide other people's answers from non-owners."},
+				"display_timezone": gin.H{"description": "IANA label, or null to clear it. Omitted leaves the stored label. It does not move UTC times."},
 			},
 			"required": []string{"event_id"},
 		}},
@@ -510,7 +515,7 @@ func toolDefs() []gin.H {
 		}},
 		{"name": "muster_remove_attendee", "description": "Owner only. Remove one invitee from a group muster and delete that person's answer, matching the website. The owner cannot be removed.", "annotations": gin.H{"readOnlyHint": false, "destructiveHint": true, "idempotentHint": true, "openWorldHint": false}, "inputSchema": gin.H{
 			"type":       "object",
-			"properties": gin.H{"event_id": id, "email": gin.H{"type": "string"}},
+			"properties": gin.H{"event_id": id, "email": gin.H{"type": "string", "description": "Invitee address to remove. The owner cannot be removed."}},
 			"required":   []string{"event_id", "email"},
 		}},
 		{"name": "muster_list_changes", "description": "Owner only. Answers and invites recorded at or after since. since is RFC3339. Older website edits that have no timestamp are left out. There is no webhook.", "annotations": read, "inputSchema": gin.H{
@@ -525,7 +530,7 @@ func toolDefs() []gin.H {
 				"start":    gin.H{"type": "string", "description": window},
 				"end":      gin.H{"type": "string", "description": window},
 			},
-			"required": []string{"event_id", "start", "end"},
+			"required": []string{"event_id"},
 		}},
 	}
 }

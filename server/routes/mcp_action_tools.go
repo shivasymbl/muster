@@ -9,10 +9,10 @@ func actionToolDefs() []gin.H {
 		{"name": "muster_ui_prepare_action", "description": "App only. Check one closed operation and store an expiring review. Changes no muster until commit.", "annotations": write, "inputSchema": gin.H{
 			"type": "object", "additionalProperties": false,
 			"properties": gin.H{
-				"operation":                  gin.H{"type": "string", "enum": []string{"edit_own_answer", "clear_own_answer", "decline_own_invitation", "finalize_time", "create_group", "update_group", "add_attendees", "remove_attendee"}},
-				"event_id":                   gin.H{"type": "string"},
-				"expected_state_fingerprint": gin.H{"type": "string"},
-				"payload":                    gin.H{"type": "object"},
+				"operation":                  gin.H{"type": "string", "enum": []string{"edit_own_answer", "clear_own_answer", "decline_own_invitation", "finalize_time", "create_group", "update_group", "add_attendees", "remove_attendee"}, "description": "Closed operation to review. Nothing is saved until commit."},
+				"event_id":                   gin.H{"type": "string", "description": "Muster the operation applies to, when the operation needs one."},
+				"expected_state_fingerprint": gin.H{"type": "string", "description": "action_bases.write from the open view. The review is refused when it differs."},
+				"payload":                    gin.H{"type": "object", "description": "Fields the operation will write. The review shows these before commit."},
 			},
 			"required": []string{"operation", "payload"},
 		}, "_meta": gin.H{"ui": gin.H{"visibility": []string{"app"}}}},

@@ -847,8 +847,12 @@ func TestWriteToolResultErrorTextStartsWithCode(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
 		t.Fatal(err)
 	}
-	if got := out.Result.Content[0].Text; got != "CONFLICT: The stored answer changed." {
-		t.Fatalf("text = %q", got)
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(out.Result.Content[0].Text), &parsed); err != nil {
+		t.Fatalf("text = %q", out.Result.Content[0].Text)
+	}
+	if parsed["code"] != "CONFLICT" || parsed["message"] != "The stored answer changed." {
+		t.Fatalf("text = %q", out.Result.Content[0].Text)
 	}
 	if out.Result.StructuredContent["code"] != "CONFLICT" || out.Result.StructuredContent["message"] != "The stored answer changed." || !out.Result.IsError {
 		t.Fatalf("structuredContent changed: %v", out.Result.StructuredContent)

@@ -78,6 +78,9 @@ type Event struct {
 	// Whether to enable blind availability
 	BlindAvailabilityEnabled *bool `json:"blindAvailabilityEnabled" bson:"blindAvailabilityEnabled,omitempty"`
 
+	// DisplayTimezone is an IANA label for presentation. It does not change stored UTC instants.
+	DisplayTimezone *string `json:"displayTimezone" bson:"displayTimezone,omitempty"`
+
 	// Whether to only poll for days, not times
 	DaysOnly *bool `json:"daysOnly" bson:"daysOnly,omitempty"`
 

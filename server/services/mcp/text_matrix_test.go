@@ -161,6 +161,9 @@ func (s *mxStore) Patch(id primitive.ObjectID, set map[string]any) error {
 	if v, ok := set["duration"].(float32); ok {
 		ev.Duration = &v
 	}
+	if v, ok := set["displayTimezone"]; ok {
+		ev.DisplayTimezone, _ = v.(*string)
+	}
 	return nil
 }
 func (s *mxStore) RemoveAttendee(id primitive.ObjectID, email, _ string) error {

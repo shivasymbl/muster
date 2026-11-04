@@ -14,6 +14,21 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// displayZone checks an optional IANA presentation label. Nil means unspecified.
+func displayZone(raw any) (*string, *ToolError) {
+	if raw == nil {
+		return nil, nil
+	}
+	name, ok := raw.(string)
+	if !ok || name == "" {
+		return nil, toolErr("BAD_ARGUMENTS", "display_timezone must be an IANA name such as America/New_York.", "Omit it, or pass a name from the IANA database.")
+	}
+	if _, err := time.LoadLocation(name); err != nil {
+		return nil, toolErr("BAD_ARGUMENTS", "display_timezone must be an IANA name such as America/New_York.", "Omit it, or pass a name from the IANA database.")
+	}
+	return &name, nil
+}
+
 func createEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolError) {
 	name, bad := requiredString(args, "name")
 	if bad != nil {
@@ -86,6 +101,13 @@ func createEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 			return nil, toolErr("BAD_ARGUMENTS", "At most 20 emails per call.", "Split the list and call again.")
 		}
 	}
+	var zone *string
+	if raw, ok := args["display_timezone"]; ok {
+		zone, bad = displayZone(raw)
+		if bad != nil {
+			return nil, bad
+		}
+	}
 	event := models.Event{
 		Name:                     name,
 		Type:                     eventType,
@@ -95,6 +117,7 @@ func createEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 		BlindAvailabilityEnabled: boolPtr(args, "blind"),
 		DaysOnly:                 boolPtr(args, "days_only"),
 		StartOnMonday:            boolPtr(args, "start_on_monday"),
+		DisplayTimezone:          zone,
 	}
 	created, err := deps.Events.Create(user, event, emails)
 	if err != nil {
@@ -397,6 +420,13 @@ func updateEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 			return nil, toolErr("BAD_ARGUMENTS", "blind must be true or false.", "Pass a boolean.")
 		}
 		set["blindAvailabilityEnabled"] = value
+	}
+	if raw, ok := args["display_timezone"]; ok {
+		zone, bad := displayZone(raw)
+		if bad != nil {
+			return nil, bad
+		}
+		set["displayTimezone"] = zone
 	}
 	if len(set) == 0 {
 		return nil, toolErr("BAD_ARGUMENTS", "Nothing to change.", "Pass name, dates, duration_hours, archive, or blind.")
