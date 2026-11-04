@@ -16,6 +16,9 @@ import (
 
 const maxResponseBytes = 4096
 
+// maxListBytes keeps one list page under 20,000 characters. A cursor continues the list.
+const maxListBytes = 18000
+
 // Call runs one tool for the token user. An extra user_id argument is ignored.
 func Call(deps Deps, user *models.User, name string, args map[string]any) (any, *ToolError, string) {
 	eventID := "-"
@@ -91,7 +94,7 @@ func whoami(user *models.User) Whoami {
 	}
 }
 
-func listEvents(deps Deps, user *models.User, args map[string]any) (*ListPage, *ToolError) {
+func listEvents(deps Deps, user *models.User, args map[string]any) (any, *ToolError) {
 	limit := 20
 	if raw, ok := args["limit"]; ok && raw != nil {
 		n, ok := wholeNumber(raw)
@@ -126,21 +129,43 @@ func listEvents(deps Deps, user *models.User, args map[string]any) (*ListPage, *
 	if raw, ok := args["status"]; ok && raw != nil {
 		s, ok := raw.(string)
 		if !ok {
-			return nil, toolErr("BAD_ARGUMENTS", "status must be a string.", "Omit status, or pass needs_answer or all.")
+			return nil, toolErr("BAD_ARGUMENTS", "status must be a string.", "Omit status, or pass needs_answer, all, open or archived.")
 		}
 		status = strings.TrimSpace(s)
 		if status == "" {
 			status = "needs_answer"
 		}
 	}
+	needsMine := false
+	if raw, ok := args["needs_my_answer"]; ok && raw != nil {
+		b, ok := raw.(bool)
+		if !ok {
+			return nil, toolErr("BAD_ARGUMENTS", "needs_my_answer must be true or false.", "Pass a boolean, or omit it.")
+		}
+		needsMine = b
+	}
+	projection := "full"
+	if raw, ok := args["projection"]; ok && raw != nil {
+		s, ok := raw.(string)
+		if !ok || (s != "full" && s != "compact") {
+			return nil, toolErr("BAD_ARGUMENTS", "projection must be full or compact.", "Omit projection for the full grid, or pass compact.")
+		}
+		projection = s
+	}
 	match, bad := statusMatch(status)
 	if bad != nil {
 		return nil, bad
 	}
-	page := &ListPage{Events: []EventRow{}}
+	if needsMine {
+		inner := match
+		match = func(got string) bool { return inner(got) && (got == "no_answer" || got == "invited_no_answer") }
+	}
+	filters := ListFilters{Status: status, NeedsMyAnswer: needsMine, Projection: projection}
+	page := &ListPage{Events: []EventRow{}, Filters: filters}
+	size := 0
 	for len(page.Events) < limit {
 		batch := limit
-		if status != "all" {
+		if status != "all" || needsMine {
 			batch = 50
 		}
 		rows, next, err := deps.Events.ListForUser(user, name, batch, cursor)
@@ -153,8 +178,15 @@ func listEvents(deps Deps, user *models.User, args map[string]any) (*ListPage, *
 		filled := false
 		for i, row := range rows {
 			item := eventRow(user, &row.Event, row.IsAttendee, row.Declined, ResponseFlags{Exists: row.HasResponse, NonEmpty: row.NonEmpty})
-			if !match(item.MyStatus) {
+			if !match(item.MyStatus) || !archiveMatch(status, item.IsArchived) {
 				continue
+			}
+			size += len(mustJSON(item))
+			if size > maxListBytes && len(page.Events) > 0 {
+				// The page is full by size. The next page starts after the last row kept.
+				page.NextCursor = page.Events[len(page.Events)-1].EventID
+				filled = true
+				break
 			}
 			page.Events = append(page.Events, item)
 			if len(page.Events) == limit {
@@ -170,23 +202,42 @@ func listEvents(deps Deps, user *models.User, args map[string]any) (*ListPage, *
 		}
 		cursor = next
 	}
+	if projection == "compact" {
+		out := &CompactListPage{Events: make([]CompactRow, 0, len(page.Events)), NextCursor: page.NextCursor, Filters: filters}
+		for _, r := range page.Events {
+			out.Events = append(out.Events, CompactRow{EventID: r.EventID, ShortID: r.ShortID, Name: r.Name, Type: r.Type,
+				IsArchived: r.IsArchived, Closed: r.Closed, Scheduled: r.Scheduled, MyRoles: r.MyRoles, MyStatus: r.MyStatus, PageURL: r.PageURL})
+		}
+		return out, nil
+	}
 	return page, nil
+}
+
+// archiveMatch applies the open and archived statuses. Other statuses do not look at the archive flag.
+func archiveMatch(status string, archived bool) bool {
+	switch status {
+	case "open":
+		return !archived
+	case "archived":
+		return archived
+	}
+	return true
 }
 
 func statusMatch(status string) (func(string) bool, *ToolError) {
 	switch status {
-	case "all":
+	case "all", "open", "archived":
 		return func(string) bool { return true }, nil
 	case "needs_answer":
 		return func(got string) bool { return got == "no_answer" || got == "invited_no_answer" }, nil
 	case "no_answer", "invited_no_answer", "responded", "cleared", "declined":
 		return func(got string) bool { return got == status }, nil
 	default:
-		return nil, toolErr("BAD_ARGUMENTS", "status must be needs_answer, all, or one my_status value.", "Omit status to list musters that still need an answer.")
+		return nil, toolErr("BAD_ARGUMENTS", "status must be needs_answer, all, open, archived, or one my_status value.", "Omit status to list musters that still need an answer.")
 	}
 }
 
-func getEvent(deps Deps, user *models.User, args map[string]any) (*EventRow, *ToolError) {
+func getEvent(deps Deps, user *models.User, args map[string]any) (*EventDetail, *ToolError) {
 	id, err := requiredString(args, "event_id")
 	if err != nil {
 		return nil, err
@@ -195,10 +246,18 @@ func getEvent(deps Deps, user *models.User, args map[string]any) (*EventRow, *To
 	if !member(deps, user, event) {
 		return nil, notFound()
 	}
+	return eventDetail(deps, user, event), nil
+}
+
+// eventDetail is the muster_get_event shape. update and create echo it too.
+func eventDetail(deps Deps, user *models.User, event *models.Event) *EventDetail {
 	attendee, declined := attendeeState(deps, user, event.Id)
 	flags := deps.Events.ResponseFlags(user.Id.Hex(), []primitive.ObjectID{event.Id})[event.Id.Hex()]
-	row := eventRow(user, event, attendee, declined, flags)
-	return &row, nil
+	out := &EventDetail{EventRow: eventRow(user, event, attendee, declined, flags)}
+	if event.OwnerId == user.Id {
+		out.ResponseTotals = responseTotals(deps, user, event)
+	}
+	return out
 }
 
 func getResponses(deps Deps, user *models.User, args map[string]any) (*ResponsesPayload, *ToolError) {
@@ -206,27 +265,13 @@ func getResponses(deps Deps, user *models.User, args map[string]any) (*Responses
 	if bad != nil {
 		return nil, bad
 	}
-	startRaw, bad := requiredString(args, "start")
-	if bad != nil {
-		return nil, bad
-	}
-	endRaw, bad := requiredString(args, "end")
-	if bad != nil {
-		return nil, bad
-	}
-	start, err := time.Parse(time.RFC3339, startRaw)
-	if err != nil {
-		return nil, toolErr("BAD_ARGUMENTS", "start must be RFC3339.", "Pass start and end as RFC3339 timestamps.")
-	}
-	end, err := time.Parse(time.RFC3339, endRaw)
-	if err != nil {
-		return nil, toolErr("BAD_ARGUMENTS", "end must be RFC3339.", "Pass start and end as RFC3339 timestamps.")
-	}
-	if !end.After(start) {
-		return nil, toolErr("BAD_ARGUMENTS", "end must be after start.", "Pass an end timestamp after start.")
-	}
-	if end.Sub(start) > 7*24*time.Hour {
-		return nil, toolErr("WINDOW_TOO_WIDE", "The window must stay within 7 days.", "Narrow start and end. The window must stay within 7 days.")
+	// An explicit window is checked before any read. A defaulted one needs the event's dates.
+	explicit := presentList(args, "start") || presentList(args, "end")
+	var start, end time.Time
+	if explicit {
+		if start, end, bad = window(args); bad != nil {
+			return nil, bad
+		}
 	}
 	event := deps.Events.GetByEitherID(id)
 	if !member(deps, user, event) {
@@ -234,6 +279,11 @@ func getResponses(deps Deps, user *models.User, args map[string]any) (*Responses
 	}
 	if utils.Coalesce(event.IsSignUpForm) {
 		return nil, toolErr("SIGN_UP_FORM", "This muster is a sign-up form.", utils.GetBaseUrl()+"/e/"+event.GetId())
+	}
+	if !explicit {
+		if start, end, bad = optionalWindow(event, args); bad != nil {
+			return nil, bad
+		}
 	}
 	responses := deps.Events.Responses(event.Id)
 	attendees := attendeeList(deps, event)
@@ -293,6 +343,8 @@ func eventRow(user *models.User, event *models.Event, isAttendee bool, declined 
 	if event.ShortId != nil {
 		row.ShortID = *event.ShortId
 	}
+	row.Scheduled = snapshotEvent(event, false, false).Scheduled
+	row.Closed = row.Scheduled != nil
 	return row
 }
 

@@ -8,11 +8,17 @@ import (
 )
 
 type bestSlot struct {
-	Start     string   `json:"start"`
-	End       string   `json:"end"`
-	Available int      `json:"available"`
-	IfNeeded  int      `json:"if_needed"`
-	Missing   []string `json:"missing"`
+	Start     string `json:"start"`
+	End       string `json:"end"`
+	Available int    `json:"available"`
+	IfNeeded  int    `json:"if_needed"`
+	// Missing keeps its meaning: everyone who is not fully available, conditional people included.
+	Missing []string `json:"missing"`
+	// IfNeededNames and UnavailableNames split Missing into two disjoint groups, one entry per person.
+	IfNeededNames    []string `json:"if_needed_names"`
+	UnavailableNames []string `json:"unavailable_names"`
+	IfNeededCount    int      `json:"if_needed_count"`
+	UnavailableCount int      `json:"unavailable_count"`
 }
 
 func rankSlots(event *models.Event, responses []models.EventResponse, start, end time.Time, duration time.Duration) []bestSlot {
@@ -73,6 +79,7 @@ func rankSlots(event *models.Event, responses []models.EventResponse, start, end
 		available := 0
 		ifNeeded := 0
 		missing := []string{}
+		conditional, unavailable := []string{}, []string{}
 		for _, p := range people {
 			free := true
 			backup := true
@@ -93,18 +100,28 @@ func rankSlots(event *models.Event, responses []models.EventResponse, start, end
 			missing = append(missing, p.name)
 			if backup {
 				ifNeeded++
+				conditional = append(conditional, p.name)
+			} else {
+				unavailable = append(unavailable, p.name)
 			}
 		}
 		if available == 0 && ifNeeded == 0 {
 			continue
 		}
 		sort.Strings(missing)
+		sort.Strings(conditional)
+		sort.Strings(unavailable)
 		out = append(out, bestSlot{
 			Start:     slotStart.Format(time.RFC3339),
 			End:       slotEnd.Format(time.RFC3339),
 			Available: available,
 			IfNeeded:  ifNeeded,
 			Missing:   missing,
+
+			IfNeededNames:    conditional,
+			UnavailableNames: unavailable,
+			IfNeededCount:    len(conditional),
+			UnavailableCount: len(unavailable),
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {

@@ -217,6 +217,9 @@ func TestMCPTextParity(t *testing.T) {
 			t.Fatalf("%#v", views)
 		}
 	})
+	for _, c := range matrixParity {
+		t.Run(c.name, c.fn)
+	}
 }
 
 type legacyProbe struct {
@@ -283,6 +286,9 @@ func TestMCPFieldFindings(t *testing.T) {
 			t.Fatalf("%#v", out)
 		}
 	})
+	for _, c := range matrixField {
+		t.Run(c.name, c.fn)
+	}
 }
 
 type dropsWrites struct{ *statefulEvents }

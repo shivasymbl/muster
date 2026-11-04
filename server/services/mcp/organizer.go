@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -65,14 +66,15 @@ func createEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 			return nil, toolErr("BAD_ARGUMENTS", "emails must be an array.", "Pass plain email addresses.")
 		}
 		seen := map[string]bool{}
-		for _, item := range list {
+		for i, item := range list {
 			address, ok := item.(string)
 			if !ok {
-				return nil, toolErr("BAD_ARGUMENTS", "Each email must be a string.", "Pass plain email addresses.")
+				return nil, toolErr("BAD_ARGUMENTS", "Each email must be a string.", "Pass plain email addresses.").at(fmt.Sprintf("emails[%d]", i), i, "")
 			}
+			raw := address
 			address, ok = canonicalEmail(address)
 			if !ok {
-				return nil, toolErr("BAD_ARGUMENTS", "One address is not an email.", "Fix the address and call again.")
+				return nil, toolErr("BAD_ARGUMENTS", "One address is not an email.", "Fix the address and call again.").at(fmt.Sprintf("emails[%d]", i), i, raw)
 			}
 			if address == canonicalOrLower(user.Email) || seen[address] {
 				continue
@@ -118,6 +120,8 @@ func createEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 		"page_url":   utils.GetBaseUrl() + "/e/" + created.GetId(),
 		"is_group":   created.Type == models.GROUP,
 		"email_sent": emailSent,
+		"invited":    emails,
+		"event":      eventDetail(deps, user, created),
 	}, nil
 }
 
@@ -137,6 +141,18 @@ func listAttendees(deps Deps, user *models.User, args map[string]any) (any, *Too
 			"totals": map[string]int{},
 		}, nil
 	}
+	people, totals := roster(deps, event, owner)
+	return map[string]any{"event_id": event.Id.Hex(), "people": people, "totals": totals}, nil
+}
+
+// rosterRow is one person on the owner's roster. Email is set for accounts and invites.
+type rosterRow struct {
+	email, name, status string
+}
+
+// rosterRows lists the invite list (group) or the people with a stored answer (other musters).
+// Status is invited (no answer yet), responded, cleared, or declined.
+func rosterRows(deps Deps, event *models.Event) []rosterRow {
 	responses := deps.Events.Responses(event.Id)
 	byUser := map[string]*models.Response{}
 	for _, row := range responses {
@@ -144,20 +160,14 @@ func listAttendees(deps Deps, user *models.User, args map[string]any) (any, *Too
 			byUser[row.UserId] = row.Response
 		}
 	}
-	people := []map[string]any{}
-	totals := map[string]int{}
+	rows := []rosterRow{}
 	seen := map[string]bool{}
 	add := func(email, name, status string) {
 		if seen[email+name+status] {
 			return
 		}
 		seen[email+name+status] = true
-		row := map[string]any{"name": name, "status": status}
-		if owner && email != "" {
-			row["email"] = email
-		}
-		people = append(people, row)
-		totals[status]++
+		rows = append(rows, rosterRow{email, name, status})
 	}
 	for _, attendee := range deps.Events.Attendees(event.Id) {
 		status := "invited"
@@ -179,16 +189,66 @@ func listAttendees(deps Deps, user *models.User, args map[string]any) (any, *Too
 		add(attendee.Email, name, status)
 	}
 	if event.Type != models.GROUP {
-		for id, response := range byUser {
+		for _, response := range byUser {
 			status := "cleared"
 			if len(response.Availability)+len(response.IfNeeded) > 0 {
 				status = "responded"
 			}
 			add("", displayName(deps, response), status)
-			_ = id
 		}
 	}
-	return map[string]any{"event_id": event.Id.Hex(), "people": people, "totals": totals}, nil
+	return rows
+}
+
+func roster(deps Deps, event *models.Event, owner bool) ([]map[string]any, map[string]int) {
+	people := []map[string]any{}
+	totals := map[string]int{}
+	for _, r := range rosterRows(deps, event) {
+		row := map[string]any{"name": r.name, "status": r.status}
+		if owner && r.email != "" {
+			row["email"] = r.email
+		}
+		people = append(people, row)
+		totals[r.status]++
+	}
+	return people, totals
+}
+
+// responseTotals is the owner-only count. Pending is the roster members with no answer and no decline.
+// The owner is on a group's invite list, so the owner counts as pending until they answer.
+func responseTotals(deps Deps, owner *models.User, event *models.Event) *ResponseTotals {
+	rows := rosterRows(deps, event)
+	out := &ResponseTotals{Population: "people with a stored answer; the owner counts only after answering"}
+	if event.Type == models.GROUP {
+		out.Population = "group invite list, including the owner"
+	}
+	for _, r := range rows {
+		out.Invited++
+		switch r.status {
+		case "responded":
+			out.Responded++
+		case "cleared":
+			out.Cleared++
+		case "declined":
+			out.Declined++
+		default:
+			out.Pending++
+		}
+		if event.Type == models.GROUP && r.email != "" && canonicalOrLower(r.email) == canonicalOrLower(owner.Email) {
+			out.OwnerIsParticipant = true
+			out.OwnerStatus = r.status
+		}
+	}
+	if event.Type != models.GROUP {
+		if snap := callerSnapshot(deps, owner, event.Id); snap.Exists {
+			out.OwnerIsParticipant = true
+			out.OwnerStatus = "cleared"
+			if len(snap.Availability)+len(snap.IfNeeded) > 0 {
+				out.OwnerStatus = "responded"
+			}
+		}
+	}
+	return out
 }
 
 func findBestTimes(deps Deps, user *models.User, args map[string]any) (any, *ToolError) {
@@ -228,10 +288,11 @@ func findBestTimes(deps Deps, user *models.User, args map[string]any) (any, *Too
 	}
 	slots := rankSlots(event, responses, start, end, time.Duration(minutes)*time.Minute)
 	return map[string]any{
-		"event_id": event.Id.Hex(),
-		"start":    start.UTC().Format(time.RFC3339),
-		"end":      end.UTC().Format(time.RFC3339),
-		"slots":    slots,
+		"event_id":         event.Id.Hex(),
+		"start":            start.UTC().Format(time.RFC3339),
+		"end":              end.UTC().Format(time.RFC3339),
+		"duration_minutes": minutes,
+		"slots":            slots,
 	}, nil
 }
 
@@ -273,12 +334,18 @@ func finalizeEvent(deps Deps, user *models.User, args map[string]any) (any, *Too
 	if err != nil {
 		return nil, toolErr("INTERNAL", "Try again.", "Wait and retry.")
 	}
+	// The stored interval is read back, so the receipt proves it. null means the readback did not show it.
+	var stored *ScheduledSpan
+	if fresh := deps.Events.GetByEitherID(event.Id.Hex()); fresh != nil {
+		stored = snapshotEvent(fresh, false, false).Scheduled
+	}
 	return map[string]any{
 		"event_id":   event.Id.Hex(),
 		"start":      start.UTC().Format(time.RFC3339),
 		"end":        end.UTC().Format(time.RFC3339),
 		"closed":     true,
 		"email_sent": false,
+		"scheduled":  stored,
 	}, nil
 }
 
@@ -337,7 +404,12 @@ func updateEvent(deps Deps, user *models.User, args map[string]any) (any, *ToolE
 	if err := deps.Events.Patch(event.Id, set); err != nil {
 		return nil, toolErr("INTERNAL", "Try again.", "Wait and retry.")
 	}
-	return map[string]any{"event_id": event.Id.Hex(), "updated": true}, nil
+	// The echo is a read after the write, not the submitted input.
+	fresh := deps.Events.GetByEitherID(event.Id.Hex())
+	if fresh == nil {
+		fresh = event
+	}
+	return map[string]any{"event_id": event.Id.Hex(), "updated": true, "event": eventDetail(deps, user, fresh)}, nil
 }
 
 func remindAttendees(deps Deps, user *models.User, args map[string]any) (any, *ToolError) {
@@ -459,8 +531,7 @@ func ownedOrMember(deps Deps, user *models.User, args map[string]any, ownerOnly 
 }
 
 func optionalWindow(event *models.Event, args map[string]any) (time.Time, time.Time, *ToolError) {
-	_, hasStart := args["start"]
-	_, hasEnd := args["end"]
+	hasStart, hasEnd := presentList(args, "start"), presentList(args, "end")
 	if !hasStart && !hasEnd {
 		start, end, ok := eventWindow(event)
 		if !ok {
