@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"fmt"
 	"net/mail"
 	"os"
 	"strings"
@@ -63,7 +64,8 @@ func setAvailability(deps Deps, user *models.User, args map[string]any) (any, *T
 	availability, droppedA := dedupeTimes(availability)
 	ifNeeded, droppedI := dedupeTimes(ifNeeded)
 	if timesOverlap(availability, ifNeeded) {
-		return nil, toolErr("SLOT_IN_BOTH", "A time cannot be both available and if-needed.", "Put each timestamp in only one list.")
+		return nil, toolErr("SLOT_IN_BOTH", "A time cannot be both available and if-needed.", "Put each timestamp in only one list.").
+			at("availability", -1, firstShared(availability, ifNeeded))
 	}
 	if bad := slotsOnGrid(event, availability, ifNeeded); bad != nil {
 		return nil, bad
@@ -170,7 +172,7 @@ func setRanges(deps Deps, user *models.User, event *models.Event, args map[strin
 	if bad != nil {
 		return nil, bad
 	}
-	if bad := slotsOnGrid(event, requested, requestedIfNeeded); bad != nil {
+	if bad := slotsOnGridAt(event, []string{"ranges"}, false, requested, requestedIfNeeded); bad != nil {
 		return nil, bad
 	}
 	avail, ifNeeded, bad := applyRanges(event, changes, merge, &snap)
@@ -306,23 +308,41 @@ func addAttendees(deps Deps, user *models.User, args map[string]any) (any, *Tool
 	}
 	emails := make([]string, 0, len(list))
 	skipped := make([]string, 0)
+	details := make([]map[string]any, 0)
 	seen := map[string]bool{}
 	skippedSeen := map[string]bool{}
-	for _, item := range list {
+	// Check every address first, so one invalid input rejects the whole batch and nothing is written.
+	canonical := make([]string, len(list))
+	for i, item := range list {
 		address, ok := item.(string)
 		address = strings.TrimSpace(address)
 		if !ok || address == "" {
-			return nil, toolErr("BAD_ARGUMENTS", "Each email must be a string.", "Pass plain email addresses.")
+			return nil, toolErr("BAD_ARGUMENTS", "Each email must be a string.", "Pass plain email addresses.").
+				at(fmt.Sprintf("emails[%d]", i), i, address)
 		}
-		address, ok = canonicalEmail(address)
+		clean, ok := canonicalEmail(address)
 		if !ok {
-			return nil, toolErr("BAD_ARGUMENTS", "One address is not an email.", "Fix the address and call again.")
+			return nil, toolErr("BAD_ARGUMENTS", "One address is not an email.", "Fix the address and call again.").
+				at(fmt.Sprintf("emails[%d]", i), i, address)
 		}
-		if seen[address] || address == canonicalOrLower(user.Email) || alreadyInvited(deps, event.Id, address) {
+		canonical[i] = clean
+	}
+	for i, address := range canonical {
+		reason, basis := "", ""
+		switch {
+		case address == canonicalOrLower(user.Email):
+			reason, basis = "owner", "owner"
+		case alreadyInvited(deps, event.Id, address):
+			reason, basis = "already_invited", "existing_attendee"
+		case seen[address]:
+			reason, basis = "already_invited", "earlier_input"
+		}
+		if reason != "" {
 			if !skippedSeen[address] {
 				skippedSeen[address] = true
 				skipped = append(skipped, address)
 			}
+			details = append(details, map[string]any{"email": address, "reason": reason, "input_index": i, "basis": basis})
 			continue
 		}
 		seen[address] = true
@@ -347,10 +367,11 @@ func addAttendees(deps Deps, user *models.User, args map[string]any) (any, *Tool
 		}
 	}
 	return map[string]any{
-		"event_id":   event.Id.Hex(),
-		"added":      added,
-		"skipped":    skipped,
-		"email_sent": emailSent && len(added) > 0,
+		"event_id":        event.Id.Hex(),
+		"added":           added,
+		"skipped":         skipped,
+		"skipped_details": details,
+		"email_sent":      emailSent && len(added) > 0,
 	}, nil
 }
 
@@ -359,13 +380,21 @@ func summarizeOverlap(deps Deps, user *models.User, args map[string]any) (any, *
 	if bad != nil {
 		return nil, bad
 	}
-	start, end, bad := window(args)
-	if bad != nil {
-		return nil, bad
+	explicit := presentList(args, "start") || presentList(args, "end")
+	var start, end time.Time
+	if explicit {
+		if start, end, bad = window(args); bad != nil {
+			return nil, bad
+		}
 	}
 	event := deps.Events.GetByEitherID(id)
 	if !member(deps, user, event) {
 		return nil, notFound()
+	}
+	if !explicit {
+		if start, end, bad = optionalWindow(event, args); bad != nil {
+			return nil, bad
+		}
 	}
 	if utils.Coalesce(event.IsSignUpForm) {
 		return nil, toolErr("SIGN_UP_FORM", "This muster is a sign-up form.", utils.GetBaseUrl()+"/e/"+event.GetId())
@@ -449,17 +478,55 @@ func timesOverlap(a, b []primitive.DateTime) bool {
 }
 
 func slotsOnGrid(event *models.Event, lists ...[]primitive.DateTime) *ToolError {
-	for _, list := range lists {
-		for _, mark := range list {
+	return slotsOnGridAt(event, []string{"availability", "if_needed"}, true, lists...)
+}
+
+// slotsOnGridAt names the list each mark came from, so the error can point at it.
+func slotsOnGridAt(event *models.Event, paths []string, withIndex bool, lists ...[]primitive.DateTime) *ToolError {
+	for n, list := range lists {
+		for i, mark := range list {
+			path, index := paths[n%len(paths)], -1
+			if withIndex {
+				index = i
+			}
+			value := mark.Time().UTC().Format(time.RFC3339)
 			switch slotProblem(event, mark.Time()) {
 			case "outside":
-				return toolErr("SLOT_OUTSIDE", "slot outside this muster's dates", "Read dates and duration_hours from muster_get_event and pick a time inside one of those windows.")
+				return toolErr("SLOT_OUTSIDE", "slot outside this muster's dates", "Read dates and duration_hours from muster_get_event and pick a time inside one of those windows.").
+					at(pathAt(path, index), index, value).within(eventBounds(event))
 			case "off":
-				return toolErr("SLOT_OFF_GRID", "slot is off this muster's grid", "Use a start that matches slot_minutes from muster_get_event.")
+				return toolErr("SLOT_OFF_GRID", "slot is off this muster's grid", "Use a start that matches slot_minutes from muster_get_event.").
+					at(pathAt(path, index), index, value).within(eventBounds(event))
 			}
 		}
 	}
 	return nil
+}
+
+func pathAt(path string, index int) string {
+	if index < 0 {
+		return path
+	}
+	return fmt.Sprintf("%s[%d]", path, index)
+}
+
+// eventBounds is what a member may use to repair a slot. Call it only after the access check.
+func eventBounds(event *models.Event) map[string]any {
+	g := eventGrid(event)
+	return map[string]any{"dates": g.Dates, "slot_minutes": g.SlotMinutes, "duration_hours": g.DurationHours}
+}
+
+func firstShared(a, b []primitive.DateTime) string {
+	seen := map[int64]bool{}
+	for _, t := range a {
+		seen[t.Time().UTC().UnixMilli()] = true
+	}
+	for _, t := range b {
+		if seen[t.Time().UTC().UnixMilli()] {
+			return t.Time().UTC().Format(time.RFC3339)
+		}
+	}
+	return ""
 }
 
 func presentList(args map[string]any, key string) bool {
@@ -497,7 +564,8 @@ func window(args map[string]any) (time.Time, time.Time, *ToolError) {
 		return time.Time{}, time.Time{}, toolErr("BAD_ARGUMENTS", "end must be after start.", "Pass an end timestamp after start.")
 	}
 	if end.Sub(start) > 7*24*time.Hour {
-		return time.Time{}, time.Time{}, toolErr("WINDOW_TOO_WIDE", "The window must stay within 7 days.", "Narrow start and end. The window must stay within 7 days.")
+		return time.Time{}, time.Time{}, toolErr("WINDOW_TOO_WIDE", "The window must stay within 7 days.", "Narrow start and end. The window must stay within 7 days.").
+			within(map[string]any{"max_days": 7})
 	}
 	return start, end, nil
 }

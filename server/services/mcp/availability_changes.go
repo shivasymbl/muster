@@ -68,7 +68,7 @@ func parseRanges(raw any) ([]rangeChange, *ToolError) {
 }
 
 func indexed(i int, message, next string) *ToolError {
-	return toolErr("BAD_ARGUMENTS", fmt.Sprintf("ranges[%d]: %s", i, message), next)
+	return toolErr("BAD_ARGUMENTS", fmt.Sprintf("ranges[%d]: %s", i, message), next).at(fmt.Sprintf("ranges[%d]", i), i, "")
 }
 
 // applyRanges expands half-open ranges onto the muster grid and assigns each

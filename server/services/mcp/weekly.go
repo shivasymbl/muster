@@ -1,6 +1,8 @@
 package mcp
 
 import (
+	"encoding/json"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -29,9 +31,17 @@ func markList(event *models.Event, eventType models.EventType, args map[string]a
 		return nil, toolErr("BAD_ARGUMENTS", key+" is too long.", "Send at most 2000 times.")
 	}
 	out := make([]primitive.DateTime, 0, len(list))
-	for _, item := range list {
+	for i, item := range list {
 		parsed, bad := oneMark(event, eventType, item, key)
 		if bad != nil {
+			if bad.path == "" {
+				text, isText := item.(string)
+				if !isText {
+					raw, _ := json.Marshal(item)
+					text = string(raw)
+				}
+				bad.at(fmt.Sprintf("%s[%d]", key, i), i, text)
+			}
 			return nil, bad
 		}
 		out = append(out, primitive.NewDateTimeFromTime(parsed))
