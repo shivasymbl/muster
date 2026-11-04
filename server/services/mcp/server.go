@@ -94,7 +94,20 @@ func whoami(user *models.User) Whoami {
 	}
 }
 
+var listArgNames = map[string]bool{
+	"name": true, "status": true, "limit": true, "cursor": true,
+	"needs_my_answer": true, "projection": true,
+}
+
 func listEvents(deps Deps, user *models.User, args map[string]any) (any, *ToolError) {
+	if _, ok := args["archived"]; ok {
+		return nil, toolErr("BAD_ARGUMENTS", "There is no archived boolean.", "Use status open or status archived. status all includes archived musters.")
+	}
+	for key := range args {
+		if !listArgNames[key] {
+			return nil, toolErr("BAD_ARGUMENTS", "Unknown argument "+key+".", "muster_list_my_events accepts name, status, needs_my_answer, projection, limit, and cursor.")
+		}
+	}
 	limit := 20
 	if raw, ok := args["limit"]; ok && raw != nil {
 		n, ok := wholeNumber(raw)

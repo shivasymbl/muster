@@ -752,9 +752,12 @@ func listFilterCase(t *testing.T) {
 			t.Fatalf("compact lost %s: %#v", k, compact)
 		}
 	}
-	for _, bad := range []map[string]any{{"status": "sideways"}, {"projection": "tiny"}, {"needs_my_answer": "yes"}} {
+	for _, bad := range []map[string]any{{"status": "sideways"}, {"projection": "tiny"}, {"needs_my_answer": "yes"}, {"status": "all", "archived": false}} {
 		_, err := w.run(w.owner, "muster_list_my_events", nil, bad)
 		wantCode(t, err, "BAD_ARGUMENTS")
+	}
+	if _, err := w.run(w.owner, "muster_list_my_events", nil, map[string]any{"status": "all", "archived": false}); err == nil || !strings.Contains(err.Message, "no archived boolean") {
+		t.Fatalf("archived boolean should be refused: %#v", err)
 	}
 }
 
