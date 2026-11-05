@@ -79,7 +79,7 @@ export default {
       this.updateBufferTime("enabled", isEnabled)
 
       // Capture PostHog event
-      this.$posthog.capture("buffer_time_switch_toggled", {
+      this.$posthog?.capture("buffer_time_switch_toggled", {
         enabled: isEnabled,
       })
     },

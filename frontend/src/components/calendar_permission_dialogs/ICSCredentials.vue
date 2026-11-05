@@ -61,7 +61,7 @@ export default {
           await this.refreshAuthUser()
           this.$emit("addedCalendar")
 
-          this.$posthog.capture("ICS Calendar Added")
+          this.$posthog?.capture("ICS Calendar Added")
         })
         .catch((err) => {
           this.showError(

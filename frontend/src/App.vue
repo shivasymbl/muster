@@ -221,6 +221,7 @@ import {
   signInOutlook,
 } from "@/utils"
 import { authTypes, calendarTypes, eventTypes } from "@/constants"
+import { posthogEnabled } from "@/plugins/posthog"
 import AutoSnackbar from "@/components/AutoSnackbar"
 import AuthUserMenu from "@/components/AuthUserMenu.vue"
 import SignInNotSupportedDialog from "@/components/SignInNotSupportedDialog.vue"
@@ -293,10 +294,10 @@ export default {
       this.scrollY = window.scrollY
     },
     _createNew(eventOnly = false) {
-      this.$posthog.capture("create_new_button_clicked", {
+      this.createNew({ eventOnly })
+      this.$posthog?.capture("create_new_button_clicked", {
         eventOnly: eventOnly,
       })
-      this.createNew({ eventOnly })
     },
     signIn() {
       if (
@@ -357,12 +358,12 @@ export default {
       }
     },
     setFeatureFlags() {
-      if (!this.$posthog) return
+      if (!posthogEnabled(this.$posthog)) return
 
       this.setFeatureFlagsLoaded(true)
     },
     trackFeedbackClick() {
-      this.$posthog.capture("give_feedback_button_clicked")
+      this.$posthog?.capture("give_feedback_button_clicked")
     },
   },
 
@@ -427,7 +428,7 @@ export default {
     authUser: {
       immediate: true,
       handler() {
-        if (this.$posthog) {
+        if (posthogEnabled(this.$posthog)) {
           this.setFeatureFlags()
           // Check feature flags (only if posthog is enabled)
           // this.$posthog.setPersonPropertiesForFlags({

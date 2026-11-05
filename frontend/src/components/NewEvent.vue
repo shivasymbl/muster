@@ -973,7 +973,7 @@ export default {
       )
     },
     trackTimezoneChange(newTimezone) {
-      this.$posthog.capture("timezone_selected_in_new_event_dialog", {
+      this.$posthog?.capture("timezone_selected_in_new_event_dialog", {
         timezone: newTimezone?.value,
       })
     },

@@ -769,7 +769,7 @@ export default {
       document.body.removeChild(downloadLink)
     },
     trackExportCsvClick() {
-      this.$posthog.capture("export_csv_clicked", {
+      this.$posthog?.capture("export_csv_clicked", {
         eventId: this.eventId,
         numRespondents: this.respondents.length,
       })

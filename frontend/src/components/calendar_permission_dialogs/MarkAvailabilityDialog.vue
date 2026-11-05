@@ -164,11 +164,11 @@ export default {
       this.$emit("setAvailabilityManually")
     },
     autofillWithGcal() {
-      this.$posthog.capture("autofill_with_gcal_clicked")
+      this.$posthog?.capture("autofill_with_gcal_clicked")
       this.state = this.states.GCAL_PERMISSIONS
     },
     autofillWithApple() {
-      this.$posthog.capture("autofill_with_apple_clicked")
+      this.$posthog?.capture("autofill_with_apple_clicked")
       if (this.authUser) {
         this.state = this.states.APPLE_CREDENTIALS
       } else {
@@ -176,11 +176,11 @@ export default {
       }
     },
     autofillWithOutlook() {
-      this.$posthog.capture("autofill_with_outlook_clicked")
+      this.$posthog?.capture("autofill_with_outlook_clicked")
       this.$emit("allowOutlookCalendar")
     },
     autofillWithICS() {
-      this.$posthog.capture("autofill_with_ics_clicked")
+      this.$posthog?.capture("autofill_with_ics_clicked")
       this.state = this.states.ICS_CREDENTIALS
     },
     showChoices() {

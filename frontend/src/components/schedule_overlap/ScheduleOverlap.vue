@@ -179,11 +179,11 @@
 
               <!-- Middle section -->
               <div class="tw-grow">
-                <div
-                  ref="calendar"
-                  @scroll="onCalendarScroll"
-                  class="tw-relative tw-flex tw-flex-col"
-                >
+                  <div
+                    ref="calendar"
+                    @scroll="onCalendarScroll"
+                    class="tw-relative tw-flex tw-flex-col tw-overflow-x-auto"
+                  >
                   <!-- Days -->
                   <div
                     :class="
@@ -199,7 +199,7 @@
                         :style="{ width: `${SPLIT_GAP_WIDTH}px` }"
                         :key="`${i}-gap`"
                       ></div>
-                      <div :key="i" class="tw-flex-1 tw-bg-white">
+                      <div :key="i" class="tw-min-w-[8.5rem] tw-flex-1 tw-bg-white">
                         <div class="tw-text-center">
                           <div
                             v-if="isSpecificDates || isGroup"
@@ -243,7 +243,7 @@
                           ></div>
                           <div
                             :key="d"
-                            class="tw-relative tw-flex-1"
+                            class="tw-relative tw-min-w-[8.5rem] tw-flex-1"
                             :class="
                               ((isGroup && loadingCalendarEvents) ||
                                 loadingResponses.loading) &&
@@ -3531,7 +3531,7 @@ export default {
     // -----------------------------------
     scheduleEvent() {
       this.state = this.states.SCHEDULE_EVENT
-      this.$posthog.capture("schedule_event_button_clicked")
+      this.$posthog?.capture("schedule_event_button_clicked")
     },
     cancelScheduleEvent() {
       this.state = this.defaultState
@@ -3541,7 +3541,7 @@ export default {
     confirmScheduleEvent(googleCalendar = true) {
       if (!this.curScheduledEvent) return
 
-      this.$posthog.capture("schedule_event_confirmed")
+      this.$posthog?.capture("schedule_event_confirmed")
       // Get start date, and end date from the area that the user has dragged out
       const { col, row, numRows } = this.curScheduledEvent
       let startDate = this.getDateFromRowCol(row, col)
@@ -3974,7 +3974,7 @@ export default {
     },
     updateOverlayAvailability(val) {
       this.overlayAvailability = !!val
-      this.$posthog.capture("overlay_availability_toggled", {
+      this.$posthog?.capture("overlay_availability_toggled", {
         enabled: !!val,
       })
     },
